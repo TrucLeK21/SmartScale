@@ -1,7 +1,7 @@
-# Project Name
+# Smart Scale Station UI
 
 ## Introduction
-This project is a frontend application built with modern web technologies. Below are the instructions to set up, run, and build the project.
+This project is a frontend application built with React + Electron with python as backend. Below are the instructions to set up, run, and build the project.
 
 ## Prerequisites
 Make sure you have the following installed:
