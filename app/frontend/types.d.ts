@@ -7,8 +7,10 @@ declare global {
         electronAPI: {
             sendPython: (args: PythonArgs) => void;
             onPythonResult: (callback: (result: string) => void) => void;
+            removeListener: (callback: (result: string) => void) => void;
         }
     }
 }
+
 
 export {};
