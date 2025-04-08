@@ -21,7 +21,7 @@ const runPythonScript = () => {
     
         // Cleanup the listener when the component unmounts or before the effect runs again
         return () => {
-
+            window.electronAPI.removeListener(handleResult);
         };
     }, []);
 
@@ -30,10 +30,9 @@ const runPythonScript = () => {
         <div className="container-fluid container">
             <div className="menu">
                 <CardComponent 
-                    // imageUrl='../assets/body-check-icon.png'
                     imageUrl={bodyCheckIcon}
                     title='Body Analysis'
-                    navigateTo=''
+                    navigateTo='/camera'
                 />
                 <CardComponent 
                     imageUrl={balanceIcon}

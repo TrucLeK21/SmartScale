@@ -18,7 +18,8 @@ app.on("ready", () => {
     }
 
     ipcMain.on('run-python', (event, args) => {
-        const pythonEnvPath = path.join(app.getAppPath(), '../backend', 'venv',  'Scripts', 'python');
+        const pythonEnvPath = path.join(app.getAppPath(), '../backend', 'venv', 'Scripts', 'python.exe');
+        console.log("Using Python from:", pythonEnvPath);
 
         const python = spawn(pythonEnvPath, [
             path.join(app.getAppPath(), '../backend/main.py'),

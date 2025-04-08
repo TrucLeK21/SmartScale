@@ -6,14 +6,32 @@
     color: #FFFFFF;
 }
 
+
+.brandLeft {
+    display: flex;
+    align-items: center;
+  }
+
 .navBrand {
     display: flex;
-    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
+    width: 100%;
+    padding: 0;
+    margin: 0;
 }
 
 .navBar {
     background-color: var(--appbar-color);
     display: flex;
     justify-content: center;
+}
+
+.settings {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 4rem; /* adjust size if needed */
+    color: inherit;
 }
