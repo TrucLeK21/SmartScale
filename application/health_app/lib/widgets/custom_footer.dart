@@ -27,7 +27,7 @@ class CustomFooter extends StatelessWidget {
           default:
             return;
         }
-        Navigator.pushReplacementNamed(context, route);
+        Navigator.pushNamedAndRemoveUntil(context, route, (Route<dynamic> route) => false);
       }
     }
 

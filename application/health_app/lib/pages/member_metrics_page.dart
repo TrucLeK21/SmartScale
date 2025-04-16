@@ -114,7 +114,7 @@ class _MemberMetricsPageState extends State<MemberMetricsPage> {
       onTap: () {
         Navigator.pushNamed(
           context,
-          '/detail',
+          '/metric-detail',
           arguments: {
             "metric": key,
             "userId": _member?.id,

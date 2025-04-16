@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import {evaluate_bmi, evaluate_bmr, evaluate_tdee, evaluate_overall_health} from "../utils/metricEvalutor.js";
 const SALT_ROUNDS = 10;
 
 // Schema định nghĩa User
@@ -52,12 +53,12 @@ const userSchema = new mongoose.Schema({
         default: null,
     },
     overviewScore: {
-        type: Number,
+        type: Object,
         default: null,
     },
     race: {
         type: String,
-        enum: ["easterner", "westerner"],
+        enum: ["asian", "caucasian"],
         default: null,
     },
     records: [
@@ -173,6 +174,9 @@ userSchema.methods.addRecord = function({weight = null, height, dateOfBirth, gen
     const proteinPercentage = weight != null ? getProteinPercentage(weight, height, age, gender) : null;
     const visceralFat = weight != null ? getVisceralFat(weight, height, age, gender) : null;
     const idealWeight = getIdealWeight(height, gender);
+    
+    this.overviewScore = evaluate_overall_health(bmi, age, gender, this.race);
+
 
     const newRecord = {
         date, 
@@ -298,15 +302,29 @@ function getVisceralFat(weight, height, age, gender) {
     return null;
 }
 
+// function getIdealWeight(height, gender) {
+//     if (height && gender) {
+//         return parseFloat(
+//             (
+//                 gender === 'male'
+//                     ? height - 100 + (height / 100)
+//                     : height - 100 + ((height / 100) * 0.9)
+//             ).toFixed(2)
+//         );
+//     }
+//     return null;
+// }
+
 function getIdealWeight(height, gender) {
     if (height && gender) {
-        return parseFloat(
-            (
-                gender === 'male'
-                    ? height - 100 + (height / 100)
-                    : height - 100 + ((height / 100) * 0.9)
-            ).toFixed(2)
-        );
+        let baseHeight = 152.4; // 5 feet in cm
+        let additionalWeightPerInch = 2.3; // kg per inch over 5 feet
+        let heightInInches = (height - baseHeight) / 2.54;
+        if (gender === 'male') {
+            return parseFloat((50 + additionalWeightPerInch * heightInInches).toFixed(2));
+        } else if (gender === 'female') {
+            return parseFloat((45.5 + additionalWeightPerInch * heightInInches).toFixed(2));
+        }
     }
     return null;
 }

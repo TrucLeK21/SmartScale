@@ -12,7 +12,7 @@ class User {
   String? gender;
   double? activityFactor;
   int? group;
-  int? overviewScore;
+  Map<String, dynamic>? overviewScore;
   String? race;
   List<Metrics>? records;
 
@@ -92,7 +92,7 @@ class User {
     String? gender,
     double? activityFactor,
     int? group,
-    int? overviewScore,
+    Map<String, dynamic>? overviewScore,
     String? race,
     List<Metrics>? records,
   }) =>

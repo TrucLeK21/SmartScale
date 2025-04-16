@@ -17,8 +17,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _fullnameController = TextEditingController();
   final _heightController = TextEditingController();
-  // final _weightController =
-  //     TextEditingController(); // Thêm controller cho cân nặng
+  final _weightController =
+      TextEditingController(); // Thêm controller cho cân nặng
   String? _selectedGender;
   DateTime? _selectedDate;
   double? _selectedActivityFactor;
@@ -50,7 +50,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           lastestRecord = profile.getLatestRecord();
           _fullnameController.text = user!.fullName ?? ''; // Gán giá trị
           _heightController.text = lastestRecord?.height.toString() ?? '';
-          // _weightController.text = lastestRecord?.weight.toString() ?? '';
+          _weightController.text = lastestRecord?.weight.toString() ?? '';
           _selectedGender = user?.gender == "" ? "male" : user?.gender;
           _selectedDate = user?.dateOfBirth;
           _selectedActivityFactor = user?.activityFactor;
@@ -203,26 +203,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
               const SizedBox(height: 16),
         
-              // // Cân nặng
-              // TextFormField(
-              //   controller: _weightController,
-              //   keyboardType: TextInputType.number,
-              //   decoration: const InputDecoration(
-              //     labelText: 'Cân nặng (kg)',
-              //     border: OutlineInputBorder(),
-              //   ),
-              //   validator: (value) {
-              //     if (value == null || value.isEmpty) {
-              //       return 'Vui lòng nhập cân nặng';
-              //     }
-              //     if (value.isNotEmpty && double.tryParse(value) == null) {
-              //       return 'Vui lòng nhập số hợp lệ';
-              //     }
+              // Cân nặng
+              TextFormField(
+                controller: _weightController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Cân nặng (kg)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Vui lòng nhập cân nặng';
+                  }
+                  if (value.isNotEmpty && double.tryParse(value) == null) {
+                    return 'Vui lòng nhập số hợp lệ';
+                  }
         
-              //     return null;
-              //   },
-              // ),
-              // const SizedBox(height: 16),
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
         
               // Mức độ hoạt động
               DropdownButtonFormField<double>(
@@ -268,7 +268,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       "dateOfBirth": _selectedDate?.toIso8601String(),
                       "gender": _selectedGender,
                       "height": _heightController.text,
-                      // "weight": _weightController.text,
+                      "weight": _weightController.text,
                       "activityFactor": _selectedActivityFactor,
                     };
                     var res = await userServices().update(data);

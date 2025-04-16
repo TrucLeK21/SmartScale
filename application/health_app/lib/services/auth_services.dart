@@ -14,6 +14,7 @@ class AuthServices {
   }
 
   Future<http.Response?> login(Map<String, dynamic> data) async {
+    print(data);
 
     final res = await _httpServices.post('/auth/login', data: data);
 

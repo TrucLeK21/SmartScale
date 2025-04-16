@@ -19,8 +19,6 @@ class _HomePageState extends State<HomePage> {
   DateTime? latestDate;
   List<dynamic>? latestRecord;
 
-
-
   @override
   void initState() {
     super.initState();
@@ -43,7 +41,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildMetricWidget(String key) {
-    final weightRecord = latestRecord?.firstWhere(
+    final metricRecord = latestRecord?.firstWhere(
       (record) => record['key'] == key,
       orElse: () => null, // Tránh lỗi nếu không tìm thấy
     );
@@ -52,7 +50,7 @@ class _HomePageState extends State<HomePage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          weightRecord != null ? "${weightRecord['value']}" : "",
+          metricRecord != null ? "${metricRecord['value']}" : "",
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -62,8 +60,8 @@ class _HomePageState extends State<HomePage> {
           width: 10,
         ),
         Text(
-          (weightRecord != null && weightRecord['key'] != 'bmi')
-              ? "${weightRecord['unit']}"
+          (metricRecord != null && metricRecord['key'] != 'bmi')
+              ? "${metricRecord['unit']}"
               : "BMI",
           style: const TextStyle(
             fontSize: 18,
@@ -99,6 +97,25 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print('Lỗi khi tải thông tin người dùng: $e');
+    }
+  }
+
+  Color _getColorForOverviewScore(String? overviewScore) {
+    if (overviewScore == null)
+      return AppColors.boldGray; // Màu mặc định nếu không có overviewScore
+
+    // Tùy chỉnh màu sắc dựa trên trạng thái overviewScore
+    switch (overviewScore) {
+      case 'Thiếu cân':
+        return Colors.orange; // Ví dụ: Màu xanh cho trạng thái thiếu cân
+      case 'Bình thường':
+        return AppColors.appGreen; // Màu xanh lá cho trạng thái bình thường
+      case 'Thừa cân':
+        return Colors.orange; // Màu cam cho trạng thái thừa cân
+      case 'Béo phì':
+        return Colors.red; // Màu đỏ cho trạng thái béo phì
+      default:
+        return AppColors.boldGray; // Màu mặc định
     }
   }
 
@@ -230,25 +247,106 @@ class _HomePageState extends State<HomePage> {
                     decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10)),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          user?.overviewScore?.toString() ?? 'None',
-                          style: const TextStyle(
-                              color: AppColors.boldGray,
-                              fontSize: 42,
+                    child: Stack(children: [
+                      Center(
+                        child: Text(
+                          user?.overviewScore?['status'].toString() ?? 'None',
+                          style: TextStyle(
+                              color: _getColorForOverviewScore(
+                                  user?.overviewScore?['status'].toString()),
+                              fontSize: 26,
                               fontWeight: FontWeight.bold),
                         ),
-                        const Text(
-                          "Giá trị",
-                          style: TextStyle(
-                            color: AppColors.appGreen,
-                            fontSize: 20,
-                          ),
+                        // const Text(
+                        //   "Giá trị",
+                        //   style: TextStyle(
+                        //     color: AppColors.appGreen,
+                        //     fontSize: 20,
+                        //   ),
+                        // ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: IconButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return Dialog(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text("Đánh giá chi tiết",
+                                              style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold)),
+                                          const SizedBox(height: 10),
+
+                                          // Evaluation list
+                                          ...?user?.overviewScore?['evaluation']
+                                              ?.map<Widget>((e) => Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 4.0),
+                                                    child: Text("• $e"),
+                                                  ))
+                                              ?.toList(),
+
+                                          const SizedBox(height: 15),
+                                          const Text("Khuyến nghị",
+                                              style:  TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600)),
+                                          const SizedBox(height: 5),
+                                          ...?user?.overviewScore?[
+                                                  'recommendations']
+                                              ?.map<Widget>((r) => Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 4.0),
+                                                    child: Text("• $r"),
+                                                  ))
+                                              ?.toList(),
+
+                                          const SizedBox(height: 15),
+                                          const Text("Tình trạng tổng quan",
+                                              style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600)),
+                                          const SizedBox(height: 5),
+                                          Text(user?.overviewScore?[
+                                                  'overall_status'] ??
+                                              'Không có dữ liệu'),
+
+                                          const SizedBox(height: 20),
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: ElevatedButton(
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                              child: Text("Đóng"),
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          icon: Icon(Icons.info_outline),
                         ),
-                      ],
-                    ),
+                      )
+                    ]),
                   )
                 ],
               ),

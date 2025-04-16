@@ -16,10 +16,14 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
   final int index = 0;
   List<dynamic> records = [];
   DateTime? _selectedRecordDate;
+  String _previousRecordDate = "";
   LineBarSpot? _selectedSpot;
   String _selectedRecord = "";
+  double? _metricDiff;
   String _metricUnit = "";
   String _formattedDate = "";
+  String _fromDate = "";
+  String _toDate = "";
   int? memId;
   List<FlSpot> spots = [];
   bool touchingGraph = false;
@@ -52,9 +56,19 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
             records = res;
             _metricUnit = res[0]['unit'] ?? "";
             _selectedRecord = res.last['value'].toString();
+            _metricDiff = res.length >= 2
+                ? (res.last['value'] as num).toDouble() -
+                    (res[res.length - 2]['value'] as num).toDouble()
+                : null;
             _selectedRecordDate = DateTime.parse(res.last['date']);
+            _previousRecordDate =
+                DateFormat('dd/MM').format( DateTime.parse(res[res.length-2]['date']).toLocal());
             _formattedDate = DateFormat('hh:mm - dd/MM/yyyy')
                 .format(_selectedRecordDate!.toLocal());
+            _fromDate = DateFormat('dd/MM/yyyy')
+                .format(DateTime.parse(res.first['date']));
+            _toDate = DateFormat('dd/MM/yyyy')
+                .format(DateTime.parse(res.last['date']));
           });
           for (int i = 0; i < records.length; i++) {
             spots.add(FlSpot(i.toDouble(), records[i]['value'].toDouble()));
@@ -118,7 +132,7 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
                 ? Row(
                     children: [
                       const SizedBox(width: leftReservedSize),
-                      const _ChartTitle(),
+                      _ChartTitle(),
                       const Spacer(),
                       Center(
                         child: _TransformationButtons(
@@ -129,7 +143,7 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
                   )
                 : Column(
                     children: [
-                      const _ChartTitle(),
+                      _ChartTitle(),
                       const SizedBox(height: 16),
                       _TransformationButtons(
                         controller: _transformationController,
@@ -137,33 +151,33 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
                     ],
                   );
           }),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              spacing: 16,
-              children: [
-                const Text('Pan'),
-                Switch(
-                  value: _isPanEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _isPanEnabled = value;
-                    });
-                  },
-                ),
-                const Text('Scale'),
-                Switch(
-                  value: _isScaleEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _isScaleEnabled = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.end,
+          //     spacing: 16,
+          //     children: [
+          //       const Text('Pan'),
+          //       Switch(
+          //         value: _isPanEnabled,
+          //         onChanged: (value) {
+          //           setState(() {
+          //             _isPanEnabled = value;
+          //           });
+          //         },
+          //       ),
+          //       const Text('Scale'),
+          //       Switch(
+          //         value: _isScaleEnabled,
+          //         onChanged: (value) {
+          //           setState(() {
+          //             _isScaleEnabled = value;
+          //           });
+          //         },
+          //       ),
+          //     ],
+          //   ),
+          // ),
           AspectRatio(
             aspectRatio: 1.4,
             child: Padding(
@@ -253,7 +267,9 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
                     },
                     touchCallback:
                         (FlTouchEvent event, LineTouchResponse? touchResponse) {
-                      if (event is FlTapDownEvent || event is FlPanStartEvent || event is FlLongPressStart) {
+                      if (event is FlTapDownEvent ||
+                          event is FlPanStartEvent ||
+                          event is FlLongPressStart) {
                         // Khi người dùng bắt đầu chạm vào biểu đồ: bật chế độ tương tác.
                         if (!touchingGraph) {
                           setState(() {
@@ -261,7 +277,8 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
                           });
                         }
                       } else if (event is FlTapUpEvent ||
-                          event is FlPanEndEvent || event is FlLongPressEnd) {
+                          event is FlPanEndEvent ||
+                          event is FlLongPressEnd) {
                         // Khi người dùng dừng chạm: tắt chế độ tương tác.
                         if (touchingGraph) {
                           setState(() {
@@ -278,9 +295,27 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
 
                       setState(() {
                         _selectedSpot = touchResponse.lineBarSpots!.first;
+                        // Lấy chỉ số điểm được chọn
+                        final int index = _selectedSpot!.x.toInt();
+
+                        // Lấy giá trị điểm hiện tại
+                        final currentValue = _selectedSpot!.y;
+
                         _selectedRecord = _selectedSpot!.y.toString();
-                        _selectedRecordDate = DateTime.parse(
-                            records[_selectedSpot!.x.toInt()]['date']);
+
+                        if (index >= 1) {
+                          final previousValue = spots[index - 1].y;
+                          _metricDiff = currentValue - previousValue;
+                          _previousRecordDate = DateFormat('dd/MM').format(
+                              DateTime.parse(records[index - 1]['date'])
+                                  .toLocal());
+                        } else {
+                          _previousRecordDate = "";
+                          _metricDiff = null;
+                        }
+
+                        _selectedRecordDate =
+                            DateTime.parse(records[index]['date']);
                         _formattedDate = DateFormat('hh:mm - dd/MM/yyyy')
                             .format(_selectedRecordDate!.toLocal());
                       });
@@ -358,6 +393,67 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
         ]);
   }
 
+  Widget _ChartTitle() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 14),
+        Text(
+          "$_selectedRecord $_metricUnit",
+          style: const TextStyle(
+            color: AppColors.subColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        _metricDiff != null
+            ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                    children: [
+                      Icon(
+                        _metricDiff! >= 0
+                            ? Icons.arrow_circle_up
+                            : Icons.arrow_circle_down,
+                        color: Colors.orangeAccent,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${_metricDiff!.abs().toStringAsFixed(2)} $_metricUnit",
+                        style: const TextStyle(
+                           color: Colors.orangeAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                        "So với lần trước (${_previousRecordDate})",
+                        style: const TextStyle(
+                           color: AppColors.boldGray,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+              ],
+            )
+            : const SizedBox.shrink(),
+        Text(
+          "$_fromDate - $_toDate",
+          style: const TextStyle(
+            color: AppColors.mediumGray,
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+          ),
+        ),
+        const SizedBox(height: 14),
+      ],
+    );
+  }
+
   @override
   void dispose() {
     _transformationController.dispose();
@@ -365,36 +461,36 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
   }
 }
 
-class _ChartTitle extends StatelessWidget {
-  const _ChartTitle();
+// class _ChartTitle extends StatelessWidget {
+//   const _ChartTitle();
 
-  @override
-  Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(height: 14),
-        Text(
-          'Lịch sử',
-          style: TextStyle(
-            color: Colors.orange,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        Text(
-          '2023/12/19 - 2024/12/17',
-          style: TextStyle(
-            color: Colors.green,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-        SizedBox(height: 14),
-      ],
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return const Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         SizedBox(height: 14),
+//         Text(
+//           'Lịch sử',
+//           style: TextStyle(
+//             color: Colors.orange,
+//             fontWeight: FontWeight.bold,
+//             fontSize: 18,
+//           ),
+//         ),
+//         Text(
+//           '2023/12/19 - 2024/12/17',
+//           style: TextStyle(
+//             color: Colors.green,
+//             fontWeight: FontWeight.bold,
+//             fontSize: 14,
+//           ),
+//         ),
+//         SizedBox(height: 14),
+//       ],
+//     );
+//   }
+// }
 
 class _TransformationButtons extends StatelessWidget {
   const _TransformationButtons({
