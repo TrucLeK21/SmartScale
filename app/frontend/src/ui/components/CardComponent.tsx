@@ -20,7 +20,7 @@ const CardComponent: React.FC<CardProps> = ({ imageUrl, title, navigateTo }) => 
               alt={title}
               style={{ height: "150px", width: "auto", objectFit: "contain" }}
             />
-            <Card.Body className="p-0">
+            <Card.Body className="p-0 px-3 text-center" style={{height: "50px"}}>
               <Card.Title className="cardTitle">{title}</Card.Title>
             </Card.Body>
         </div>

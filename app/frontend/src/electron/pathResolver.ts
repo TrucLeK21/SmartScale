@@ -9,3 +9,10 @@ export function getPreloadPath() {
         'dist-electron/preload.cjs'
     );
 }
+
+export function getSavedImagesPath() {
+    return path.join(
+        app.getAppPath(),
+        "../backend/images",
+    );
+}

@@ -31,17 +31,17 @@ const runPythonScript = () => {
             <div className="menu">
                 <CardComponent 
                     imageUrl={bodyCheckIcon}
-                    title='Body Analysis'
+                    title='Phân tích sức khỏe'
                     navigateTo='/camera'
                 />
                 <CardComponent 
                     imageUrl={balanceIcon}
-                    title='Balance Test'
+                    title='Kiểm tra thăng bằng'
                     navigateTo=''
                 />
                 <CardComponent 
                     imageUrl={historyIcon}
-                    title='History'
+                    title='Lịch sử'
                     navigateTo=''
                 />
                 <button onClick={runPythonScript}>Say Hello</button>
