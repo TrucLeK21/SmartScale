@@ -1,9 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { isDev } from './util.js';
-import { getPreloadPath } from './pathResolver.js';
+import { getPreloadPath, getSavedImagesPath } from './pathResolver.js';
 import { spawn } from 'child_process';
-
+import fs from 'fs';
 
 app.on("ready", () => {
     const mainWindow = new BrowserWindow({
@@ -19,7 +19,6 @@ app.on("ready", () => {
 
     ipcMain.on('run-python', (event, args) => {
         const pythonEnvPath = path.join(app.getAppPath(), '../backend', 'venv', 'Scripts', 'python.exe');
-        console.log("Using Python from:", pythonEnvPath);
 
         const python = spawn(pythonEnvPath, [
             path.join(app.getAppPath(), '../backend/main.py'),
@@ -39,6 +38,24 @@ app.on("ready", () => {
         python.on('close', (code) => {
             console.log(`Python process exited with code ${code}`); // Log it
             event.reply('python-result', output);
+        });
+    });
+
+    ipcMain.on('save-image', (_event, base64Data: string) => {
+        const matches = base64Data.match(/^data:image\/(png|jpeg);base64,(.+)$/);
+        if (!matches) return;
+
+        const extension = matches[1];
+        const data = matches[2];
+        const buffer = Buffer.from(data, 'base64');
+
+        const savePath = path.join(getSavedImagesPath(), `screenshot-${Date.now()}.${extension}`);
+        fs.writeFile(savePath, buffer, (err) => {
+            if (err) {
+                console.error('Failed to save image:', err);
+            } else {
+                console.log('Image saved to:', savePath);
+            }
         });
     });
 })

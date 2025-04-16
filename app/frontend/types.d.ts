@@ -8,6 +8,7 @@ declare global {
             sendPython: (args: PythonArgs) => void;
             onPythonResult: (callback: (result: string) => void) => void;
             removeListener: (callback: (result: string) => void) => void;
+            saveImage: (data: string) => void;
         }
     }
 }
