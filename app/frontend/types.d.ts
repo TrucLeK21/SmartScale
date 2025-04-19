@@ -2,16 +2,27 @@ interface PythonArgs {
     input: string;
 }
 
-declare global {
-    interface Window {
-        electronAPI: {
-            sendPython: (args: PythonArgs) => void;
-            onPythonResult: (callback: (result: string) => void) => void;
-            removeListener: (callback: (result: string) => void) => void;
-            saveImage: (data: string) => void;
-        }
-    }
+interface WeightPayload {
+    weightStatus: 'measuring' | 'info' | 'error';
+    isStable?: boolean;
+    isRemoved?: boolean;
+    weight?: number;
+    message: string;
 }
 
+type EventPayloadMapping = {
+    'start-ble': void;
+    'weight-data': WeightPayload;
+    'save-image': string;
+};
 
-export {};
+type UnsubscribeFunction = () => void;
+
+interface Window {
+    electronAPI: {
+        startBLE: () => void;
+        saveImage: (data: string) => void;
+        onGettingWeight: (callback: (data: WeightPayload) => void) => UnsubscribeFunction;
+        removeListener: (event: keyof EventPayloadMapping, callback: (data: WeightPayload) => void) => void;
+    };
+}

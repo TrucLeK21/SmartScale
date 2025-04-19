@@ -17,27 +17,64 @@ app.on("ready", () => {
         mainWindow.loadFile(path.join(app.getAppPath(), '/dist-react/index.html'));
     }
 
-    ipcMain.on('run-python', (event, args) => {
-        const pythonEnvPath = path.join(app.getAppPath(), '../backend', 'venv', 'Scripts', 'python.exe');
+    ipcMain.on('start-face', (_event, imagePath: string) => {
+        const pythonEnvPath = path.join(app.getAppPath(), '..', 'backend', 'venv', 'Scripts', 'python.exe');
+        const faceScriptPath = path.join(app.getAppPath(), '..', 'backend', 'face_detect.py');
+    
+        const faceProcess = spawn(pythonEnvPath, [faceScriptPath, imagePath]);
+    
+        faceProcess.stdout.on('data', (data) => {
+            try {
+                const message = JSON.parse(data.toString());
+                BrowserWindow.getAllWindows()[0]?.webContents.send('face-data', message);
+            } catch (e) {
+                console.error('Failed to parse Python output:', e);
+            }
+        });
+    
+        faceProcess.stderr.on('data', (data) => {
+            BrowserWindow.getAllWindows()[0]?.webContents.send('face-data', {
+                type: 'error',
+                message: data.toString()
+            });
+        });
+    
+        faceProcess.on('close', (code) => {
+            BrowserWindow.getAllWindows()[0]?.webContents.send('face-data', {
+                type: 'info',
+                message: `Face process exited with code ${code}`
+            });
+        });
+    });
+    
+    
+
+    ipcMain.on('start-ble', () => {
+        const pythonEnvPath = path.join(app.getAppPath(), '..', 'backend', 'venv', 'Scripts', 'python.exe');
+        const pythonScriptPath = path.join(app.getAppPath(), '..', 'backend', 'weight_scale.py');
 
         const python = spawn(pythonEnvPath, [
-            path.join(app.getAppPath(), '../backend/main.py'),
-            args.input,
+            pythonScriptPath,
         ]);
-    
-        let output = '';
-    
+
+        console.log('Python process started:', pythonEnvPath, pythonScriptPath);
+
         python.stdout.on('data', (data) => {
-            output += data.toString();
+            try {
+                const message = JSON.parse(data.toString());
+                BrowserWindow.getAllWindows()[0]?.webContents.send('weight-data', message);
+            } catch (e) {
+                console.error('Failed to parse Python output:', e);
+            }
         });
-    
+
         python.stderr.on('data', (data) => {
-            console.error(`Python Error: ${data}`);
+            const errorMessage = { weightStatus: 'error', message: data.toString() };
+            BrowserWindow.getAllWindows()[0]?.webContents.send('weight-data', errorMessage);
         });
-    
+
         python.on('close', (code) => {
-            console.log(`Python process exited with code ${code}`); // Log it
-            event.reply('python-result', output);
+            console.log(`Python process exited with code ${code}`);
         });
     });
 
@@ -59,3 +96,4 @@ app.on("ready", () => {
         });
     });
 })
+
