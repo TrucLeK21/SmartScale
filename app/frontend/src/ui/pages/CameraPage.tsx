@@ -9,6 +9,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingScreen from "../components/LoadingScreen";
 import { useNavigate } from "react-router-dom";
+import { analyzeFaceSound } from "../../assets/sounds";
 
 const resolutions = [
   { label: "640x480", width: 640, height: 480 },
@@ -16,20 +17,39 @@ const resolutions = [
   { label: "1280x720", width: 1280, height: 720 },
 ];
 
-const CAPTURE_DELAY = 3000; // Thời gian chờ trước khi chụp (ms)
+const CAPTURE_DELAY = 3000;
 
 const Face: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [detections, setDetections] = useState<FaceDetection.Detection[]>([]);
   const [cameraView, setCameraView] = useState({ width: 960, height: 540 });
-  const [showModal, setShowModal] = useState(false);
+  const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedRes, setSelectedRes] = useState(resolutions[1].label);
+  const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const faceInBoxStartTimeRef = useRef<number | null>(null);
   const navigate = useNavigate();
 
+  // Lấy danh sách thiết bị camera
+  useEffect(() => {
+    async function getDevices() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter((device) => device.kind === "videoinput");
+        setDevices(videoDevices);
+        if (videoDevices.length > 0) {
+          setDeviceId(videoDevices[0].deviceId); // Chọn camera đầu tiên mặc định
+        }
+      } catch (err) {
+        console.error("Error enumerating devices:", err);
+        setError("Failed to enumerate camera devices.");
+      }
+    }
+    getDevices();
+  }, []);
 
   useEffect(() => {
     let camera: Camera | null = null;
@@ -44,7 +64,6 @@ const Face: React.FC = () => {
       minDetectionConfidence: 0.5,
     });
 
-    // Tính toán fixedBox trong useEffect để cập nhật khi cameraView thay đổi
     const fixedBox = {
       x: (cameraView.width - 320) / 2,
       y: (cameraView.height - 320) / 2,
@@ -56,19 +75,11 @@ const Face: React.FC = () => {
       if (isCancelled) return;
       const canvas = canvasRef.current;
       const video = webcamRef.current?.video;
-      if (!canvas || !video) {
-        console.error("Canvas or video not available");
-        return;
-      }
+      if (!canvas || !video) return;
 
       const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        console.error("Canvas context not available");
-        return;
-      }
+      if (!ctx) return;
 
-
-      // Đồng bộ kích thước canvas với cameraView
       canvas.width = cameraView.width;
       canvas.height = cameraView.height;
 
@@ -82,7 +93,6 @@ const Face: React.FC = () => {
       ctx.stroke();
 
       const validDetections: FaceDetection.Detection[] = [];
-
       results.detections.forEach((detection) => {
         const box = detection.boundingBox;
         const x = (box.xCenter - box.width / 2) * canvas.width;
@@ -108,21 +118,15 @@ const Face: React.FC = () => {
 
       setDetections(validDetections);
 
-      // Logic chụp ảnh
       if (validDetections.length > 0) {
         if (!faceInBoxStartTimeRef.current) {
-          console.log("Starting timer for capture");
           faceInBoxStartTimeRef.current = Date.now();
         } else if (Date.now() - faceInBoxStartTimeRef.current >= CAPTURE_DELAY) {
-          console.log("Capturing photo");
           handleCapture();
           faceInBoxStartTimeRef.current = null;
         }
       } else {
-        if (faceInBoxStartTimeRef.current) {
-          console.log("Resetting timer: no face in box");
-          faceInBoxStartTimeRef.current = null;
-        }
+        faceInBoxStartTimeRef.current = null;
       }
     });
 
@@ -140,10 +144,12 @@ const Face: React.FC = () => {
         });
         camera
           .start()
+          .then(() => {
+            analyzeFaceSound().play();
+          })
           .catch((err) => {
-            console.error("Failed to start camera:", err);
             if (!isCancelled) {
-              setError("Failed to access webcam. Please check permissions or device.");
+              setError(`Failed to start camera: ${err.message}`);
             }
           });
       } else if (!isCancelled) {
@@ -155,47 +161,38 @@ const Face: React.FC = () => {
 
     return () => {
       isCancelled = true;
-      camera?.stop();
+      if (camera) camera.stop();
       faceDetection.close();
     };
-  }, [cameraView]);
-
+  }, [cameraView, deviceId]);
 
   const handleCapture = () => {
     const video = webcamRef.current?.video;
-
     if (!video) {
-      console.error("Video not available");
       toast.error("Failed to capture photo: Video not available");
       return;
     }
 
-    // Tạo canvas tạm thời để chụp ảnh từ video
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = cameraView.width;
     tempCanvas.height = cameraView.height;
     const tempCtx = tempCanvas.getContext("2d");
     if (!tempCtx) {
-      console.error("Temp canvas context not available");
       toast.error("Failed to capture photo: Canvas context not available");
       return;
     }
 
-    // Vẽ khung hình từ video lên canvas tạm thời
     tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
 
-    // Tạo canvas để cắt vùng khung xanh
     const croppedCanvas = document.createElement("canvas");
     croppedCanvas.width = 320;
     croppedCanvas.height = 320;
     const croppedCtx = croppedCanvas.getContext("2d");
     if (!croppedCtx) {
-      console.error("Cropped canvas context not available");
       toast.error("Failed to capture photo: Cropped canvas context not available");
       return;
     }
 
-    // Cắt vùng khung xanh từ canvas tạm thời
     croppedCtx.drawImage(
       tempCanvas,
       (cameraView.width - 320) / 2,
@@ -211,7 +208,6 @@ const Face: React.FC = () => {
     const croppedImage = croppedCanvas.toDataURL("image/png");
     window.electronAPI.saveImage(croppedImage);
 
-    // Hiển thị thông báo chụp ảnh thành công
     toast.success("Ảnh được chụp thành công!", {
       position: "top-right",
       autoClose: 2000,
@@ -222,16 +218,18 @@ const Face: React.FC = () => {
     });
 
     setTimeout(() => {
-      navigate('/test');
+      navigate("/test");
     }, 2000);
   };
 
-  const handleChangeResolution = () => {
+  const handleApplySettings = () => {
     const selected = resolutions.find((r) => r.label === selectedRes);
     if (selected) {
       setCameraView({ width: selected.width, height: selected.height });
     }
     setShowModal(false);
+    setLoading(true);
+    setTimeout(() => setLoading(false), 1000);
   };
 
   useEffect(() => {
@@ -245,7 +243,25 @@ const Face: React.FC = () => {
   if (error) {
     return (
       <div className="container-fluid d-flex justify-content-center align-items-center" style={{ height: "100%" }}>
-        <div className="text-danger">{error}</div>
+        <div className="text-danger">
+          {error}
+          <div className="mt-3">
+            <Button variant="primary" onClick={() => setShowModal(true)}>
+              Open Settings
+            </Button>
+            <Button
+              variant="secondary"
+              className="ms-2"
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                setTimeout(() => setLoading(false), 1000);
+              }}
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -276,13 +292,22 @@ const Face: React.FC = () => {
           screenshotFormat="image/png"
           style={{ position: "absolute", top: 0, left: 0, zIndex: 1, borderRadius: "20px" }}
           videoConstraints={{
+            deviceId: deviceId ? { exact: deviceId } : undefined,
             width: { ideal: cameraView.width },
             height: { ideal: cameraView.height },
-            facingMode: "user",
           }}
-          onUserMediaError={(err) => {
-            console.error("Webcam error:", err);
-            setError("Failed to access webcam or unsupported resolution. Please try another resolution.");
+          mirrored={false}
+          onUserMediaError={(err: any) => {
+            console.error("Webcam error:", err.name, err.message);
+            let errorMessage = "Failed to access webcam.";
+            if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+              errorMessage = "No camera found for the selected device.";
+            } else if (err.name === "NotAllowedError") {
+              errorMessage = "Camera access denied. Please grant permission.";
+            } else if (err.name === "OverconstrainedError") {
+              errorMessage = "Selected resolution or device is not supported.";
+            }
+            setError(errorMessage);
           }}
         />
 
@@ -315,31 +340,48 @@ const Face: React.FC = () => {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Camera Resolution</Modal.Title>
+          <Modal.Title>Camera Settings</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form.Select
-            value={selectedRes}
-            onChange={(e) => setSelectedRes(e.target.value)}
-          >
-            {resolutions.map((res) => (
-              <option key={res.label} value={res.label}>
-                {res.label}
-              </option>
-            ))}
-          </Form.Select>
+          <Form.Group className="mb-3">
+            <Form.Label>Resolution</Form.Label>
+            <Form.Select
+              value={selectedRes}
+              onChange={(e) => setSelectedRes(e.target.value)}
+            >
+              {resolutions.map((res) => (
+                <option key={res.label} value={res.label}>
+                  {res.label}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Camera</Form.Label>
+            <Form.Select
+              value={deviceId || ""}
+              onChange={(e) => setDeviceId(e.target.value || undefined)}
+            >
+              {devices.length === 0 && <option value="">No cameras found</option>}
+              {devices.map((device) => (
+                <option key={device.deviceId} value={device.deviceId}>
+                  {device.label || `Camera ${device.deviceId.slice(0, 5)}...`}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleChangeResolution}>
+          <Button variant="primary" onClick={handleApplySettings}>
             Apply
           </Button>
         </Modal.Footer>
       </Modal>
 
-      <ToastContainer aria-label={undefined} />
+      <ToastContainer />
     </div>
   );
 };

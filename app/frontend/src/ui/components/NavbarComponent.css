@@ -1,8 +1,8 @@
 .appName {
     font-style: normal;
     font-weight: 700;
-    font-size: 72px;
-    line-height: 84px;
+    font-size: 4rem;
+    line-height: 5rem;
     color: #FFFFFF;
 }
 
@@ -10,7 +10,7 @@
 .brandLeft {
     display: flex;
     align-items: center;
-  }
+}
 
 .navBrand {
     display: flex;
@@ -25,13 +25,4 @@
     background-color: var(--appbar-color);
     display: flex;
     justify-content: center;
-}
-
-.settings {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.25rem;
-    font-size: 4rem; /* adjust size if needed */
-    color: inherit;
 }

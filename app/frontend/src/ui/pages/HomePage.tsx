@@ -1,38 +1,23 @@
 import CardComponent from '../components/CardComponent';
-import './HomePage.css'
-import bodyCheckIcon from '../../assets/body-check-icon.png'
-import balanceIcon from '../../assets/balance-icon.png'
-import historyIcon from '../../assets/history-icon.svg'
-import { useEffect } from 'react';
+import bodyCheckIcon from '../../assets/body-check-icon.png';
+import balanceIcon from '../../assets/balance-icon.png';
+import historyIcon from '../../assets/history-icon.svg';
+import { greetingSound } from '../../assets/sounds';
 
 function HomePage() {
-const runPythonScript = () => {
-    window.electronAPI.sendPython({ input: 'Truc' });
-};
-
-    useEffect(() => {
-        const handleResult = (result: string) => {
-            console.log('Python Output:', result);
-            alert(result);
-        };
-    
-        // Register the listener once
-        window.electronAPI.onPythonResult(handleResult);
-    
-        // Cleanup the listener when the component unmounts or before the effect runs again
-        return () => {
-            window.electronAPI.removeListener(handleResult);
-        };
-    }, []);
-
+    const playGreeting = () => {
+        const audio = greetingSound();
+        audio.play();
+    };
 
     return (
-        <div className="container-fluid container">
-            <div className="menu">
+        <div className="container-fluid" style={styles.container}>
+            <div style={styles.menu}>
                 <CardComponent 
                     imageUrl={bodyCheckIcon}
                     title='Phân tích sức khỏe'
                     navigateTo='/camera'
+                    playSound={playGreeting}
                 />
                 <CardComponent 
                     imageUrl={balanceIcon}
@@ -44,10 +29,25 @@ const runPythonScript = () => {
                     title='Lịch sử'
                     navigateTo=''
                 />
-                <button onClick={runPythonScript}>Say Hello</button>
             </div>
         </div>
     );
+}
+
+const styles: { [key: string]: React.CSSProperties } = {
+    container: {
+        padding: 0,
+        margin: 0,
+        display: "flex",
+        justifyContent: "flex-start",
+        alignItems: "flex-start"
+    },
+    menu: {
+        display: "flex",
+        gap: "1rem",
+        padding: "2rem",
+        width: "100vw"
+    }    
 }
 
 export default HomePage;
