@@ -132,10 +132,10 @@ class _HomePageState extends State<HomePage> {
           actions: [
             IconButton(
               onPressed: () {
-                print("pressed");
+                Navigator.pushNamed(context, "/ai-chat");
               },
               icon: const Icon(
-                Icons.smart_toy,
+                Icons.message_outlined,
                 size: 40,
                 color: AppColors.mainColor,
               ),

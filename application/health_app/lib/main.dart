@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:health_app/consts.dart';
+import 'package:health_app/pages/ai_chat_page.dart';
 // import 'package:health_app/pages/ble_page.dart';
 import 'package:health_app/pages/create_group_page.dart';
 import 'package:health_app/pages/detail_page.dart';
@@ -14,17 +16,22 @@ import 'package:health_app/pages/metric_detail_page.dart';
 import 'package:health_app/pages/profile_page.dart';
 import 'package:health_app/pages/qr_scan_page.dart';
 import 'package:health_app/pages/register_page.dart';
+import 'package:health_app/providers/chat_provider.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   // Khóa hướng màn hình
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+    create: (context) => ChatProvider(),
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +63,7 @@ class MyApp extends StatelessWidget {
         "/member-metrics": (context) => const MemberMetricsPage(),
         "/qr-scan": (context) => const QrScanPage(),
         "/metric-detail": (context) => const MetricDetailPage(),
+        "/ai-chat": (context) => const AiChatPage(),
       },
     );
   }

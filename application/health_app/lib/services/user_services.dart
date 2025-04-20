@@ -85,7 +85,7 @@ class userServices {
     if(userId != null){
       header['userid'] = userId.toString();
     }
-    print(header);
+    // print(header);
     final res = await HttpServices().get('/users/records/$metric', headers: header);
     if (res!.statusCode == 200) 
     {
