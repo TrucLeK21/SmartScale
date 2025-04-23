@@ -16,3 +16,23 @@ export function getSavedImagesPath() {
         "../backend/images",
     );
 }
+
+export function getPythonEnvPath() {
+    return path.join(
+        app.getAppPath(),
+        '..',
+        'backend',
+        'venv',
+        'Scripts',
+        'python.exe'
+    );
+}
+
+export function getPythonScriptPath(scriptName: string) {
+    return path.join(
+        app.getAppPath(),
+        '..',
+        'backend',
+        scriptName
+    );
+}

@@ -13,7 +13,43 @@ interface WeightPayload {
 type EventPayloadMapping = {
     'start-ble': void;
     'weight-data': WeightPayload;
-    'save-image': string;
+    'start-face': string;
+    'face-data': FaceData;
+    'get-metrics': number;
+    'reset-user-state': void;
+};
+
+type UserData = {
+    race?: string;
+    gender?: string;
+    age?: number;
+    height?: number;
+    weight?: number;
+};
+
+type FaceData = {
+    age?: number;
+    gender?: string;
+    race?: string;
+};
+
+interface HealthRecord {
+    date: Date;
+    height: number;
+    weight: number;
+    age: number;
+    bmi: number;
+    bmr: number;
+    tdee: number;
+    lbm: number;
+    fatPercentage: number;
+    waterPercentage: number;
+    boneMass: number;
+    muscleMass: number;
+    proteinPercentage: number;
+    visceralFat: number;
+    idealWeight: number;
+    overviewScore: OverallHealthEvaluation;
 };
 
 type UnsubscribeFunction = () => void;
@@ -21,8 +57,10 @@ type UnsubscribeFunction = () => void;
 interface Window {
     electronAPI: {
         startBLE: () => void;
-        saveImage: (data: string) => void;
+        startFaceAnalyzer: (data: string) => void;
         onGettingWeight: (callback: (data: WeightPayload) => void) => UnsubscribeFunction;
-        removeListener: (event: keyof EventPayloadMapping, callback: (data: WeightPayload) => void) => void;
+        onFaceData: (callback: (data: FaceData) => void) => UnsubscribeFunction;
+        getMetrics: (activityFactor: number) => Promise<HealthRecord>;
+        resetUserState: () => void;
     };
 }

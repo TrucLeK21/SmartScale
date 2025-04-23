@@ -5,7 +5,8 @@ import historyIcon from '../../assets/history-icon.svg';
 import { greetingSound } from '../../assets/sounds';
 
 function HomePage() {
-    const playGreeting = () => {
+    const startAnalyzeCallback = () => {
+        window.electronAPI.resetUserState();
         const audio = greetingSound();
         audio.play();
     };
@@ -17,7 +18,7 @@ function HomePage() {
                     imageUrl={bodyCheckIcon}
                     title='Phân tích sức khỏe'
                     navigateTo='/camera'
-                    playSound={playGreeting}
+                    callback={startAnalyzeCallback}
                 />
                 <CardComponent 
                     imageUrl={balanceIcon}

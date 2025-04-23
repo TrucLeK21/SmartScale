@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import Webcam from "react-webcam";
 import FaceDetection from "@mediapipe/face_detection";
 import { Camera } from "@mediapipe/camera_utils";
@@ -33,23 +33,62 @@ const Face: React.FC = () => {
   const faceInBoxStartTimeRef = useRef<number | null>(null);
   const navigate = useNavigate();
 
-  // Lấy danh sách thiết bị camera
-  useEffect(() => {
-    async function getDevices() {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter((device) => device.kind === "videoinput");
-        setDevices(videoDevices);
-        if (videoDevices.length > 0) {
-          setDeviceId(videoDevices[0].deviceId); // Chọn camera đầu tiên mặc định
-        }
-      } catch (err) {
-        console.error("Error enumerating devices:", err);
-        setError("Failed to enumerate camera devices.");
-      }
+  const handleCapture = useCallback(() => {
+    const video = webcamRef.current?.video;
+    if (!video) {
+      toast.error("Failed to capture photo: Video not available");
+      return;
     }
-    getDevices();
-  }, []);
+  
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = cameraView.width;
+    tempCanvas.height = cameraView.height;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) {
+      toast.error("Failed to capture photo: Canvas context not available");
+      return;
+    }
+  
+    tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+  
+    const croppedCanvas = document.createElement("canvas");
+    croppedCanvas.width = 320;
+    croppedCanvas.height = 320;
+    const croppedCtx = croppedCanvas.getContext("2d");
+    if (!croppedCtx) {
+      toast.error("Failed to capture photo: Cropped canvas context not available");
+      return;
+    }
+  
+    croppedCtx.drawImage(
+      tempCanvas,
+      (cameraView.width - 320) / 2,
+      (cameraView.height - 320) / 2,
+      320,
+      320,
+      0,
+      0,
+      320,
+      320
+    );
+  
+    const croppedImage = croppedCanvas.toDataURL("image/png");
+    window.electronAPI.startFaceAnalyzer(croppedImage);
+  
+    toast.success("Ảnh được chụp thành công!", {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: true,
+    });
+  
+    setTimeout(() => {
+      navigate("/weight");
+    }, 2000);
+  }, [cameraView.width, cameraView.height, navigate]);
+  
 
   useEffect(() => {
     let camera: Camera | null = null;
@@ -164,63 +203,9 @@ const Face: React.FC = () => {
       if (camera) camera.stop();
       faceDetection.close();
     };
-  }, [cameraView, deviceId]);
+  }, [cameraView, deviceId, handleCapture]);
 
-  const handleCapture = () => {
-    const video = webcamRef.current?.video;
-    if (!video) {
-      toast.error("Failed to capture photo: Video not available");
-      return;
-    }
 
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = cameraView.width;
-    tempCanvas.height = cameraView.height;
-    const tempCtx = tempCanvas.getContext("2d");
-    if (!tempCtx) {
-      toast.error("Failed to capture photo: Canvas context not available");
-      return;
-    }
-
-    tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-
-    const croppedCanvas = document.createElement("canvas");
-    croppedCanvas.width = 320;
-    croppedCanvas.height = 320;
-    const croppedCtx = croppedCanvas.getContext("2d");
-    if (!croppedCtx) {
-      toast.error("Failed to capture photo: Cropped canvas context not available");
-      return;
-    }
-
-    croppedCtx.drawImage(
-      tempCanvas,
-      (cameraView.width - 320) / 2,
-      (cameraView.height - 320) / 2,
-      320,
-      320,
-      0,
-      0,
-      320,
-      320
-    );
-
-    const croppedImage = croppedCanvas.toDataURL("image/png");
-    window.electronAPI.saveImage(croppedImage);
-
-    toast.success("Ảnh được chụp thành công!", {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      pauseOnHover: false,
-      draggable: true,
-    });
-
-    setTimeout(() => {
-      navigate("/test");
-    }, 2000);
-  };
 
   const handleApplySettings = () => {
     const selected = resolutions.find((r) => r.label === selectedRes);
@@ -235,7 +220,23 @@ const Face: React.FC = () => {
   useEffect(() => {
     setTimeout(() => {
       setLoading(false);
-    }, 1000);
+    }, 4000);
+
+    // Get available camera devices
+    async function getDevices() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter((device) => device.kind === "videoinput");
+        setDevices(videoDevices);
+        if (videoDevices.length > 0) {
+          setDeviceId(videoDevices[0].deviceId); // Chọn camera đầu tiên mặc định
+        }
+      } catch (err) {
+        console.error("Error enumerating devices:", err);
+        setError("Failed to enumerate camera devices.");
+      }
+    }
+    getDevices();
   }, []);
 
   if (loading) return <LoadingScreen message="Starting the application..." />;
@@ -246,16 +247,13 @@ const Face: React.FC = () => {
         <div className="text-danger">
           {error}
           <div className="mt-3">
-            <Button variant="primary" onClick={() => setShowModal(true)}>
-              Open Settings
-            </Button>
-            <Button
+          <Button
               variant="secondary"
               className="ms-2"
               onClick={() => {
                 setError(null);
                 setLoading(true);
-                setTimeout(() => setLoading(false), 1000);
+                setTimeout(() => setLoading(false), 2000);
               }}
             >
               Retry
@@ -287,6 +285,7 @@ const Face: React.FC = () => {
         </button>
 
         <Webcam
+          key={deviceId}
           ref={webcamRef}
           audio={false}
           screenshotFormat="image/png"
@@ -297,16 +296,26 @@ const Face: React.FC = () => {
             height: { ideal: cameraView.height },
           }}
           mirrored={false}
-          onUserMediaError={(err: any) => {
-            console.error("Webcam error:", err.name, err.message);
+          onUserMediaError={(err: string | DOMException) => {
+            console.error("Webcam error:", err);
+          
             let errorMessage = "Failed to access webcam.";
-            if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
-              errorMessage = "No camera found for the selected device.";
-            } else if (err.name === "NotAllowedError") {
-              errorMessage = "Camera access denied. Please grant permission.";
-            } else if (err.name === "OverconstrainedError") {
-              errorMessage = "Selected resolution or device is not supported.";
+          
+            if (typeof err === "string") {
+              errorMessage = err;
+            } else {
+              // Safe to access DOMException properties
+              console.error("Webcam error details:", err.name, err.message);
+          
+              if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+                errorMessage = "No camera found for the selected device.";
+              } else if (err.name === "NotAllowedError") {
+                errorMessage = "Camera access denied. Please grant permission.";
+              } else if (err.name === "OverconstrainedError") {
+                errorMessage = "Selected resolution or device is not supported.";
+              }
             }
+          
             setError(errorMessage);
           }}
         />
@@ -331,9 +340,9 @@ const Face: React.FC = () => {
           }}
         >
           {detections.length > 0 ? (
-            <p>Face detected inside box</p>
+            <p>Phát hiện gương mặt nằm trong khung</p>
           ) : (
-            <p>Please align your face inside the green box</p>
+            <p>Xin hãy đưa mặt vào khung xanh</p>
           )}
         </div>
       </div>

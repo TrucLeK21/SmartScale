@@ -2,14 +2,16 @@ const electron = require('electron');
 
 electron.contextBridge.exposeInMainWorld('electronAPI', {
     startBLE: () => ipcSend('start-ble'),
-    saveImage: (data) => ipcSend('save-image', data),
+    startFaceAnalyzer: (data) => ipcSend('start-face', data),
     onGettingWeight: (callback) => ipcOn('weight-data', callback),
-    removeListener: (event, callback) => electron.ipcRenderer.removeListener(event, callback),
+    onFaceData: (callback) => ipcOn('face-data', callback),
+    getMetrics:  (activityFactor) => ipcInvoke<'get-metrics', HealthRecord>('get-metrics', activityFactor),
+    resetUserState: () => ipcSend('reset-user-state'),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(
     key: Key,
-    payload?: EventPayloadMapping[Key] // Payload là optional
+    payload?: EventPayloadMapping[Key] // Payload is optional
 ) {
     if (payload) {
         electron.ipcRenderer.send(key, payload);
@@ -27,4 +29,11 @@ function ipcOn<Key extends keyof EventPayloadMapping>(
     };
     electron.ipcRenderer.on(key, cb);
     return () => electron.ipcRenderer.off(key, cb);
+}
+
+function ipcInvoke<Key extends keyof EventPayloadMapping, Res = unknown>(
+    key: Key,
+    payload: EventPayloadMapping[Key]
+): Promise<Res> {
+    return electron.ipcRenderer.invoke(key, payload);
 }
