@@ -14,9 +14,10 @@ type EventPayloadMapping = {
     'start-ble': void;
     'weight-data': WeightPayload;
     'start-face': string;
-    'face-data': FaceData;
-    'get-metrics': number;
+    'get-metrics': FaceData;
     'reset-user-state': void;
+    'get-face-data': void;
+    'rotate-camera': Direction;
 };
 
 type UserData = {
@@ -28,9 +29,9 @@ type UserData = {
 };
 
 type FaceData = {
-    age?: number;
-    gender?: string;
-    race?: string;
+    age: number;
+    gender: string;
+    race: string;
 };
 
 interface HealthRecord {
@@ -52,6 +53,8 @@ interface HealthRecord {
     overviewScore: OverallHealthEvaluation;
 };
 
+type Direction = "up" | "down" | "stop" | "default";
+
 type UnsubscribeFunction = () => void;
 
 interface Window {
@@ -59,8 +62,9 @@ interface Window {
         startBLE: () => void;
         startFaceAnalyzer: (data: string) => void;
         onGettingWeight: (callback: (data: WeightPayload) => void) => UnsubscribeFunction;
-        onFaceData: (callback: (data: FaceData) => void) => UnsubscribeFunction;
-        getMetrics: (activityFactor: number) => Promise<HealthRecord>;
+        getMetrics: (faceData: FaceData) => Promise<HealthRecord>;
         resetUserState: () => void;
+        getFaceData: () => Promise<FaceData>;
+        rotateCamera: (direction: Direction) => void;
     };
 }

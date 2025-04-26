@@ -6,12 +6,12 @@ import CameraPage from './pages/CameraPage';
 import { Navigate } from "react-router-dom";
 import HealthResultPage from './pages/HealthResultPage';
 import WeightDisplayPage from './pages/WeightPage';
-import ActivitySelectScreen from './pages/ActivitySelectPage';
+import InfoConfirmScreen from './pages/InfoConfirmPage';
 import QRCodePage from './pages/QRCodePage';
+import ClickableCard from './pages/TestPage';
 
 
 function App() {
-
   return (
     <>
       <Router>
@@ -20,10 +20,11 @@ function App() {
             <Route path="/" element={<Navigate to="/home" />} />
             <Route path="/home" element={<HomePage />} />
             <Route path='/camera' element={<CameraPage/>}/>
-            <Route path="/metrics" element={<HealthResultPage/>} />
+            <Route path="/result" element={<HealthResultPage/>} />
             <Route path="/weight" element={<WeightDisplayPage/>}/>
-            <Route path="/activity" element={<ActivitySelectScreen/>} />
+            <Route path="/info" element={<InfoConfirmScreen/>} />
             <Route path="/qrcode" element={<QRCodePage/>}/>
+            <Route path="/test" element={<ClickableCard/>}/>
           </Routes>
         </MainLayout>
       </Router>

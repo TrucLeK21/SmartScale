@@ -31,6 +31,7 @@ const Face: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const faceInBoxStartTimeRef = useRef<number | null>(null);
+  const lastCommandRef = useRef<string | null>(null);
   const navigate = useNavigate();
 
   const handleCapture = useCallback(() => {
@@ -88,7 +89,6 @@ const Face: React.FC = () => {
       navigate("/weight");
     }, 2000);
   }, [cameraView.width, cameraView.height, navigate]);
-  
 
   useEffect(() => {
     let camera: Camera | null = null;
@@ -115,48 +115,84 @@ const Face: React.FC = () => {
       const canvas = canvasRef.current;
       const video = webcamRef.current?.video;
       if (!canvas || !video) return;
-
+    
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-
+    
       canvas.width = cameraView.width;
       canvas.height = cameraView.height;
-
+    
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
+    
       ctx.beginPath();
       ctx.rect(fixedBox.x, fixedBox.y, fixedBox.width, fixedBox.height);
       ctx.lineWidth = 3;
       ctx.strokeStyle = "lime";
       ctx.stroke();
-
+    
       const validDetections: FaceDetection.Detection[] = [];
+    
+      // Handle case when no faces are detected
+      if (results.detections.length === 0) {
+        if (lastCommandRef.current !== "stop") {
+          window.electronAPI.rotateCamera("stop");
+          lastCommandRef.current = "stop";
+        }
+        setDetections([]);
+        faceInBoxStartTimeRef.current = null;
+        return;
+      }
+    
       results.detections.forEach((detection) => {
         const box = detection.boundingBox;
         const x = (box.xCenter - box.width / 2) * canvas.width;
         const y = (box.yCenter - box.height / 2) * canvas.height;
         const width = box.width * canvas.width;
         const height = box.height * canvas.height;
-
+    
         const isInside =
           x >= fixedBox.x &&
           y >= fixedBox.y &&
           x + width <= fixedBox.x + fixedBox.width &&
           y + height <= fixedBox.y + fixedBox.height;
-
+    
+        // Vertical alignment check
+        const verticalThreshold = fixedBox.height * 0.1; // 10% of box height as threshold
+    
         if (isInside) {
+          if (lastCommandRef.current !== "stop") {
+            window.electronAPI.rotateCamera("stop");
+            lastCommandRef.current = "stop";
+          }
           validDetections.push(detection);
           ctx.beginPath();
           ctx.rect(x, y, width, height);
           ctx.lineWidth = 2;
           ctx.strokeStyle = "red";
           ctx.stroke();
+        } else {
+          if (y < fixedBox.y - verticalThreshold) {
+            if (lastCommandRef.current !== "moveup") {
+              window.electronAPI.rotateCamera("up");
+              lastCommandRef.current = "moveup";
+            }
+          } else if (y + height > fixedBox.y + fixedBox.height + verticalThreshold) {
+            if (lastCommandRef.current !== "movedown") {
+              window.electronAPI.rotateCamera("down");
+              lastCommandRef.current = "movedown";
+            }
+          } else {
+            if (lastCommandRef.current !== "stop") {
+              window.electronAPI.rotateCamera("stop");
+              lastCommandRef.current = "stop";
+            }
+          }
         }
       });
-
+    
       setDetections(validDetections);
-
+    
       if (validDetections.length > 0) {
         if (!faceInBoxStartTimeRef.current) {
           faceInBoxStartTimeRef.current = Date.now();
@@ -205,8 +241,6 @@ const Face: React.FC = () => {
     };
   }, [cameraView, deviceId, handleCapture]);
 
-
-
   const handleApplySettings = () => {
     const selected = resolutions.find((r) => r.label === selectedRes);
     if (selected) {
@@ -222,14 +256,13 @@ const Face: React.FC = () => {
       setLoading(false);
     }, 4000);
 
-    // Get available camera devices
     async function getDevices() {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter((device) => device.kind === "videoinput");
         setDevices(videoDevices);
         if (videoDevices.length > 0) {
-          setDeviceId(videoDevices[0].deviceId); // Chọn camera đầu tiên mặc định
+          setDeviceId(videoDevices[0].deviceId);
         }
       } catch (err) {
         console.error("Error enumerating devices:", err);
@@ -247,7 +280,7 @@ const Face: React.FC = () => {
         <div className="text-danger">
           {error}
           <div className="mt-3">
-          <Button
+            <Button
               variant="secondary"
               className="ms-2"
               onClick={() => {
@@ -298,15 +331,11 @@ const Face: React.FC = () => {
           mirrored={false}
           onUserMediaError={(err: string | DOMException) => {
             console.error("Webcam error:", err);
-          
             let errorMessage = "Failed to access webcam.";
-          
             if (typeof err === "string") {
               errorMessage = err;
             } else {
-              // Safe to access DOMException properties
               console.error("Webcam error details:", err.name, err.message);
-          
               if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
                 errorMessage = "No camera found for the selected device.";
               } else if (err.name === "NotAllowedError") {
@@ -315,7 +344,6 @@ const Face: React.FC = () => {
                 errorMessage = "Selected resolution or device is not supported.";
               }
             }
-          
             setError(errorMessage);
           }}
         />

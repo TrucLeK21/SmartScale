@@ -4,6 +4,10 @@ import { Modal, Button, Form } from 'react-bootstrap';
 import { activityWarnSound, analyzeActivitySound } from '../../assets/sounds';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import HoldableNumberPicker from '../components/NumberPickerComponent';
+import LoadingScreen from '../components/LoadingScreen';
+import useHealthStore from '../hooks/healthStore';
+import { useNavigate } from 'react-router-dom';
 
 const activityLevels = [
     { id: 1, label: 'Ít vận động', description: 'Ngồi nhiều, ít đi lại', value: 1.2 },
@@ -13,19 +17,53 @@ const activityLevels = [
     { id: 5, label: 'Vận động rất nhiều', description: 'Tập nặng, vận động viên', value: 1.9 },
 ];
 
-const ActivitySelectScreen: React.FC = () => {
+const genderMap: Record<string, string> = {
+    'Nam': 'male',
+    'Nữ': 'female',
+};
+
+const raceMap: Record<string, string> = {
+    'Châu Á': 'asian',
+    'Khác': 'other',
+};
+
+const InfoConfirmScreen: React.FC = () => {
     const [selected, setSelected] = useState<number | null>(null);
-    const [userData, setUserData] = useState({
-        age: 25,
-        gender: 'Nam',
-        race: 'Châu Á'
-    });
+    const [isLoading, setIsLoading] = useState(true);
     const [editingField, setEditingField] = useState<string | null>(null);
     const [tempValue, setTempValue] = useState<string | number>('');
     const [showModal, setShowModal] = useState(false);
+    const [userData, setUserData] = useState({
+        age: 25,
+        gender: 'Nam',
+        race: 'Châu Á',
+    });
+    const set = useHealthStore(state => state.set);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        analyzeActivitySound().play();
+        setIsLoading(true);
+        const getFaceData = async () => {
+            try {
+                const data = await window.electronAPI.getFaceData();
+                setIsLoading(false);
+                const displayData = {
+                    age: data.age,
+                    race: data.race === 'asian' ? 'Châu Á' : 'Khác',
+                    gender: data.gender === 'male' ? 'Nam' : 'Nữ',
+                };
+                setUserData(displayData);
+                analyzeActivitySound().play();
+            } catch (error: unknown) {
+                if (error instanceof Error) {
+                    handleToastify(`Có lỗi xảy ra khi lấy dữ liệu khuôn mặt: ${error.message}`, "error");
+                } else {
+                    handleToastify(`Lỗi không xác định: ${error}`, "error");
+                }
+            }
+        };
+    
+        getFaceData();
     }, []);
 
     const handleToastify = (message: string, type: 'success' | 'error' | 'info' | 'warn') => {
@@ -45,10 +83,35 @@ const ActivitySelectScreen: React.FC = () => {
             handleToastify("Vui lòng chọn mức độ vận động!", "warn");
             return;
         }
-
+    
         const activityFactor = activityLevels.find((activity) => activity.id === selected)?.value;
         if (activityFactor !== undefined) {
-            console.log("Gửi dữ liệu:", { ...userData, activityFactor });
+            const formattedData = {
+                age: userData.age,
+                gender: genderMap[userData.gender] || userData.gender,
+                race: raceMap[userData.race] || userData.race,
+                activityFactor,
+            };
+    
+            try {
+                console.log("Gửi dữ liệu:", formattedData);
+                const metrics = await window.electronAPI.getMetrics(formattedData);
+                console.log("Nhận dữ liệu:", metrics);
+                set({
+                    gender: formattedData.gender,
+                    race: formattedData.race,
+                    activityFactor: formattedData.activityFactor,
+                    record: metrics,
+                });
+                navigate("/result");
+            } catch (error: unknown) {
+                if (error instanceof Error) {
+                    handleToastify(`Có lỗi xảy ra khi tính toán chỉ số: ${error.message}`, "error");
+                } else {
+                    handleToastify(`Lỗi không xác định khi tính toán chỉ số: ${error}`, "error");
+                }
+            }
+    
         } else {
             handleToastify("Không tìm thấy mức độ vận động phù hợp!", "error");
         }
@@ -71,24 +134,13 @@ const ActivitySelectScreen: React.FC = () => {
     const renderEditField = () => {
         if (editingField === 'age') {
             return (
-                <Form.Select
-                    value={tempValue.toString()}
-                    onChange={(e) => setTempValue(e.target.value)}
-                    style={{
-                        height: '200px',
-                        fontSize: '1.2rem',
-                        overflowY: 'auto',
-                        padding: '0.5rem',
-                        touchAction: 'pan-y',
-                    }}
-                    size="lg"
-                >
-                    {Array.from({ length: 100 }, (_, i) => i + 1).map((num) => (
-                        <option key={num} value={num} style={{ padding: '0.5rem', fontSize: '1.2rem' }}>
-                            {num}
-                        </option>
-                    ))}
-                </Form.Select>
+                <HoldableNumberPicker
+                    min={6}
+                    max={99}
+                    initial={userData.age}
+                    step={1}
+                    onChange={(value) => setTempValue(value)}
+                />
             );
         } else if (editingField === 'gender') {
             return (
@@ -130,11 +182,16 @@ const ActivitySelectScreen: React.FC = () => {
         return null;
     };
 
-    return (
+    return isLoading ? (
+        <>
+            <LoadingScreen message={"Getting face data..."} />
+            <ToastContainer />
+        </>
+    ) : (
         <div className="container-fluid d-flex flex-column align-items-center justify-content-between" style={styles.container}>
             <div className="d-flex flex-column align-items-center justify-content-center gap-2 position-relative" style={styles.frame}>
                 <h2 className="text-center mb-4">Xác nhận thông tin của bạn</h2>
-
+    
                 <div className="w-100 mb-4">
                     <div className="row g-3 text-center">
                         {['age', 'gender', 'race'].map((field) => (
@@ -152,12 +209,12 @@ const ActivitySelectScreen: React.FC = () => {
                         ))}
                     </div>
                 </div>
-
+    
                 <h4 className="text-center mb-3">Chọn mức độ vận động</h4>
                 <div className="row g-3 w-100 px-2">
                     {activityLevels.map((activity) => {
                         const isSelected = selected === activity.id;
-
+    
                         return (
                             <div className="col-12 col-md-6" key={activity.id}>
                                 <div
@@ -175,14 +232,14 @@ const ActivitySelectScreen: React.FC = () => {
                         );
                     })}
                 </div>
-
+    
                 <button className="fs-5 mt-4" style={styles.confirmButton} onClick={handleConfirm}>
                     Xác nhận
                 </button>
             </div>
-
+    
             <ToastContainer />
-
+    
             {/* Modal chỉnh sửa thông tin */}
             <Modal show={showModal} onHide={() => setShowModal(false)} centered>
                 <Modal.Header closeButton>
@@ -202,6 +259,7 @@ const ActivitySelectScreen: React.FC = () => {
             </Modal>
         </div>
     );
+    
 };
 
 const styles: { [key: string]: React.CSSProperties } = {
@@ -243,4 +301,4 @@ const styles: { [key: string]: React.CSSProperties } = {
     },
 };
 
-export default ActivitySelectScreen;
+export default InfoConfirmScreen;

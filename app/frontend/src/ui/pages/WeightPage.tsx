@@ -74,7 +74,7 @@ function WeightDisplayPage() {
                 handleToastify("Cân nặng đã được cập nhật!", 'success');
                 analyzeWeightSavedSound().play();
                 setTimeout(() => {
-                    navigate("/activity");
+                    navigate("/info");
                 }, 2000);
             }
         });

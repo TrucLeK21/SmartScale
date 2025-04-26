@@ -3,10 +3,12 @@ import bodyCheckIcon from '../../assets/body-check-icon.png';
 import balanceIcon from '../../assets/balance-icon.png';
 import historyIcon from '../../assets/history-icon.svg';
 import { greetingSound } from '../../assets/sounds';
+import useHealthStore from '../hooks/healthStore';
 
 function HomePage() {
     const startAnalyzeCallback = () => {
         window.electronAPI.resetUserState();
+        useHealthStore.getState().clear();
         const audio = greetingSound();
         audio.play();
     };

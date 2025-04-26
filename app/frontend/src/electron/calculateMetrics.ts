@@ -1,5 +1,5 @@
 type Gender = 'male' | 'female';
-type Race = 'asian' | 'black' | 'white' | 'hispanic' | 'other' | 'caucasian';
+type Race = 'asian' | 'other';
 
 const BMI_THRESHOLDS: Record<Race | string, {
     underweight: number;
@@ -8,7 +8,7 @@ const BMI_THRESHOLDS: Record<Race | string, {
     obese: number;
 }> = {
     asian: { underweight: 18.5, normal: 23, overweight: 27.5, obese: 27.5 },
-    caucasian: { underweight: 18.5, normal: 25, overweight: 30, obese: 30 },
+    other: { underweight: 18.5, normal: 25, overweight: 30, obese: 30 },
 };
 
 
@@ -156,6 +156,7 @@ function evaluate_bmi(bmi: number, age: number, gender: Gender, race: Race): BMI
     } else if (bmi < thresholds.normal) {
         status = "Bình thường";
         message = "Cân nặng của bạn trong mức khỏe mạnh";
+        recommendation = "Duy trì chế độ ăn uống và vận động hợp lý";
     } else if (bmi < thresholds.overweight) {
         status = "Thừa cân";
         message = "Bạn có nguy cơ về sức khỏe nếu không kiểm soát cân nặng";
@@ -195,7 +196,7 @@ function evaluate_overall_health(bmi: number, age: number, gender: Gender, race:
     }
 
     evaluation.push(`Giới tính: ${gender === 'male' ? "Nam - Thường có cơ bắp nhiều hơn" : "Nữ - Cần chú ý cân bằng mỡ và cơ"}`);
-    evaluation.push(`Chủng tộc: ${race} - Áp dụng ngưỡng sức khỏe phù hợp`);
+    evaluation.push(`Chủng tộc: ${race === 'asian' ? 'Châu Á' : 'Người không phải châu Á'} - Áp dụng ngưỡng sức khỏe phù hợp`);
 
     let overall_status = "Sức khỏe tổng quan: ";
     if (bmiEval.status === "Bình thường" && age < 65) {

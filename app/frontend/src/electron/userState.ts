@@ -1,17 +1,19 @@
 type UserData = {
-    race: string;
-    gender: string;
+    race: 'asian' | 'other';
+    gender: 'male' | 'female';
     age: number;
     height: number;
     weight: number;
+    activityFactor: number;
 };
 
 let userData: UserData = {
-    race: "",
-    gender: "",
+    race: "asian",
+    gender: "male",
     age: 0,
     height: 0,
-    weight: 0
+    weight: 0,
+    activityFactor: 0
 };
 
 const userState = {
@@ -19,18 +21,34 @@ const userState = {
         userData[key] = value;
     },
 
+    update(partial: Partial<UserData>) {
+        Object.assign(userData, partial);
+    },
+
     get(key?: keyof UserData) {
         return key ? userData[key] : userData;
     },
 
     reset() {
-        userData = { race: "", gender: "", age: 0, height: 0, weight: 0 };
+        userData = { race: "asian", gender: "male", age: 0, height: 0, weight: 0, activityFactor: 0 };
     },
 
-    isComplete(): boolean {
-        const requiredKeys: (keyof UserData)[] = ["race", "age", "height", "weight", "gender"];
-        return requiredKeys.every((key) => userData[key] !== undefined);
-    }
+    isComplete(allowZeroKeys: (keyof UserData)[] = []): boolean {
+        const requiredKeys: (keyof UserData)[] = ["race", "age", "height", "weight", "gender", "activityFactor"];
+    
+        return requiredKeys.every((key) => {
+            const value = userData[key];
+    
+            if (value === undefined) return false;
+    
+            if (typeof value === 'number') {
+                // Cho phép = 0 nếu key nằm trong allowZeroKeys
+                return allowZeroKeys.includes(key) || value > 0;
+            }
+    
+            return true;
+        });
+    }    
 };
 
 export default userState;

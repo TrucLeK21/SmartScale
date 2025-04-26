@@ -4,9 +4,10 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     startBLE: () => ipcSend('start-ble'),
     startFaceAnalyzer: (data) => ipcSend('start-face', data),
     onGettingWeight: (callback) => ipcOn('weight-data', callback),
-    onFaceData: (callback) => ipcOn('face-data', callback),
-    getMetrics:  (activityFactor) => ipcInvoke<'get-metrics', HealthRecord>('get-metrics', activityFactor),
+    getMetrics:  (faceData) => ipcInvoke<'get-metrics', HealthRecord>('get-metrics', faceData),
     resetUserState: () => ipcSend('reset-user-state'),
+    getFaceData: () => ipcInvoke<'get-face-data', FaceData>('get-face-data'),
+    rotateCamera: (direction) => ipcSend('rotate-camera', direction),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(
@@ -32,8 +33,14 @@ function ipcOn<Key extends keyof EventPayloadMapping>(
 }
 
 function ipcInvoke<Key extends keyof EventPayloadMapping, Res = unknown>(
+    key: Key
+): EventPayloadMapping[Key] extends void ? Promise<Res> : never;
+
+function ipcInvoke<Key extends keyof EventPayloadMapping, Res = unknown>(
     key: Key,
     payload: EventPayloadMapping[Key]
-): Promise<Res> {
+): Promise<Res>;
+
+function ipcInvoke(key: string, payload?: any): Promise<any> {
     return electron.ipcRenderer.invoke(key, payload);
 }
