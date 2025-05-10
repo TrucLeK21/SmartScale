@@ -160,7 +160,7 @@ function evaluate_bmi(bmi: number, age: number, gender: Gender, race: Race): BMI
     } else if (bmi < thresholds.overweight) {
         status = "Thừa cân";
         message = "Bạn có nguy cơ về sức khỏe nếu không kiểm soát cân nặng";
-        recommendation = "Giảm cân bằng chế độ ăn và tập thể dục";
+        recommendation = "Kiểm soát cân nặng bằng chế độ ăn uống lành mạnh và tập thể dục đều đặn";
     } else {
         status = "Béo phì";
         message = "Nguy cơ cao về bệnh tim mạch, tiểu đường";

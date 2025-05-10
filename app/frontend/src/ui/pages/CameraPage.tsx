@@ -5,11 +5,11 @@ import { Camera } from "@mediapipe/camera_utils";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingScreen from "../components/LoadingScreen";
 import { useNavigate } from "react-router-dom";
 import { analyzeFaceSound } from "../../assets/sounds";
+import { showToast } from "../utils/toastUtils";
 
 const resolutions = [
   { label: "640x480", width: 640, height: 480 },
@@ -37,7 +37,8 @@ const Face: React.FC = () => {
   const handleCapture = useCallback(() => {
     const video = webcamRef.current?.video;
     if (!video) {
-      toast.error("Failed to capture photo: Video not available");
+      showToast.error("Failed to capture photo: Video not available");
+      // toast.error("Failed to capture photo: Video not available");
       return;
     }
   
@@ -46,7 +47,8 @@ const Face: React.FC = () => {
     tempCanvas.height = cameraView.height;
     const tempCtx = tempCanvas.getContext("2d");
     if (!tempCtx) {
-      toast.error("Failed to capture photo: Canvas context not available");
+      showToast.error("Failed to capture photo: Canvas context not available");
+      // toast.error("Failed to capture photo: Canvas context not available");
       return;
     }
   
@@ -57,7 +59,8 @@ const Face: React.FC = () => {
     croppedCanvas.height = 320;
     const croppedCtx = croppedCanvas.getContext("2d");
     if (!croppedCtx) {
-      toast.error("Failed to capture photo: Cropped canvas context not available");
+      showToast.error("Failed to capture photo: Cropped canvas context not available");
+      // toast.error("Failed to capture photo: Cropped canvas context not available");
       return;
     }
   
@@ -76,14 +79,7 @@ const Face: React.FC = () => {
     const croppedImage = croppedCanvas.toDataURL("image/png");
     window.electronAPI.startFaceAnalyzer(croppedImage);
   
-    toast.success("Ảnh được chụp thành công!", {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: true,
-      closeOnClick: true,
-      pauseOnHover: false,
-      draggable: true,
-    });
+    showToast.success("Ảnh được chụp thành công!");
   
     setTimeout(() => {
       navigate("/weight");
@@ -417,8 +413,6 @@ const Face: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-
-      <ToastContainer />
     </div>
   );
 };

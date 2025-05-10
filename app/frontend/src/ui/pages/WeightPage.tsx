@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingScreen from '../components/LoadingScreen';
 import { analyzeWeightSavedSound, analyzeWeightSound, removeWarnSound } from '../../assets/sounds';
 import { useNavigate } from 'react-router-dom';
+import { showToast } from '../utils/toastUtils';
 
 function WeightDisplayPage() {
     const [weightData, setWeightData] = useState<WeightPayload | null>(null);
@@ -15,31 +15,6 @@ function WeightDisplayPage() {
 
     const handleStartBLE = () => {
         window.electronAPI.startBLE();
-    };
-
-    const handleToastify = (message: string, type: 'success' | 'error' | 'info' | 'warn') => {
-        const config = {
-            position: "top-right" as const,
-            autoClose: 2000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: false,
-            draggable: true,
-        };
-        switch (type) {
-            case 'success':
-                toast.success(message, config);
-                break;
-            case 'error':
-                toast.error(message, config);
-                break;
-            case 'info':
-                toast.info(message, config);
-                break;
-            case 'warn':
-                toast.warn(message, config);
-                break;
-        }
     };
 
     useEffect(() => {
@@ -57,9 +32,9 @@ function WeightDisplayPage() {
                 } else if (data.message?.includes('removed')) {
                     setIsRemoved(true);
                     removeWarnSound().play();
-                    handleToastify(data.message, 'warn');
+                    showToast.warn(data.message);
                 } else {
-                    handleToastify(data.message, 'info');
+                    showToast.info(data.message);
                 }
             }
 
@@ -71,7 +46,7 @@ function WeightDisplayPage() {
             setIsStable(data.isStable ?? false);
 
             if (data.isStable) {
-                handleToastify("Cân nặng đã được cập nhật!", 'success');
+                showToast.success("Cân nặng đã được cập nhật!");
                 analyzeWeightSavedSound().play();
                 setTimeout(() => {
                     navigate("/info");
@@ -114,7 +89,6 @@ function WeightDisplayPage() {
                     {weightData?.weight !== undefined ? `${weightData.weight.toFixed(1)} kg` : '--.- kg'}
                 </div>
             </div>
-            <ToastContainer />
         </div>
     );
 }

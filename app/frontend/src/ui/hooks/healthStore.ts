@@ -23,6 +23,8 @@ interface HealthStore {
 
     // Xóa toàn bộ dữ liệu
     clear: () => void;
+
+    getRecord: () => HealthRecord | null;
 }
 
 const useHealthStore = create<HealthStore>((set, get) => ({
@@ -57,6 +59,8 @@ const useHealthStore = create<HealthStore>((set, get) => ({
             activityFactor: 0,
             record: null,
     }),
+
+    getRecord: () => get().record,
 }));
 
 export default useHealthStore;

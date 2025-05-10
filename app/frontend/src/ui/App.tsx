@@ -4,11 +4,12 @@ import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import './App.css';
 import CameraPage from './pages/CameraPage';
 import { Navigate } from "react-router-dom";
-import HealthResultPage from './pages/HealthResultPage';
 import WeightDisplayPage from './pages/WeightPage';
 import InfoConfirmScreen from './pages/InfoConfirmPage';
 import QRCodePage from './pages/QRCodePage';
-import ClickableCard from './pages/TestPage';
+import AIPage from './pages/AIPage';
+import TestPage from './pages/TestPage';
+import HealthResultPage from './pages/HealthResultPage';
 
 
 function App() {
@@ -24,7 +25,8 @@ function App() {
             <Route path="/weight" element={<WeightDisplayPage/>}/>
             <Route path="/info" element={<InfoConfirmScreen/>} />
             <Route path="/qrcode" element={<QRCodePage/>}/>
-            <Route path="/test" element={<ClickableCard/>}/>
+            <Route path="/ai" element={<AIPage/>}/>
+            <Route path="/test" element={<TestPage/>}/>
           </Routes>
         </MainLayout>
       </Router>

@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { activityWarnSound, analyzeActivitySound } from '../../assets/sounds';
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import HoldableNumberPicker from '../components/NumberPickerComponent';
 import LoadingScreen from '../components/LoadingScreen';
 import useHealthStore from '../hooks/healthStore';
 import { useNavigate } from 'react-router-dom';
+import { showToast } from '../utils/toastUtils';
 
 const activityLevels = [
     { id: 1, label: 'Ít vận động', description: 'Ngồi nhiều, ít đi lại', value: 1.2 },
@@ -56,9 +56,9 @@ const InfoConfirmScreen: React.FC = () => {
                 analyzeActivitySound().play();
             } catch (error: unknown) {
                 if (error instanceof Error) {
-                    handleToastify(`Có lỗi xảy ra khi lấy dữ liệu khuôn mặt: ${error.message}`, "error");
+                    showToast.error(`Có lỗi xảy ra khi lấy dữ liệu khuôn mặt: ${error.message}`);
                 } else {
-                    handleToastify(`Lỗi không xác định: ${error}`, "error");
+                    showToast.error(`Lỗi không xác định: ${error}`);
                 }
             }
         };
@@ -66,21 +66,10 @@ const InfoConfirmScreen: React.FC = () => {
         getFaceData();
     }, []);
 
-    const handleToastify = (message: string, type: 'success' | 'error' | 'info' | 'warn') => {
-        toast[type](message, {
-            position: "top-right",
-            autoClose: 2000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: false,
-            draggable: true,
-        });
-    };
-
     const handleConfirm = async () => {
         if (selected === null) {
             activityWarnSound().play();
-            handleToastify("Vui lòng chọn mức độ vận động!", "warn");
+            showToast.warn("Vui lòng chọn mức độ vận động!");
             return;
         }
     
@@ -106,14 +95,14 @@ const InfoConfirmScreen: React.FC = () => {
                 navigate("/result");
             } catch (error: unknown) {
                 if (error instanceof Error) {
-                    handleToastify(`Có lỗi xảy ra khi tính toán chỉ số: ${error.message}`, "error");
+                    showToast.error(`Có lỗi xảy ra khi tính toán chỉ số: ${error.message}`);
                 } else {
-                    handleToastify(`Lỗi không xác định khi tính toán chỉ số: ${error}`, "error");
+                    showToast.error(`Lỗi không xác định khi tính toán chỉ số: ${error}`);
                 }
             }
     
         } else {
-            handleToastify("Không tìm thấy mức độ vận động phù hợp!", "error");
+            showToast.error("Không tìm thấy mức độ vận động phù hợp!");
         }
     };
 
@@ -185,7 +174,6 @@ const InfoConfirmScreen: React.FC = () => {
     return isLoading ? (
         <>
             <LoadingScreen message={"Getting face data..."} />
-            <ToastContainer />
         </>
     ) : (
         <div className="container-fluid d-flex flex-column align-items-center justify-content-between" style={styles.container}>
@@ -238,7 +226,6 @@ const InfoConfirmScreen: React.FC = () => {
                 </button>
             </div>
     
-            <ToastContainer />
     
             {/* Modal chỉnh sửa thông tin */}
             <Modal show={showModal} onHide={() => setShowModal(false)} centered>

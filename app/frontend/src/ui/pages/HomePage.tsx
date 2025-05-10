@@ -1,6 +1,6 @@
 import CardComponent from '../components/CardComponent';
 import bodyCheckIcon from '../../assets/body-check-icon.png';
-import balanceIcon from '../../assets/balance-icon.png';
+// import balanceIcon from '../../assets/balance-icon.png';
 import historyIcon from '../../assets/history-icon.svg';
 import { greetingSound } from '../../assets/sounds';
 import useHealthStore from '../hooks/healthStore';
@@ -21,11 +21,6 @@ function HomePage() {
                     title='Phân tích sức khỏe'
                     navigateTo='/camera'
                     callback={startAnalyzeCallback}
-                />
-                <CardComponent 
-                    imageUrl={balanceIcon}
-                    title='Kiểm tra thăng bằng'
-                    navigateTo=''
                 />
                 <CardComponent 
                     imageUrl={historyIcon}

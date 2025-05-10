@@ -2,6 +2,7 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
+  "author": "Trucle",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -9,11 +10,11 @@
     "dev:react": "vite",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
     "build": "tsc -b && vite build",
-    "rebuild": "electron-rebuild",
     "lint": "eslint .",
     "preview": "vite preview",
     "transpile:electron": "tsc --project src/electron/tsconfig.json",
-    "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64"
+    "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -38,6 +39,7 @@
     "react-use-face-detection": "^1.0.2",
     "react-webcam": "^7.2.0",
     "serialport": "^13.0.0",
+    "swiper": "^11.2.6",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -50,7 +52,6 @@
     "cross-env": "^7.0.3",
     "electron": "^35.1.2",
     "electron-builder": "^26.0.12",
-    "electron-rebuild": "^3.2.9",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",

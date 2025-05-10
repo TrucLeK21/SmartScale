@@ -14,6 +14,16 @@ let port: SerialPort | null = null;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let parser: ReadlineParser | null = null;
 
+const checkPortExists = async (portPath: string): Promise<boolean> => {
+    try {
+        const ports = await SerialPort.list();
+        return ports.some(port => port.path === portPath);
+    } catch (err: unknown) {
+        console.error('Error listing serial ports:', (err as Error).message);
+        return false;
+    }
+};
+
 const openSerialPort = () => {
     if (!port || !port.isOpen) {
         port = new SerialPort({ path: "COM8", baudRate: 115200 });
@@ -92,12 +102,11 @@ app.on("ready", () => {
         const faceScriptPath = getPythonScriptPath('face_analyzer.py');
     
         const faceProcess = spawn(pythonEnvPath, [faceScriptPath, '--image', savePath]);
-
-        console.log(pythonEnvPath, faceScriptPath, '--image', savePath);
     
         faceProcess.stdout.on('data', (data) => {
             try {
                 const message = JSON.parse(data.toString());
+                console.log('Python face analyzing output:', message);
     
                 if (message.type === 'success') {
                     userState.set('race', message.race === 'AI' ? 'asian' : 'other');
@@ -192,7 +201,14 @@ app.on("ready", () => {
         return userMetrics;
     });
 
-    ipcMain.on("rotate-camera", (event, direction) => {
+    ipcMain.on("rotate-camera", async (event, direction) => {
+        const isPortAvailable = await checkPortExists('COM8');
+        if (!isPortAvailable) {
+            console.error('Port COM8 does not exist, skipping command send');
+            event.reply('serial-response', { success: false, message: 'Cổng COM8 không tồn tại' });
+            return;
+        }
+
         openSerialPort(); // Ensure the serial port is open before sending the command
     
         let command = "";
