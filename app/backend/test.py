@@ -1,104 +1,81 @@
 import serial
+import threading
 import time
-import serial.tools.list_ports
+from pynput import keyboard
 
-# Function to list available serial ports
-def list_serial_ports():
-    ports = serial.tools.list_ports.comports()
-    if not ports:
-        print("No serial ports found.")
-        return None
-    for port in ports:
-        print(f"Port: {port.device}, Description: {port.description}")
-    return [port.device for port in ports]
+# Cấu hình cổng serial
+PORT_NAME = 'COM8'  # Thay đổi nếu cần
+BAUD_RATE = 115200
 
-# Function to open serial port with retries
-def open_serial_port(port_name, baudrate, retries=3, delay=2):
-    for attempt in range(retries):
-        try:
-            ser = serial.Serial(
-                port=port_name,
-                baudrate=baudrate,
-                timeout=1  # 1-second timeout for reading
-            )
-            print(f"Serial port {port_name} opened successfully")
-            return ser
-        except serial.SerialException as e:
-            print(f"Attempt {attempt + 1} failed: {e}")
-            if attempt < retries - 1:
-                time.sleep(delay)
-    raise serial.SerialException(f"Could not open serial port {port_name} after {retries} retries")
+# Mở cổng serial
+ser = serial.Serial(PORT_NAME, BAUD_RATE, timeout=1)
 
-# Function to wait for SERVO-START message while printing all received messages
-def wait_for_servo_start(ser, timeout=30):
-    start_time = time.time()
-    print("Waiting for SERVO-START message...")
-    
-    while time.time() - start_time < timeout:
-        try:
-            line = ser.readline().decode('utf-8').strip()
-            if line:
-                print(f"Received: {line}")
-                if line == "SERVO-START":
-                    print("SERVO-START detected. Servo is ready.")
-                    return True
-        except UnicodeDecodeError:
-            print("Received invalid data, skipping...")
-        time.sleep(0.01)  # Short delay to avoid CPU overload
-    raise TimeoutError("Timeout waiting for SERVO-START message")
+# Trạng thái phím để tránh gửi lệnh lặp
+key_state = {
+    'up': False,
+    'down': False
+}
 
-# Function to read and print all serial messages continuously
-def read_serial_messages(ser):
-    print("Continuously reading serial messages...")
+# Hàm gửi lệnh
+def send_command(cmd):
+    if ser.is_open:
+        ser.write((cmd + "\n").encode())
+        print(f"Đã gửi: {cmd}")
+    else:
+        print("Serial port chưa mở")
+
+# Xử lý khi ấn phím
+def on_press(key):
+    try:
+        if key == keyboard.Key.up and not key_state['up']:
+            key_state['up'] = True
+            send_command("SERVO-MOVEUP")
+        elif key == keyboard.Key.down and not key_state['down']:
+            key_state['down'] = True
+            send_command("SERVO-MOVEDN")
+        elif key.char == 'g':  # Nhấn phím 'g' để lấy góc
+            send_command("SERVO-GETANGLE")
+    except AttributeError:
+        pass
+
+# Xử lý khi nhả phím
+def on_release(key):
+    if key == keyboard.Key.up:
+        key_state['up'] = False
+        send_command("SERVO-STOP")
+    elif key == keyboard.Key.down:
+        key_state['down'] = False
+        send_command("SERVO-STOP")
+    elif key == keyboard.Key.esc:
+        print("Thoát chương trình")
+        return False
+
+# Thread để đọc dữ liệu trả về
+def read_serial():
+    buffer = []
     while True:
         try:
-            line = ser.readline().decode('utf-8').strip()
-            if line:
-                print(f"Received: {line}")
-        except UnicodeDecodeError:
-            print("Received invalid data, skipping...")
-        except KeyboardInterrupt:
-            print("Stopped reading serial messages")
+            if ser.in_waiting > 0:
+                line = ser.readline().decode().strip()
+                if line.startswith("ANGLE-"):
+                    value = int(line.split("-")[1])
+                    buffer.append(value)
+                    if len(buffer) == 5:
+                        average = sum(buffer) / 5
+                        print(f"Góc trung bình: {average}")
+                        buffer.clear()
+                else:
+                    print(f"Dữ liệu khác nhận được: {line}")
+        except Exception as e:
+            print("Lỗi khi đọc Serial:", e)
             break
-        time.sleep(0.01)  # Short delay to avoid CPU overload
 
-# Main function to communicate with servo and print all serial messages
-def communicate_with_servo(port_name='COM8', baudrate=115200):
-    # List available ports to confirm COM8 exists
-    available_ports = list_serial_ports()
-    if not available_ports or port_name not in available_ports:
-        print(f"Port {port_name} not found. Available ports: {available_ports}")
-        return
+# Bắt đầu thread đọc serial
+threading.Thread(target=read_serial, daemon=True).start()
 
-    ser = None
-    try:
-        # Open serial port
-        ser = open_serial_port(port_name, baudrate)
-        time.sleep(3)  # Wait for ESP32 initialization (e.g., after reset)
+# Bắt đầu lắng nghe bàn phím
+with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+    listener.join()
 
-        # Wait for SERVO-START while printing all messages
-        wait_for_servo_start(ser)
-
-        # Send SERVO-GETANGLE command
-        command = b'SERVO-GETANGLE\n'
-        ser.write(command)
-        print(f"Sent: {command.decode().strip()}")
-
-        # Continue reading and printing all serial messages
-        read_serial_messages(ser)
-
-    except serial.SerialException as e:
-        print(f"Serial error: {e}")
-    except TimeoutError as e:
-        print(f"Timeout error: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-    finally:
-        # Close the serial port
-        if ser and ser.is_open:
-            ser.close()
-            print(f"Serial port {port_name} closed")
-
-# Run the script
-if __name__ == "__main__":
-    communicate_with_servo(port_name='COM8', baudrate=115200)
+# Đóng serial khi thoát
+ser.close()
