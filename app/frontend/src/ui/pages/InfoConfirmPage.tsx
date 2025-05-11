@@ -63,7 +63,15 @@ const InfoConfirmScreen: React.FC = () => {
             }
         };
     
-        getFaceData();
+        const displayData = {
+            age: 25,
+            race: 'Châu Á',
+            gender: 'Nam'
+        };
+        setUserData(displayData);
+        setIsLoading(false);
+
+        // getFaceData();
     }, []);
 
     const handleConfirm = async () => {
@@ -178,7 +186,7 @@ const InfoConfirmScreen: React.FC = () => {
     ) : (
         <div className="container-fluid d-flex flex-column align-items-center justify-content-between" style={styles.container}>
             <div className="d-flex flex-column align-items-center justify-content-center gap-2 position-relative" style={styles.frame}>
-                <h2 className="text-center mb-4">Xác nhận thông tin của bạn</h2>
+                <h3 className="text-center mb-3">Xác nhận thông tin của bạn</h3>
     
                 <div className="w-100 mb-4">
                     <div className="row g-3 text-center">
@@ -204,7 +212,7 @@ const InfoConfirmScreen: React.FC = () => {
                         const isSelected = selected === activity.id;
     
                         return (
-                            <div className="col-12 col-md-6" key={activity.id}>
+                            <div className="col-12 col-md-4" key={activity.id}>
                                 <div
                                     className="border rounded-4 shadow-sm"
                                     style={{
@@ -263,7 +271,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         height: '100%',
     },
     card: {
-        padding: '1.5rem',
+        padding: '1rem',
         cursor: 'pointer',
         transition: '0.3s',
         touchAction: 'manipulation',

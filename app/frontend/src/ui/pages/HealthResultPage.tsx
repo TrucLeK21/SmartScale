@@ -51,11 +51,15 @@ const HealthResultPage: React.FC = () => {
 
   // const record = mockData;
   // const isComplete = true;
+
+  // useHealthStore(state => state.set ({
+  //   record: mockData
+  // }))
   const swiperRef = useRef<SwiperType | null>(null);
   const [isBeginning, setIsBeginning] = useState(false);
   const [isEnd, setIsEnd] = useState(true);
 
-  const record = useHealthStore(state => state.record);
+  const record = useHealthStore(state => state.getRecord());
   const isComplete = useHealthStore(state => state.isComplete);
 
   const onSwiper = (swiper: SwiperType | null) => {
