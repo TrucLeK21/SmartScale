@@ -18,7 +18,7 @@ function App() {
       <Router>
         <MainLayout>
           <Routes>
-            <Route path="/" element={<Navigate to="/info" />} />
+            <Route path="/" element={<Navigate to="/camera" />} />
             <Route path="/home" element={<HomePage />} />
             <Route path='/camera' element={<CameraPage/>}/>
             <Route path="/result" element={<HealthResultPage/>} />

@@ -63,15 +63,16 @@ const InfoConfirmScreen: React.FC = () => {
             }
         };
     
-        const displayData = {
-            age: 25,
-            race: 'Châu Á',
-            gender: 'Nam'
-        };
-        setUserData(displayData);
-        setIsLoading(false);
+        // Mock data for testing
+        // const displayData = {
+        //     age: 25,
+        //     race: 'Châu Á',
+        //     gender: 'Nam'
+        // };
+        // setUserData(displayData);
+        // setIsLoading(false);
 
-        // getFaceData();
+        getFaceData();
     }, []);
 
     const handleConfirm = async () => {

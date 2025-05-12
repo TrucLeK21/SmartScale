@@ -7,6 +7,7 @@ import fs from 'fs';
 import userState from './userState.js';
 import calculateRecord from './calculateMetrics.js';
 import { SerialPort, ReadlineParser } from 'serialport';
+import crypto from 'crypto';
 
 const SHOW_PYTHON_ERRORS = false;
 let faceRecognitionDone = false;
@@ -83,25 +84,53 @@ app.on("ready", () => {
         faceRecognitionDone = false;
         const matches = base64Data.match(/^data:image\/(png|jpeg);base64,(.+)$/);
         if (!matches) return;
-    
-        const extension = matches[1];
+
+        // const extension = matches[1];
         const data = matches[2];
         const buffer = Buffer.from(data, 'base64');
-    
-        const savePath = path.join(getSavedImagesPath(), `screenshot-${Date.now()}.${extension}`);
-    
-        fs.writeFile(savePath, buffer, (err) => {
+
+        // Tạo khóa và IV (khóa cần lưu lại dùng để giải mã phía Python)
+        const key = crypto.randomBytes(32); // AES-256
+        const iv = crypto.randomBytes(16);  // 128-bit IV
+
+        // Mã hóa ảnh bằng AES-CBC
+        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+        const encryptedBuffer = Buffer.concat([cipher.update(buffer), cipher.final()]);
+
+        const encryptedPath = path.join(getSavedImagesPath(), `screenshot-${Date.now()}.enc`);
+
+        fs.writeFile(encryptedPath, encryptedBuffer, (err) => {
             if (err) {
-                console.error('Failed to save image:', err);
+                console.error('Failed to save encrypted image:', err);
             } else {
-                console.log('Image saved to:', savePath);
+                console.log('Encrypted image saved to:', encryptedPath);
             }
         });
-    
+
+        // Gọi script Python và truyền thêm key + iv (mã hóa base64 để an toàn)
         const pythonEnvPath = getPythonEnvPath();
         const faceScriptPath = getPythonScriptPath('face_analyzer.py');
-    
-        const faceProcess = spawn(pythonEnvPath, [faceScriptPath, '--image', savePath]);
+
+        const faceProcess = spawn(pythonEnvPath, [
+            faceScriptPath,
+            '--image', encryptedPath,
+            '--key', key.toString('base64'),
+            '--iv', iv.toString('base64'),
+            '--angle', '55' // Thay đổi góc nghiêng nếu cần
+        ]);
+
+        const args = [
+            '--image', encryptedPath,
+            '--key', key.toString('base64'),
+            '--iv', iv.toString('base64'),
+            '--angle', '55' // Thay đổi góc nghiêng nếu cần
+        ];
+
+        console.log('Running command:', pythonEnvPath, '[faceScriptPath]', ...args);
+
+        faceProcess.stdout.on('data', (data) => {
+            console.log(`Python output: ${data}`);
+        });
     
         faceProcess.stdout.on('data', (data) => {
             try {
