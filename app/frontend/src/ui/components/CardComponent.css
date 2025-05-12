@@ -1,0 +1,26 @@
+.cardTitle {
+    font-weight: bold;
+    font-size: 2rem;
+    color: #49AA39;
+}
+
+
+.cardButton {
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-sizing: border-box;
+    background-color: white;
+    cursor: pointer;
+    border-radius: 20px;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 315px;
+    height: 315px;
+}
+
+  
+.cardButton:active {
+    transform: scale(0.95);
+}
