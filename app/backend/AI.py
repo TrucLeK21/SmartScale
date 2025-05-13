@@ -15,7 +15,8 @@ client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
 def build_prompt(user_data):
-    record = sorted(user_data["records"], key=lambda x: x["date"])[-1]  # Lấy record mới nhất
+    # record = sorted(user_data["records"], key=lambda x: x["date"])[-1]  # Lấy record mới nhất
+    record = user_data["records"]
 
     # Map activityFactor -> mô tả
     activity_levels = {
@@ -31,7 +32,6 @@ def build_prompt(user_data):
     Bạn là một chuyên gia về **dinh dưỡng, thể hình và sức khoẻ tổng quát**. Dưới đây là thông tin của một người dùng, hãy phân tích dữ liệu và tạo ra **kế hoạch cá nhân hóa** bao gồm tổng quan sức khoẻ, khuyến nghị dinh dưỡng và tập luyện. Kết quả phải ở dạng **JSON** đúng chuẩn, như ví dụ được yêu cầu.
 
     ## Thông tin người dùng:
-    - Họ tên: {user_data.get("fullName", "Không có")}
     - Tuổi: {record.get("age")}
     - Giới tính: {user_data.get("gender")}
     - Chủng tộc: {user_data.get("race")}

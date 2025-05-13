@@ -21,7 +21,7 @@ CAMERA_TO_GROUND_MINUS_EYE = 117    # Camera height offset
 
 # Helper function: calculate vertical height component
 def calc_opposite(hypotenuse, angle_degrees):
-    print(f"Calculating opposite side with hypotenuse: {hypotenuse}, angle: {angle_degrees}")
+    # print(f"Calculating opposite side with hypotenuse: {hypotenuse}, angle: {angle_degrees}")
     angle_radians = math.radians(angle_degrees)
     return hypotenuse * math.sin(angle_radians)
 
@@ -53,7 +53,7 @@ def estimate_height_from_image(image, angle_degrees, ethnicity):
         h2 = calc_opposite(d, angle_degrees)
 
         height = h1 + h2 + h3
-        return {"type": "success", "height": round(height, 2)}
+        return {"type": "success", "height": int(height)}
 
     except Exception as e:
         return {"type": "error", "message": f"Processing failed: {str(e)}"}

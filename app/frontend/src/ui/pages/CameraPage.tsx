@@ -30,6 +30,7 @@ const Face: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isSoundPlayed = useRef(false);
   const faceInBoxStartTimeRef = useRef<number | null>(null);
   const lastCommandRef = useRef<string | null>(null);
   const navigate = useNavigate();
@@ -157,6 +158,11 @@ const Face: React.FC = () => {
         const verticalThreshold = fixedBox.height * 0.1; // 10% of box height as threshold
     
         if (isInside) {
+          if (!isSoundPlayed.current) {
+            analyzeFaceSound().play();
+            isSoundPlayed.current = true;
+          }
+
           if (lastCommandRef.current !== "stop") {
             window.electronAPI.rotateCamera("stop");
             lastCommandRef.current = "stop";
@@ -215,9 +221,9 @@ const Face: React.FC = () => {
         });
         camera
           .start()
-          .then(() => {
-            analyzeFaceSound().play();
-          })
+          // .then(() => {
+          //   analyzeFaceSound().play();
+          // })
           .catch((err) => {
             if (!isCancelled) {
               setError(`Failed to start camera: ${err.message}`);

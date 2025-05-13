@@ -116,17 +116,17 @@ app.on("ready", () => {
             '--image', encryptedPath,
             '--key', key.toString('base64'),
             '--iv', iv.toString('base64'),
-            '--angle', '55' // Thay đổi góc nghiêng nếu cần
+            '--angle', '75' // Thay đổi góc nghiêng nếu cần
         ]);
 
-        const args = [
-            '--image', encryptedPath,
-            '--key', key.toString('base64'),
-            '--iv', iv.toString('base64'),
-            '--angle', '55' // Thay đổi góc nghiêng nếu cần
-        ];
+        // const args = [
+        //     '--image', encryptedPath,
+        //     '--key', key.toString('base64'),
+        //     '--iv', iv.toString('base64'),
+        //     '--angle', '55' // Thay đổi góc nghiêng nếu cần
+        // ];
 
-        console.log('Running command:', pythonEnvPath, '[faceScriptPath]', ...args);
+        // console.log('Running command:', pythonEnvPath, '[faceScriptPath]', ...args);
 
         faceProcess.stdout.on('data', (data) => {
             console.log(`Python output: ${data}`);
@@ -141,7 +141,7 @@ app.on("ready", () => {
                     userState.set('race', message.race === 'AI' ? 'asian' : 'other');
                     userState.set('age', message.age);
                     userState.set('gender', message.gender === "Man" ? "male" : 'female');
-    
+                    userState.set('height', message.height);
                     faceRecognitionDone = true;
                 }
             } catch (e) {
@@ -163,7 +163,7 @@ app.on("ready", () => {
     
     
     ipcMain.handle("get-face-data", async () => {
-        const timeout = 10000;
+        const timeout = 15000;
         const pollInterval = 100;
     
         const waitForRecognition = () => new Promise<void>((resolve, reject) => {
@@ -189,7 +189,7 @@ app.on("ready", () => {
             throw new Error("User data is not available or invalid");
         }
     
-        if (!userState.isComplete(["activityFactor", "height"])) {
+        if (!userState.isComplete(["activityFactor"])) {
             console.log('User data is incomplete:', userData);
             throw new Error("User data is incomplete");
         }
@@ -209,7 +209,7 @@ app.on("ready", () => {
 
     ipcMain.handle("get-metrics", (_event, faceData) => {
         userState.update(faceData);
-        userState.set('height', 170); // Set height to a default value for testing
+        // userState.set('height', 170); // Set height to a default value for testing
 
         const userData = userState.get();
         console.log('User data:', userData);

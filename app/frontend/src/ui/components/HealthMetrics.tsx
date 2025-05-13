@@ -78,7 +78,7 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({ data }) => {
                       overlay={<Tooltip id={`tooltip-${index}`}>{explanation}</Tooltip>}
                     >
                       <div className="info-icon-wrapper">
-                        <span className="info-icon">?</span>
+                        <span className="info-icon fs-5">?</span>
                       </div>
                     </OverlayTrigger>
                   )}

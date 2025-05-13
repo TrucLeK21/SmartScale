@@ -89,7 +89,7 @@ class FaceAnalyzer:
             result = self.analyze_face(resized_image)
         
             if result.get("type") == "success" and "race" in result:
-                race = "asian" if result["race"] == "AI" else "caucasian"
+                race = "asian" if result["race"] == "AI" else "causian"
                 height_result = estimate_height_from_image(resized_image, angle_degrees, race)
 
                 if height_result.get("type") == "success":
