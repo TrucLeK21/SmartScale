@@ -24,6 +24,7 @@ type EventPayloadMapping = {
     'reset-user-state': void;
     'get-face-data': void;
     'rotate-camera': Direction;
+    'get-ai-response': UserData;
 };
 
 type UserData = {
@@ -63,6 +64,29 @@ type Direction = "up" | "down" | "stop" | "default";
 
 type UnsubscribeFunction = () => void;
 
+type AIResponse = {
+    overview: string;
+    diet: {
+        calories: {
+            maintain: string;
+            cut: string;
+            bulk: string;
+        };
+        macros: {
+            protein: string;
+            carbs: string;
+            fats: string;
+        };
+        supplements: string;
+    };
+    workout: {
+        cardio: string;
+        strength: string[];
+        frequency: string;
+        note: string;
+    };
+};
+
 interface Window {
     electronAPI: {
         startBLE: () => void;
@@ -72,5 +96,6 @@ interface Window {
         resetUserState: () => void;
         getFaceData: () => Promise<FaceData>;
         rotateCamera: (direction: Direction) => void;
+        getAIResponse: (user_data: UserData) => Promise<AIResponse>;
     };
 }

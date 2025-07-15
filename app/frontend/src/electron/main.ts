@@ -44,7 +44,7 @@ app.on("ready", () => {
     } else {
         mainWindow.loadFile(path.join(app.getAppPath(), '/dist-react/index.html'));
     }
-    
+
 
     ipcMain.on('start-ble', () => {
         const pythonEnvPath = getPythonEnvPath();
@@ -131,12 +131,12 @@ app.on("ready", () => {
         faceProcess.stdout.on('data', (data) => {
             console.log(`Python output: ${data}`);
         });
-    
+
         faceProcess.stdout.on('data', (data) => {
             try {
                 const message = JSON.parse(data.toString());
                 console.log('Python face analyzing output:', message);
-    
+
                 if (message.type === 'success') {
                     userState.set('race', message.race === 'AI' ? 'asian' : 'other');
                     userState.set('age', message.age);
@@ -149,23 +149,23 @@ app.on("ready", () => {
                 console.error('Failed to parse Python output:', e);
             }
         });
-    
+
         faceProcess.stderr.on('data', (data) => {
             if (SHOW_PYTHON_ERRORS) {
                 console.error('Error from Python process:', data.toString());
             }
         });
-    
+
         faceProcess.on('close', (code) => {
             console.log(`Python face analyzing process exited with code ${code}`);
         });
     });
-    
-    
+
+
     ipcMain.handle("get-face-data", async () => {
         const timeout = 15000;
         const pollInterval = 100;
-    
+
         const waitForRecognition = () => new Promise<void>((resolve, reject) => {
             const startTime = Date.now();
             const interval = setInterval(() => {
@@ -178,30 +178,30 @@ app.on("ready", () => {
                 }
             }, pollInterval);
         });
-    
+
         if (!faceRecognitionDone) {
             await waitForRecognition();
         }
-    
+
         const userData = userState.get();
-    
+
         if (!userData || typeof userData !== "object") {
             throw new Error("User data is not available or invalid");
         }
-    
+
         if (!userState.isComplete(["activityFactor"])) {
             console.log('User data is incomplete:', userData);
             throw new Error("User data is incomplete");
         }
-    
+
         return {
             race: userData.race,
             gender: userData.gender,
             age: userData.age,
         };
     });
-    
-    
+
+
     ipcMain.on('reset-user-state', () => {
         userState.reset();
         console.log('User state reset');
@@ -213,7 +213,7 @@ app.on("ready", () => {
 
         const userData = userState.get();
         console.log('User data:', userData);
-    
+
         if (!userData || typeof userData !== "object") {
             throw new Error("User data is not available or invalid");
         }
@@ -222,11 +222,11 @@ app.on("ready", () => {
             console.log('User data is incomplete:', userData);
             throw new Error("User data is incomplete");
         }
-    
-    
+
+
         // Gọi hàm calculateRecord với các tham số đã được tách
         const userMetrics = calculateRecord(userData.weight, userData.height, userData.age, userData.gender, userData.activityFactor, userData.race);
-    
+
         return userMetrics;
     });
 
@@ -239,14 +239,14 @@ app.on("ready", () => {
         }
 
         openSerialPort(); // Ensure the serial port is open before sending the command
-    
+
         let command = "";
-        
+
         if (direction === "up") command = "SERVO-MOVEUP";
         else if (direction === "down") command = "SERVO-MOVEDN";
         else if (direction === "stop") command = "SERVO-STOP";
         else if (direction === "default") command = "SERVO-MOVEDEFAULT";
-    
+
         if (command) {
             const fullCommand = command + "\n";
             port?.write(fullCommand, (err) => {
@@ -259,6 +259,42 @@ app.on("ready", () => {
                 }
             });
         }
+    });
+
+
+    ipcMain.handle("get-ai-response", async (_event, userData) => {
+        const _baseUrl = "https://health-app-server-j2mc.onrender.com/api/ai/generate-advice"; // Thay bằng URL của server Python
+        try {
+            const response = await fetch(_baseUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_data: userData }),
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            const result = JSON.parse(data.message);
+            return result as AIResponse;
+        } catch (error) {
+            console.error('Error sending message:', error);
+            return {
+                overview: 'Không thể lấy tư vấn từ AI.',
+                diet: {
+                    calories: { maintain: '', cut: '', bulk: '' },
+                    macros: { protein: '', carbs: '', fats: '' },
+                    supplements: ''
+                },
+                workout: {
+                    cardio: '',
+                    strength: [],
+                    frequency: '',
+                    note: ''
+                }
+            };
+        }
+
+
+
     });
 })
 

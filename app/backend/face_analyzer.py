@@ -111,21 +111,44 @@ class FaceAnalyzer:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze a face from an image.")
     parser.add_argument("--image", required=True, help="Path to the image file.")
-    parser.add_argument('--key', required=True, help="Base64 encoded key for decryption.")
-    parser.add_argument('--iv', required=True, help="Base64 encoded IV for decryption.")
+    parser.add_argument('--key', help="Base64 encoded key for decryption.")
+    parser.add_argument('--iv', help="Base64 encoded IV for decryption.")
     parser.add_argument("--maxdim", type=int, default=800, help="Max dimension for image resize (default: 800)")
     parser.add_argument("--angle", type=int, default=0, help="Angle for height estimation (default: 0 degrees)")
+    parser.add_argument("--init", action="store_true", help="Run initial setup (download models, test pipeline)")
+
     args = parser.parse_args()
 
     image_path = args.image
     max_dim = args.maxdim
+    angle_degrees = args.angle
     key = args.key
     iv = args.iv
-    angle_degrees = args.angle
 
     analyzer = FaceAnalyzer(max_dim=max_dim)
+
+    if args.init:
+        # Chạy thử để tải model
+        print(json.dumps({"type": "info", "message": "Running initial setup, downloading models if needed..."}), flush=True)
+        try:
+            image = cv2.imread(image_path)
+            if image is None:
+                raise ValueError("Invalid image path.")
+
+            resized = analyzer.resize_if_needed(image)
+            result = analyzer.analyze_face(resized)
+            print(json.dumps({"type": "info", "message": "Initial setup completed."}), flush=True)
+        except Exception as e:
+            print(json.dumps({"type": "error", "message": f"Init failed: {str(e)}"}), flush=True)
+        sys.exit(0)
+
+    if not key or not iv:
+        print(json.dumps({"type": "error", "message": "Missing encryption key or IV."}), flush=True)
+        sys.exit(1)
+
     analyzer.process_image(image_path, key, iv, angle_degrees)
-    
-    # Delete the image file after processing
+
+    # Optionally delete image after processing
     # if os.path.exists(image_path):
     #     os.remove(image_path)
+
