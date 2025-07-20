@@ -1,0 +1,12 @@
+   main {
+       flex: 1 1 0;
+       margin-left: 240px;
+       height: 100vh;
+   }
+
+   @media (max-width: 992px) {
+       main {
+           margin-left: 100px;
+           /* màn nhỏ hơn 768px thì không margin sidebar */
+       }
+   }

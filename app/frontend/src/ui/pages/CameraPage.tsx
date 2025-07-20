@@ -6,7 +6,7 @@ import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
 import "react-toastify/dist/ReactToastify.css";
-import LoadingScreen from "../components/LoadingScreen";
+import LoadingScreen from "../components/LoadingScreenComponent/LoadingScreen";
 import { useNavigate } from "react-router-dom";
 import { analyzeFaceSound } from "../../assets/sounds";
 import { showToast } from "../utils/toastUtils";

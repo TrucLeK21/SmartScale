@@ -13,7 +13,7 @@ import { faCheck, faDatabase, faDna } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from 'react-router-dom';
 import useHealthStore from '../hooks/healthStore';
 import { showToast } from '../utils/toastUtils';
-import HealthMetrics from '../components/HealthMetrics';
+import HealthMetrics from '../components/HealthMetricsComponent/HealthMetrics';
 
 // const mockData = {
 //     height: 175,

@@ -9,6 +9,7 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     getFaceData: () => ipcInvoke<'get-face-data', FaceData>('get-face-data'),
     rotateCamera: (direction) => ipcSend('rotate-camera', direction),
     getAIResponse: (userData) => ipcInvoke<'get-ai-response', AIResponse>('get-ai-response', userData),
+    startCCCD: (data) => ipcSend('start-cccd', data),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(

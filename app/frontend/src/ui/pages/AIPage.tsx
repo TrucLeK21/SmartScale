@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import LoadingScreen from '../components/LoadingScreen';
+import LoadingScreen from '../components/LoadingScreenComponent/LoadingScreen';
 // import useHealthStore from '../hooks/healthStore';
 
 const user_data1 = {

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import EncryptedQRComponent from "../components/EncryptedQRComponent"
+import EncryptedQRComponent from "../components/EncryptedQRComponent/EncryptedQRComponent"
 import useHealthStore from "../hooks/healthStore";
 // import { useSwiperSlide } from 'swiper/react';
 

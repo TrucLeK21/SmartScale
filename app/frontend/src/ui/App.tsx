@@ -1,5 +1,4 @@
 import HomePage from './pages/HomePage';
-import MainLayout from './layouts/MainLayout';
 import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import './App.css';
 import CameraPage from './pages/CameraPage';
@@ -10,25 +9,33 @@ import QRCodePage from './pages/QRCodePage';
 import AIPage from './pages/AIPage';
 import TestPage from './pages/TestPage';
 import HealthResultPage from './pages/HealthResultPage';
+import DashBoardPage from './pages/DashBoardPage';
+import NewLayout from './layouts/NewLayout';
+import QRScanPage from './pages/QRScanPage';
+// import MainLayout from './layouts/MainLayout';
 
 
 function App() {
   return (
     <>
       <Router>
-        <MainLayout>
+        {/* <MainLayout> */}
+        <NewLayout>
           <Routes>
-            <Route path="/" element={<Navigate to="/ai" />} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/home" element={<HomePage />} />
-            <Route path='/camera' element={<CameraPage/>}/>
-            <Route path="/result" element={<HealthResultPage/>} />
-            <Route path="/weight" element={<WeightDisplayPage/>}/>
-            <Route path="/info" element={<InfoConfirmScreen/>} />
-            <Route path="/qrcode" element={<QRCodePage/>}/>
-            <Route path="/ai" element={<AIPage/>}/>
-            <Route path="/test" element={<TestPage/>}/>
+            <Route path='/camera' element={<CameraPage />} />
+            <Route path="/result" element={<HealthResultPage />} />
+            <Route path="/weight" element={<WeightDisplayPage />} />
+            <Route path="/info" element={<InfoConfirmScreen />} />
+            <Route path="/qrcode" element={<QRCodePage />} />
+            <Route path="/ai" element={<AIPage />} />
+            <Route path="/test" element={<TestPage />} />
+            <Route path="/dashboard" element={<DashBoardPage />} />
+            <Route path="/qr-scan" element={<QRScanPage/>} />
           </Routes>
-        </MainLayout>
+        </NewLayout>
+        {/* </MainLayout> */}
       </Router>
     </>
   );

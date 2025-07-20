@@ -25,6 +25,7 @@ type EventPayloadMapping = {
     'get-face-data': void;
     'rotate-camera': Direction;
     'get-ai-response': UserData;
+    'start-cccd': ParsedCCCD;
 };
 
 type UserData = {
@@ -86,6 +87,15 @@ type AIResponse = {
         note: string;
     };
 };
+type ParsedCCCD = {
+    cccd_id: string;
+    cmnd_id: string;
+    name: string;
+    dob: string;
+    gender: string;
+    address: string;
+    issue_date: string;
+};
 
 interface Window {
     electronAPI: {
@@ -97,5 +107,6 @@ interface Window {
         getFaceData: () => Promise<FaceData>;
         rotateCamera: (direction: Direction) => void;
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
+        startCCCD: (data: ParsedCCCD) => void;
     };
 }

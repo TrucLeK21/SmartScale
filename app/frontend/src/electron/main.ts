@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, screen } from 'electron';
 import path from 'path';
 import { isDev } from './util.js';
 import { getPreloadPath, getPythonEnvPath, getPythonScriptPath, getSavedImagesPath } from './pathResolver.js';
@@ -8,6 +8,8 @@ import userState from './userState.js';
 import calculateRecord from './calculateMetrics.js';
 import { SerialPort, ReadlineParser } from 'serialport';
 import crypto from 'crypto';
+import dayjs from 'dayjs';
+
 
 const SHOW_PYTHON_ERRORS = false;
 let faceRecognitionDone = false;
@@ -32,8 +34,21 @@ const openSerialPort = () => {
     }
 };
 
+type ParsedCCCD = {
+    cccd_id: string;
+    cmnd_id: string;
+    name: string;
+    dob: string;
+    gender: string;
+    address: string;
+    issue_date: string;
+};
+
 app.on("ready", () => {
+    const { width, height } = screen.getPrimaryDisplay().workAreaSize
     const mainWindow = new BrowserWindow({
+        width,
+        height,
         webPreferences: {
             preload: getPreloadPath(),
         }
@@ -292,9 +307,18 @@ app.on("ready", () => {
                 }
             };
         }
+    });
 
+    ipcMain.on('start-cccd', (_evnent, data: ParsedCCCD) => {
+        const age = dayjs().diff(dayjs(data.dob, 'YYYY-MM-DD'), 'year');
 
+        userState.set("age", age);
+        userState.set("gender", data.gender.toLowerCase() === "nam" ? "male" : "female");
+        userState.set("race", 'asian');
 
+        console.log(userState.get());
+        console.log('Parsed CCCD data:', data);
     });
 })
+
 

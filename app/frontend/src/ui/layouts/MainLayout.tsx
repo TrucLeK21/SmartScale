@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
-import NavbarComponent from "../components/NavbarComponent";
-import ToastProvider from "../components/ToastProvider";
+import NavbarComponent from "../components/NavbarComponent/NavbarComponent";
+import ToastProvider from "../components/ToastProviderComponent/ToastProvider";
 import "./MainLayout.css"
 
 

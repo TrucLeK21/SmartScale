@@ -1,4 +1,4 @@
-import HealthMetrics from "../components/HealthMetrics";
+import HealthMetrics from "../components/HealthMetricsComponent/HealthMetrics";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faDatabase, faDna } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";

@@ -1,6 +1,6 @@
 import React from "react";
 import Lottie from "lottie-react";
-import loadingAnimation from "../../assets/loading-animation.json";
+import loadingAnimation from "../../../assets/loading-animation.json";
 
 type LoadingScreenProps = {
   message?: string;

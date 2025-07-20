@@ -1,4 +1,4 @@
-import CardComponent from '../components/CardComponent';
+import CardComponent from '../components/CardComponent/CardComponent';
 import bodyCheckIcon from '../../assets/body-check-icon.png';
 // import balanceIcon from '../../assets/balance-icon.png';
 import historyIcon from '../../assets/history-icon.svg';

@@ -1,7 +1,7 @@
 import React from 'react';
 import CryptoJS from 'crypto-js';
 import { QRCodeSVG } from 'qrcode.react';
-import bkLogo from '../../assets/bkLogo.svg';
+import bkLogo from '../../../assets/bkLogo.svg';
 
 interface EncryptToQRProps {
     data: Omit<HealthRecord, 'overviewScore'> | null;
