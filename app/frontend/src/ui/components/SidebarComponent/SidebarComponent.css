@@ -1,7 +1,7 @@
 .sidebar {
   width: 240px;
   height: 100vh;
-  background-color: #7163BA; 
+  background-color: #2A2D34; 
   color: white;
   display: flex;
   flex-direction: column;
@@ -43,9 +43,11 @@
 }
 
 .sidebar-nav .active {
-  background-color: #59527E;
+  background-color: var(--primary-color);
 }
-
+.sidebar-nav .active:hover {
+  background-color: var(--hover-color) !important;
+}
 .sidebar-nav li a:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }

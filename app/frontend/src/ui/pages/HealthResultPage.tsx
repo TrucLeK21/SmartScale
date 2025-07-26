@@ -86,6 +86,7 @@ const HealthResultPage: React.FC = () => {
     swiperWrapperContainer: {
       position: 'relative',
       height: '100%',
+      width: '100%'
     },
     swiperContainer: {
       width: '100%',
@@ -145,13 +146,14 @@ const HealthResultPage: React.FC = () => {
         onSwiper={onSwiper}
         style={{
           height: '100%',
+          width: '100%'
         }}
       >
         <SwiperSlide>
           <QRCodePage />
         </SwiperSlide>
         <SwiperSlide>
-          <div className="container-fluid d-flex flex-column align-items-center"
+          <div className="middle-container container-fluid d-flex flex-column align-items-center"
           style={{ height: "100%" }}>
               {record ? (
                   <>

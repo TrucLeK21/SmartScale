@@ -7,8 +7,7 @@ const NewNabarComponent: React.FC = () => {
 
     return (
         <aside className="sidebar">
-            <div className="w">
-
+            <div className="">
                 <div className="sidebar-header">
                     <a href="/dashboard">
                         <img src={bklogo} alt="logo" />
@@ -31,7 +30,7 @@ const NewNabarComponent: React.FC = () => {
                         </li>
                         <li >
                             <NavLink
-                                to=""
+                                to="/qr-scan"
                                 title="Phân tích sức khỏe"
                                 className={({ isActive }) => isActive ? "active" : ""}
                             >

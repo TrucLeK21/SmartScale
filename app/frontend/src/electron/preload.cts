@@ -6,7 +6,7 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     onGettingWeight: (callback) => ipcOn('weight-data', callback),
     getMetrics:  (faceData) => ipcInvoke<'get-metrics', HealthRecord>('get-metrics', faceData),
     resetUserState: () => ipcSend('reset-user-state'),
-    getFaceData: () => ipcInvoke<'get-face-data', FaceData>('get-face-data'),
+    getFaceData: (mode) => ipcInvoke<'get-face-data', FaceData>('get-face-data'),
     rotateCamera: (direction) => ipcSend('rotate-camera', direction),
     getAIResponse: (userData) => ipcInvoke<'get-ai-response', AIResponse>('get-ai-response', userData),
     startCCCD: (data) => ipcSend('start-cccd', data),

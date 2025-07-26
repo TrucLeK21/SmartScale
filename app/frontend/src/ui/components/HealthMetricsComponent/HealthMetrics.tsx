@@ -70,7 +70,7 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({ data }) => {
 
             return (
               <Col key={index}>
-                <Card className="metric-card h-100 position-relative">
+                <Card className="metric-card h-100 position-relative bg-light">
                   {!isBMI && hasExplanation && (
                     <OverlayTrigger
                       placement="top"

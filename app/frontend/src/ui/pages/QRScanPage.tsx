@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
+import { useNavigate } from "react-router-dom";
 
 // Hàm parse CCCD từ chuỗi quét được
 const parseCCCDData = (data: string) => {
@@ -31,6 +32,7 @@ const QRScanPage: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [scanResult, setScanResult] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const codeReader = new BrowserQRCodeReader();
@@ -60,6 +62,7 @@ const QRScanPage: React.FC = () => {
                                 console.log("Parsed CCCD Data:", parsedData);
                             }
                             ctrl.stop(); // Tự động dừng khi có kết quả
+                            navigate('/weight');
                         }
                         if (error) {
                             console.error("Error decoding QR code:", error);
@@ -132,6 +135,8 @@ const styles: { [key: string]: React.CSSProperties } = {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
+        backgroundColor: 'transparent',
+        flex: 1
     },
     wrapper: {
         position: "relative",

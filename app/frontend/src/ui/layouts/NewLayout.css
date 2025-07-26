@@ -1,12 +1,15 @@
    main {
-       flex: 1 1 0;
+       width: calc(100vw - 240px);
        margin-left: 240px;
-       height: 100vh;
+       min-height: 100vh;
+       background-color: var(--background-color);
    }
 
    @media (max-width: 992px) {
        main {
            margin-left: 100px;
+           width: calc(100vw - 100px);
+
            /* màn nhỏ hơn 768px thì không margin sidebar */
        }
    }

@@ -57,6 +57,38 @@ function WeightDisplayPage() {
         return () => unsubscribe();
     }, [navigate]);
 
+
+    // useEffect(() => {
+    //     // ⚠️ Tạm thời bỏ BLE thật
+    //     // handleStartBLE();
+    //     // analyzeWeightSound().play();
+
+    //     // 🎯 Dummy test: giả lập dữ liệu cân nặng sau 3 giây
+    //     const timeout = setTimeout(() => {
+    //         const dummyData: WeightPayload = {
+    //             weight: 65.5,
+    //             weightStatus: 'measuring',
+    //             isStable: true,
+    //             message: 'Dummy test: weight measured',
+    //         };
+
+    //         setWeightData(dummyData);
+    //         setIsLoading(false);
+    //         setIsRemoved(false);
+    //         setIsStable(dummyData.isStable ?? true);
+
+    //         showToast.success("Cân nặng đã được cập nhật!");
+    //         analyzeWeightSavedSound().play();
+
+    //         setTimeout(() => {
+    //             navigate("/info");
+    //         }, 2000);
+    //     }, 3000); // 3 giây
+
+    //     // 🧼 Cleanup khi unmount
+    //     return () => clearTimeout(timeout);
+    // }, [navigate]);
+
     const getTransform = () => {
         if (animate && !isStable) return 'scale(1.05)';
         if (isStable) return 'scale(1.1)';

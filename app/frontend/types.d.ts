@@ -104,7 +104,7 @@ interface Window {
         onGettingWeight: (callback: (data: WeightPayload) => void) => UnsubscribeFunction;
         getMetrics: (faceData: FaceData) => Promise<HealthRecord>;
         resetUserState: () => void;
-        getFaceData: () => Promise<FaceData>;
+        getFaceData: (mode: string) => Promise<FaceData>;
         rotateCamera: (direction: Direction) => void;
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
         startCCCD: (data: ParsedCCCD) => void;

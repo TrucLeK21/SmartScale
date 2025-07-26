@@ -1,42 +1,42 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import LoadingScreen from '../components/LoadingScreenComponent/LoadingScreen';
-// import useHealthStore from '../hooks/healthStore';
+import useHealthStore from '../hooks/healthStore';
 
-const user_data1 = {
-    "activityFactor": 1.2,
-    "gender": "male",
-    "race": "asian",
-    "overviewScore": {
-        "status": "Bình thường",
-        "evaluation": [
-            "BMI (21.97): Bình thường - Cân nặng của bạn trong mức khỏe mạnh",
-            "Độ tuổi: Thanh niên/Trưởng thành - Sức khỏe thường ổn định",
-            "Giới tính: Nam - Thường có cơ bắp nhiều hơn",
-            "Chủng tộc: asian - Áp dụng ngưỡng sức khỏe phù hợp"
-        ],
-        "recommendations": [],
-        "overall_status": "Sức khỏe tổng quan: Tốt - Tiếp tục duy trì lối sống lành mạnh"
-    },
-    "records": [
-        {
-            "height": 175,
-            "weight": 67.5,
-            "date": "2025-04-10T00:00:00.000Z",
-            "age": 22,
-            "bmi": 21.97,
-            "bmr": 1580,
-            "tdee": 2450,
-            "lbm": 54.8,
-            "fatPercentage": 17.0,
-            "waterPercentage": 59.0,
-            "boneMass": 3.1,
-            "muscleMass": 43.0,
-            "proteinPercentage": 18.5,
-            "visceralFat": 8,
-            "idealWeight": 68.0
-        }
-    ]
-};
+// const user_data1 = {
+//     "activityFactor": 1.2,
+//     "gender": "male",
+//     "race": "asian",
+//     "overviewScore": {
+//         "status": "Bình thường",
+//         "evaluation": [
+//             "BMI (21.97): Bình thường - Cân nặng của bạn trong mức khỏe mạnh",
+//             "Độ tuổi: Thanh niên/Trưởng thành - Sức khỏe thường ổn định",
+//             "Giới tính: Nam - Thường có cơ bắp nhiều hơn",
+//             "Chủng tộc: asian - Áp dụng ngưỡng sức khỏe phù hợp"
+//         ],
+//         "recommendations": [],
+//         "overall_status": "Sức khỏe tổng quan: Tốt - Tiếp tục duy trì lối sống lành mạnh"
+//     },
+//     "records": [
+//         {
+//             "height": 175,
+//             "weight": 67.5,
+//             "date": "2025-04-10T00:00:00.000Z",
+//             "age": 22,
+//             "bmi": 21.97,
+//             "bmr": 1580,
+//             "tdee": 2450,
+//             "lbm": 54.8,
+//             "fatPercentage": 17.0,
+//             "waterPercentage": 59.0,
+//             "boneMass": 3.1,
+//             "muscleMass": 43.0,
+//             "proteinPercentage": 18.5,
+//             "visceralFat": 8,
+//             "idealWeight": 68.0
+//         }
+//     ]
+// };
 
 
 function AIPage() {
@@ -45,18 +45,18 @@ function AIPage() {
     // Change this to enable API calling
     const hasFetched = useRef(false);
 
-    // const fullRecord = useHealthStore(state => state.getRecord());
-    // const activityFactor = useHealthStore(state => state.activityFactor);
-    // const gender = useHealthStore(state => state.gender);
-    // const race = useHealthStore(state => state.race);
+    const fullRecord = useHealthStore(state => state.getRecord());
+    const activityFactor = useHealthStore(state => state.activityFactor);
+    const gender = useHealthStore(state => state.gender);
+    const race = useHealthStore(state => state.race);
 
-    // const user_data = useMemo(() => ({
-    //     activityFactor,
-    //     gender,
-    //     race,
-    //     overviewScore: fullRecord?.overviewScore,
-    //     records: fullRecord ? { ...fullRecord, overviewScore: undefined } : {},
-    // }), [activityFactor, gender, race, fullRecord]);
+    const user_data = useMemo(() => ({
+        activityFactor,
+        gender,
+        race,
+        overviewScore: fullRecord?.overviewScore,
+        records: fullRecord ? [{ ...fullRecord, overviewScore: undefined }] : [],
+    }), [activityFactor, gender, race, fullRecord]);
 
 
     useEffect(() => {
@@ -65,10 +65,11 @@ function AIPage() {
             hasFetched.current = true;
             setIsLoading(true);
 
-            window.electronAPI.getAIResponse(user_data1)
+            window.electronAPI.getAIResponse(user_data)
                 .then(response => {
                     setAiResponse(JSON.stringify(response, null, 2));
                     setIsLoading(false);
+                    console.log('thành công')
                 })
                 .catch(error => {
                     console.error("Lỗi khi lấy dữ liệu AI:", error);

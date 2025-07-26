@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  CartesianGrid,
 } from 'recharts';
 
 const data = [
@@ -48,8 +49,8 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 const LineChartComponent = () => {
   return (
     <ResponsiveContainer width="100%" height={200}>
-      <LineChart data={data} margin={{ right: 30 }}>
-        {/* <CartesianGrid stroke="#ccc" strokeDasharray="3 3" /> */}
+      <LineChart data={data} margin={{ right: 30 }} >
+        <CartesianGrid stroke="#ccc" strokeDasharray="3 3" />
         <XAxis
           axisLine={false}
           tickLine={false}

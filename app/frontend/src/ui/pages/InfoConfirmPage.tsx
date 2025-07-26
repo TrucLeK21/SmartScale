@@ -35,7 +35,7 @@ const InfoConfirmScreen: React.FC = () => {
     const [showModal, setShowModal] = useState(false);
     const [userData, setUserData] = useState({
         age: 25,
-        gender: 'Nam',
+        gender: 'Nữ',
         race: 'Châu Á',
     });
     const set = useHealthStore(state => state.set);
@@ -45,13 +45,14 @@ const InfoConfirmScreen: React.FC = () => {
         setIsLoading(true);
         const getFaceData = async () => {
             try {
-                const data = await window.electronAPI.getFaceData();
+                const data = await window.electronAPI.getFaceData('id_card');
                 setIsLoading(false);
                 const displayData = {
                     age: data.age,
                     race: data.race === 'asian' ? 'Châu Á' : 'Khác',
                     gender: data.gender === 'male' ? 'Nam' : 'Nữ',
                 };
+                console.log(displayData);
                 setUserData(displayData);
                 analyzeActivitySound().play();
             } catch (error: unknown) {
@@ -70,7 +71,7 @@ const InfoConfirmScreen: React.FC = () => {
         //     gender: 'Nam'
         // };
         // setUserData(displayData);
-        // setIsLoading(false);
+        setIsLoading(false);
 
         getFaceData();
     }, []);

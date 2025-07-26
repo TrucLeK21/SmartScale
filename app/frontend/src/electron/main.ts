@@ -177,29 +177,34 @@ app.on("ready", () => {
     });
 
 
-    ipcMain.handle("get-face-data", async () => {
-        const timeout = 15000;
-        const pollInterval = 100;
+    ipcMain.handle("get-face-data", async (_, mode: string) => {
+        if (mode === 'face') {
+            const timeout = 15000;
+            const pollInterval = 100;
 
-        const waitForRecognition = () => new Promise<void>((resolve, reject) => {
-            const startTime = Date.now();
-            const interval = setInterval(() => {
-                if (faceRecognitionDone) {
-                    clearInterval(interval);
-                    resolve();
-                } else if (Date.now() - startTime > timeout) {
-                    clearInterval(interval);
-                    reject(new Error("Timeout waiting for face recognition to complete"));
-                }
-            }, pollInterval);
-        });
+            const waitForRecognition = () => new Promise<void>((resolve, reject) => {
+                const startTime = Date.now();
+                const interval = setInterval(() => {
+                    if (faceRecognitionDone) {
+                        clearInterval(interval);
+                        resolve();
+                    } else if (Date.now() - startTime > timeout) {
+                        clearInterval(interval);
+                        reject(new Error("Timeout waiting for face recognition to complete"));
+                    }
+                }, pollInterval);
+            });
 
-        if (!faceRecognitionDone) {
-            await waitForRecognition();
+            if (!faceRecognitionDone) {
+                await waitForRecognition();
+            }
         }
 
-        const userData = userState.get();
+        // hard code height
+        userState.set('height', 170);
 
+        const userData = userState.get();
+        console.log(userData);
         if (!userData || typeof userData !== "object") {
             throw new Error("User data is not available or invalid");
         }
@@ -287,8 +292,19 @@ app.on("ready", () => {
             });
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            console.log(response);
             const data = await response.json();
-            const result = JSON.parse(data.message);
+            let messageText = data.message;
+
+            if (typeof messageText === 'string') {
+                // Bỏ phần markdown ` ```json` đầu và ``` cuối nếu có
+                messageText = messageText
+                    .replace(/^```json\s*/i, '')  // Bỏ ```json và ký tự xuống dòng
+                    .replace(/\s*```$/, '');      // Bỏ ``` cuối cùng
+            }
+
+            const result = JSON.parse(messageText);
+
             return result as AIResponse;
         } catch (error) {
             console.error('Error sending message:', error);
