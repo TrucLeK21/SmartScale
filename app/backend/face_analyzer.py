@@ -110,7 +110,7 @@ class FaceAnalyzer:
 # Call directly from command line
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Analyze a face from an image.")
-    parser.add_argument("--image", required=True, help="Path to the image file.")
+    parser.add_argument("--image", required=False, help="Path to the image file.")
     parser.add_argument('--key', help="Base64 encoded key for decryption.")
     parser.add_argument('--iv', help="Base64 encoded IV for decryption.")
     parser.add_argument("--maxdim", type=int, default=800, help="Max dimension for image resize (default: 800)")
@@ -128,16 +128,26 @@ if __name__ == "__main__":
     analyzer = FaceAnalyzer(max_dim=max_dim)
 
     if args.init:
-        # Chạy thử để tải model
-        print(json.dumps({"type": "info", "message": "Running initial setup, downloading models if needed..."}), flush=True)
+        # Dùng sẵn ảnh mặc định để chạy test
+        default_image_path = os.path.join(os.path.dirname(__file__), "images", "demo.png")
+        print(json.dumps({"type": "info", "message": "Running initial setup, using default image: {}".format(default_image_path)}), flush=True)
+
+        if not os.path.exists(default_image_path):
+            print(json.dumps({"type": "error", "message": f"Default image not found at {default_image_path}."}), flush=True)
+            sys.exit(1)
+
         try:
-            image = cv2.imread(image_path)
+            image = cv2.imread(default_image_path)
             if image is None:
-                raise ValueError("Invalid image path.")
+                raise ValueError("Cannot read default image.")
 
             resized = analyzer.resize_if_needed(image)
             result = analyzer.analyze_face(resized)
-            print(json.dumps({"type": "info", "message": "Initial setup completed."}), flush=True)
+
+            # 👉 Thêm dòng sau để hiển thị kết quả phân tích khuôn mặt
+            print(json.dumps({"type": "result", "data": result}, indent=2, ensure_ascii=False), flush=True)
+
+            print(json.dumps({"type": "info", "message": "Initial setup completed successfully."}), flush=True)
         except Exception as e:
             print(json.dumps({"type": "error", "message": f"Init failed: {str(e)}"}), flush=True)
         sys.exit(0)
