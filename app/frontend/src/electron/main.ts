@@ -25,11 +25,26 @@ const checkPortExists = async (portPath: string): Promise<boolean> => {
     }
 };
 
-const openSerialPort = () => {
-    if (!port || !port.isOpen) {
-        port = new SerialPort({ path: "COM8", baudRate: 115200 });
-        parser = port.pipe(new ReadlineParser());
+const openSerialPort = (portNum: string) => {
+    if (port && port.isOpen) {
+        console.log("Port already open, closing first...");
+        port.close((err) => {
+            if (err) {
+                console.error("Error closing port:", err);
+                return;
+            }
+            console.log("Port closed. Reopening...");
+            createPort(portNum);
+        });
+    } else {
+        createPort(portNum);
     }
+};
+
+const createPort = (portNum: string) => {
+    console.log("Opening port:", portNum);
+    port = new SerialPort({ path: portNum, baudRate: 115200 });
+    parser = port.pipe(new ReadlineParser());
 };
 
 app.on("ready", () => {
@@ -46,14 +61,55 @@ app.on("ready", () => {
     }
     
 
-    ipcMain.on('start-ble', () => {
+    ipcMain.on('start-ble', async () => {
         const pythonEnvPath = getPythonEnvPath();
         const pythonScriptPath = getPythonScriptPath('weight_scale.py');
 
-        const python = spawn(pythonEnvPath, [
-            pythonScriptPath,
-        ]);
+        const ESP32_VID = "303A"; // Espressif VID
 
+        try {
+            const ports = await SerialPort.list();
+            const esp32Port = ports.find(port => port.vendorId && port.vendorId.toUpperCase() === ESP32_VID);
+
+            if (esp32Port) {
+                console.log('ESP32 detected on port:', esp32Port.path);
+
+                openSerialPort(esp32Port.path);
+                
+                // Gửi lệnh GET
+                port?.write('GET\n', (err) => {
+                    if (err) {
+                        return console.error('Error writing:', err.message);
+                    }
+                    console.log('GET command sent');
+                });
+                // Đọc dữ liệu từ ESP32
+                port?.on('data', (data) => {
+                    const received = data.toString().trim();
+                    if (received.includes('[SERIAL]')) {
+                        const match = received.match(/(\d+(\.\d+)?)\s*kg/);
+
+                        if (match) {
+                            const finalWeight = parseFloat(match[1]);
+                            console.log("Weight:", finalWeight);
+
+                            const message = { isStable: true, weight: finalWeight };
+                            userState.set('weight', finalWeight);
+                            BrowserWindow.getAllWindows()[0]?.webContents.send('weight-data', message);
+                        } else {
+                            console.log("Cannot find weight.");
+                        }
+                    }
+                });
+
+                return;
+            }
+        } catch (err) {
+            console.error('Error checking serial ports:', err);
+        }
+
+        // if ESP32 not found, run python script
+        const python = spawn(pythonEnvPath, [pythonScriptPath]);
         console.log('Python process started:', pythonEnvPath, pythonScriptPath);
 
         python.stdout.on('data', (data) => {
@@ -78,6 +134,7 @@ app.on("ready", () => {
             console.log(`Python measuring weight process exited with code ${code}`);
         });
     });
+
 
 
     ipcMain.on('start-face', (_event, base64Data: string) => {
@@ -163,7 +220,7 @@ app.on("ready", () => {
     
     
     ipcMain.handle("get-face-data", async () => {
-        const timeout = 15000;
+        const timeout = 20000;
         const pollInterval = 100;
     
         const waitForRecognition = () => new Promise<void>((resolve, reject) => {
@@ -238,7 +295,7 @@ app.on("ready", () => {
             return;
         }
 
-        openSerialPort(); // Ensure the serial port is open before sending the command
+        openSerialPort("COM8"); // Ensure the serial port is open before sending the command
     
         let command = "";
         
