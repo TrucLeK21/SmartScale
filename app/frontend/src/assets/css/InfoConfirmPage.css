@@ -1,0 +1,24 @@
+.btn-close {
+    background-color: white;
+}
+.modal-dialog {
+    max-width: 300px;
+}
+
+.modal-content{
+    color: white ;
+    background-color: var(--background-color);
+}
+
+.modal-header {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 15px;
+}
+
+.modal-footer {
+    border: none;
+    border-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+
+}

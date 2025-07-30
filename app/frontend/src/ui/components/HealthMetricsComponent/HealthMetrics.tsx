@@ -56,94 +56,102 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({ data }) => {
   ];
 
   return (
-    <Container className="pt-4 d-flex flex-column align-items-center">
-        <div className="header-section mb-4 text-center text-white">
-            <h3>Chỉ Số Sức Khỏe</h3>
-            <div className="date-display">Ngày đo: {formattedDate}</div>
-        </div>
-        <Row lg={4}  className="g-4">
-          {metrics.map((metric, index) => {
-            const explanation = explanations[metric.label];
-            const hasExplanation = Boolean(explanation);
-            const isBMI = metric.label === "BMI";
-            const bmiColorClass = isBMI ? bmiColorMap[data.overviewScore.status] || "" : "";
+    <Container className="p-5 d-flex flex-column align-items-center">
+      <div className="header-section mb-4 text-center text-white">
+        <h3>Chỉ Số Sức Khỏe</h3>
+        <div className="date-display">Ngày đo: {formattedDate}</div>
+      </div>
+      <Row md={4} className="g-4">
+        {metrics.map((metric, index) => {
+          const explanation = explanations[metric.label];
+          const hasExplanation = Boolean(explanation);
+          const isBMI = metric.label === "BMI";
+          const bmiColorClass = isBMI ? bmiColorMap[data.overviewScore.status] || "" : "";
 
-            return (
-              <Col key={index}>
-                <Card className="metric-card h-100 position-relative bg-light">
-                  {!isBMI && hasExplanation && (
-                    <OverlayTrigger
-                      placement="top"
-                      delay={{ show: 250, hide: 200 }}
-                      overlay={<Tooltip id={`tooltip-${index}`}>{explanation}</Tooltip>}
+          return (
+            <Col key={index}>
+              <Card className="metric-card h-100 position-relative" style={{ backgroundColor: 'var(--sub-background-color)' }}>
+                {!isBMI && hasExplanation && (
+                  <OverlayTrigger
+                    placement="top"
+                    delay={{ show: 250, hide: 200 }}
+                    overlay={<Tooltip id={`tooltip-${index}`}>{explanation}</Tooltip>}
+                  >
+                    <div className="info-icon-wrapper">
+                      <span className="info-icon fs-5">?</span>
+                    </div>
+                  </OverlayTrigger>
+                )}
+
+                <Card.Body
+                  style={{ borderRadius: 15 }}
+                  className="w-100 d-flex flex-column align-items-center text-center p-0">
+                  <Card.Title
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 15,
+                      height: 50
+                    }}
+                    className="metric-label text-light p-2 w-100 align-items-center d-flex justify-content-center">{metric.label}
+                  </Card.Title>
+                  {isBMI ? (
+                    // Nếu là BMI, sử dụng motion.div với hiệu ứng
+                    <motion.div
+                      className={`metric-value ${bmiColorClass}`}
+                      initial={{ scale: 1 }}
+                      animate={{
+                        scale: [1, 1.05, 1], // Tạo hiệu ứng pulse
+                        opacity: [1, 0.9, 1], // Thêm hiệu ứng mờ nhẹ
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity, // Lặp lại mãi mãi
+                        repeatType: "loop", // Lặp lại theo chu kỳ
+                      }}
+                      onClick={handleShowModal}
                     >
-                      <div className="info-icon-wrapper">
-                        <span className="info-icon fs-5">?</span>
-                      </div>
-                    </OverlayTrigger>
+                      {metric.value}
+                    </motion.div>
+                  ) : (
+                    // Nếu không phải BMI, dùng Card.Text bình thường
+                    <Card.Text className={`metric-value text-light`}>
+                      {metric.value}
+                    </Card.Text>
                   )}
+                </Card.Body>
+              </Card>
+            </Col>
+          );
+        })}
+      </Row>
 
-                  <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
-                    <Card.Title className="metric-label">{metric.label}
-                    </Card.Title>
-                    {isBMI ? (
-                      // Nếu là BMI, sử dụng motion.div với hiệu ứng
-                      <motion.div
-                        className={`metric-value ${bmiColorClass}`}
-                        initial={{ scale: 1 }}
-                        animate={{
-                          scale: [1, 1.05, 1], // Tạo hiệu ứng pulse
-                          opacity: [1, 0.9, 1], // Thêm hiệu ứng mờ nhẹ
-                        }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity, // Lặp lại mãi mãi
-                          repeatType: "loop", // Lặp lại theo chu kỳ
-                        }}
-                        onClick={handleShowModal}
-                      >
-                        {metric.value}
-                      </motion.div>
-                    ) : (
-                      // Nếu không phải BMI, dùng Card.Text bình thường
-                      <Card.Text className={`metric-value`}>
-                        {metric.value}
-                      </Card.Text>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            );
-          })}
-        </Row>
-
-        <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-          <Modal.Body>
-            <div className="evaluation-section mt-4">
-                <h4>Tình trạng tổng quan</h4>
-                <p>{data.overviewScore.overall_status}</p>
-                <h4>Đánh giá chi tiết</h4>
-                <ul className="evaluation-list">
-                    {data.overviewScore.evaluation.map((item: string, index: number) => (
-                        <li key={index}>{item}</li>
-                    ))}
-                </ul>   
-                {(data.overviewScore.recommendations.length !== 0) && <div>
-                  <h4>Khuyến nghị</h4>
-                  <ul className="recommendation-list">
-                      {data.overviewScore.recommendations.map((item: string, index: number) => (
-                          <li key={index}>{item}</li>
-                      ))}
-                  </ul>
-                </div>}
-            </div>
-          </Modal.Body>
-          <Modal.Footer className="justify-content-center">
-            <Button variant="primary" onClick={() => setShowModal(false)}>
-              OK
-            </Button>
-          </Modal.Footer>
-        </Modal>
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Body>
+          <div className="evaluation-section mt-4">
+            <h4>Tình trạng tổng quan</h4>
+            <p>{data.overviewScore.overall_status}</p>
+            <h4>Đánh giá chi tiết</h4>
+            <ul className="evaluation-list">
+              {data.overviewScore.evaluation.map((item: string, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+            {(data.overviewScore.recommendations.length !== 0) && <div>
+              <h4>Khuyến nghị</h4>
+              <ul className="recommendation-list">
+                {data.overviewScore.recommendations.map((item: string, index: number) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>}
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="justify-content-center">
+          <Button variant="primary" onClick={() => setShowModal(false)}>
+            OK
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

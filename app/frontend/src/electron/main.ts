@@ -89,7 +89,7 @@ app.on("ready", () => {
                 console.log('ESP32 detected on port:', esp32Port.path);
 
                 openSerialPort(esp32Port.path);
-                
+
                 // Gửi lệnh GET
                 port?.write('GET\n', (err) => {
                     if (err) {
@@ -117,6 +117,14 @@ app.on("ready", () => {
                 });
 
                 return;
+            }
+            // debugging
+            else {
+                const message = { isStable: true, weight: 65 };
+                userState.set('weight', 65);
+                BrowserWindow.getAllWindows()[0]?.webContents.send('weight-data', message);
+                return;
+
             }
         } catch (err) {
             console.error('Error checking serial ports:', err);
@@ -233,9 +241,14 @@ app.on("ready", () => {
     });
 
 
-    ipcMain.handle("get-face-data", async (_, mode: string) => {
-        if (mode === 'face') {
-            const timeout = 15000;
+    ipcMain.handle("get-face-data", async () => {
+        const userData = userState.get();
+        const flag = !userState.isComplete(["activityFactor", "height"]);
+
+        if (flag) {
+            console.log('User data is incomplete:', userData);
+
+            const timeout =20000;
             const pollInterval = 100;
 
             const waitForRecognition = () => new Promise<void>((resolve, reject) => {
@@ -250,24 +263,30 @@ app.on("ready", () => {
                     }
                 }, pollInterval);
             });
-
             if (!faceRecognitionDone) {
+                console.log("start wait: " , Date.now());
+
                 await waitForRecognition();
+                console.log("end wait: " , Date.now());
+
             }
+
+
+            if (!userState.isComplete(["activityFactor"])) {
+                console.log('User data is incomplete:', userData);
+
+                throw new Error("User data is incomplete");
+            }
+
+        }
+        else {
+            userState.set('height', 170);  // hardcode
+
         }
 
-        // hard code height
-        userState.set('height', 170);
-
-        const userData = userState.get();
         console.log(userData);
         if (!userData || typeof userData !== "object") {
             throw new Error("User data is not available or invalid");
-        }
-
-        if (!userState.isComplete(["activityFactor"])) {
-            console.log('User data is incomplete:', userData);
-            throw new Error("User data is incomplete");
         }
 
         return {
@@ -315,7 +334,7 @@ app.on("ready", () => {
         }
 
         openSerialPort("COM8"); // Ensure the serial port is open before sending the command
-    
+
         let command = "";
 
         if (direction === "up") command = "SERVO-MOVEUP";

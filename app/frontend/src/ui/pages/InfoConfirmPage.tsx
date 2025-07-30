@@ -8,6 +8,7 @@ import LoadingScreen from '../components/LoadingScreenComponent/LoadingScreen';
 import useHealthStore from '../hooks/healthStore';
 import { useNavigate } from 'react-router-dom';
 import { showToast } from '../utils/toastUtils';
+import '../../assets/css/InfoConfirmPage.css'
 
 const activityLevels = [
     { id: 1, label: 'Ít vận động', description: 'Ngồi nhiều, ít đi lại', value: 1.2 },
@@ -45,7 +46,7 @@ const InfoConfirmScreen: React.FC = () => {
         setIsLoading(true);
         const getFaceData = async () => {
             try {
-                const data = await window.electronAPI.getFaceData('id_card');
+                const data = await window.electronAPI.getFaceData();
                 setIsLoading(false);
                 const displayData = {
                     age: data.age,
@@ -63,7 +64,7 @@ const InfoConfirmScreen: React.FC = () => {
                 }
             }
         };
-    
+
         // Mock data for testing
         // const displayData = {
         //     age: 25,
@@ -71,7 +72,7 @@ const InfoConfirmScreen: React.FC = () => {
         //     gender: 'Nam'
         // };
         // setUserData(displayData);
-        setIsLoading(false);
+        // setIsLoading(false);
 
         getFaceData();
     }, []);
@@ -82,7 +83,7 @@ const InfoConfirmScreen: React.FC = () => {
             showToast.warn("Vui lòng chọn mức độ vận động!");
             return;
         }
-    
+
         const activityFactor = activityLevels.find((activity) => activity.id === selected)?.value;
         if (activityFactor !== undefined) {
             const formattedData = {
@@ -91,7 +92,7 @@ const InfoConfirmScreen: React.FC = () => {
                 race: raceMap[userData.race] || userData.race,
                 activityFactor,
             };
-    
+
             try {
                 console.log("Gửi dữ liệu:", formattedData);
                 const metrics = await window.electronAPI.getMetrics(formattedData);
@@ -110,7 +111,7 @@ const InfoConfirmScreen: React.FC = () => {
                     showToast.error(`Lỗi không xác định khi tính toán chỉ số: ${error}`);
                 }
             }
-    
+
         } else {
             showToast.error("Không tìm thấy mức độ vận động phù hợp!");
         }
@@ -143,7 +144,7 @@ const InfoConfirmScreen: React.FC = () => {
             );
         } else if (editingField === 'gender') {
             return (
-                <Form>
+                <Form className='d-flex justify-content-center gap-4 align-items-center'>
                     {['Nam', 'Nữ'].map((option) => (
                         <Form.Check
                             key={option}
@@ -153,7 +154,6 @@ const InfoConfirmScreen: React.FC = () => {
                             value={option}
                             checked={tempValue === option}
                             onChange={(e) => setTempValue(e.target.value)}
-                            className="mb-3"
                             style={{ fontSize: '1.2rem', padding: '1rem' }}
                         />
                     ))}
@@ -161,7 +161,7 @@ const InfoConfirmScreen: React.FC = () => {
             );
         } else if (editingField === 'race') {
             return (
-                <Form>
+                <Form className='d-flex justify-content-center gap-4 align-items-center'>
                     {['Châu Á', 'Khác'].map((option) => (
                         <Form.Check
                             key={option}
@@ -171,7 +171,6 @@ const InfoConfirmScreen: React.FC = () => {
                             value={option}
                             checked={tempValue === option}
                             onChange={(e) => setTempValue(e.target.value)}
-                            className="mb-3"
                             style={{ fontSize: '1.2rem', padding: '1rem' }}
                         />
                     ))}
@@ -188,106 +187,153 @@ const InfoConfirmScreen: React.FC = () => {
     ) : (
         <div className="container-fluid d-flex flex-column align-items-center justify-content-between" style={styles.container}>
             <div className="d-flex flex-column align-items-center justify-content-center gap-2 position-relative" style={styles.frame}>
-                <h3 className="text-center mb-3">Xác nhận thông tin của bạn</h3>
-    
+                <h3 className="text-center mb-3 text-light">Xác nhận thông tin của bạn</h3>
+
                 <div className="w-100 mb-4">
                     <div className="row g-3 text-center">
                         {['age', 'gender', 'race'].map((field) => (
                             <div className="col-md-4" key={field}>
                                 <div
-                                    className="bg-light rounded-3 p-3 shadow-sm border border-secondary-subtle hover-shadow"
-                                    style={{ cursor: 'pointer', touchAction: 'manipulation' }}
+                                    className="rounded-3 shadow-sm hover-shadow align-items-center"
+                                    style={styles.infoCard}
                                     onClick={() => handleEdit(field)}
                                 >
-                                    <h6 className="text-capitalize">{field === 'age' ? 'Tuổi' : field === 'gender' ? 'Giới tính' : 'Chủng tộc'}</h6>
-                                    <p className="fs-5 fw-bold mb-0">{userData[field as keyof typeof userData]}</p>
-                                    <small className="text-muted">Nhấn để chỉnh sửa</small>
+                                    <div style={styles.cardHeader} className="d-flex flex-row gap-2 align-items-center">
+                                        <div style={styles.cardIcon} className="d-flex justify-content-center align-items-center">
+                                            <i className="bi bi-database-fill"></i>
+                                        </div>
+                                        <span className="text-capitalize">{field === 'age' ? 'Tuổi' : field === 'gender' ? 'Giới tính' : field === 'race' ? 'Chủng tộc' : 'Chiều cao'}</span>
+
+                                    </div>
+                                    <div className="d-flex justify-content-center w-100 align-items-center" style={styles.cardValue}>
+                                        <p className="fs-5 fw-bold mb-0">{userData[field as keyof typeof userData]}</p>
+                                    </div>
+                                    <div className="footer mb-2">
+                                        <small className="text-white">Nhấn để chỉnh sửa</small>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
-    
-                <h4 className="text-center mb-3">Chọn mức độ vận động</h4>
+
+                <h4 className="text-center mb-3 text-light">Chọn mức độ vận động</h4>
                 <div className="row g-3 w-100 px-2">
                     {activityLevels.map((activity) => {
                         const isSelected = selected === activity.id;
-    
+
                         return (
                             <div className="col-12 col-md-4" key={activity.id}>
                                 <div
-                                    className="border rounded-4 shadow-sm"
+                                    className="rounded-4 shadow-sm"
                                     style={{
-                                        ...styles.card,
+                                        ...styles.infoCard,
                                         ...(isSelected ? styles.selectedCard : styles.unselectedCard),
                                     }}
                                     onClick={() => setSelected(activity.id)}
                                 >
-                                    <h5 className="mb-1">{activity.label}</h5>
-                                    <p className="mb-0">{activity.description}</p>
+                                    <div style={styles.cardHeader} className="d-flex flex-row gap-2 align-items-center">
+                                        <div style={styles.cardIcon} className="d-flex justify-content-center align-items-center">
+                                            <i className="bi bi-person-arms-up"></i>
+                                        </div>
+                                        <span className="text-capitalize">{activity.label}</span>
+
+                                    </div>
+                                    <div className="d-flex justify-content-center w-100 align-items-center" style={styles.cardValue}>
+                                        <p className="">{activity.description}</p>
+                                    </div>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
-    
+
                 <button className="fs-5 mt-4" style={styles.confirmButton} onClick={handleConfirm}>
                     Xác nhận
                 </button>
             </div>
-    
-    
+
+
             {/* Modal chỉnh sửa thông tin */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+            <Modal show={showModal} onHide={() => setShowModal(false)} centered >
                 <Modal.Header closeButton>
                     <Modal.Title>Chỉnh sửa {editingField === 'age' ? 'Tuổi' : editingField === 'gender' ? 'Giới tính' : 'Chủng tộc'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className='pl-3'>
                     {renderEditField()}
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '0.75rem 1.5rem', fontSize: '1.1rem' }}>
+                <Modal.Footer >
+                    <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>
                         Hủy
                     </Button>
-                    <Button variant="primary" onClick={handleSaveEdit} style={{ padding: '0.75rem 1.5rem', fontSize: '1.1rem' }}>
+                    <Button variant="primary" onClick={handleSaveEdit} style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>
                         Lưu
                     </Button>
                 </Modal.Footer>
             </Modal>
         </div>
     );
-    
+
 };
 
 const styles: { [key: string]: React.CSSProperties } = {
     container: {
         height: '100%',
-        padding: '3rem 5rem',
+        // padding: '3rem 5rem',  
+        // padding: '2rem',
         touchAction: 'pan-y',
     },
     frame: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: 'transparent',
         padding: '2rem 5rem',
         borderRadius: '1rem',
         width: '100%',
         height: '100%',
+    },
+    infoCard: {
+        display: 'flex',
+        flexDirection: 'column',
+        cursor: 'pointer',
+        touchAction: 'manipulation',
+        backgroundColor: 'var(--sub-background-color)',
+        color: 'white',
+        height: 140,
+        borderRadius: 12
+    },
+    cardHeader: {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        padding: '0 0.5rem',
+        borderRadius: 12,
+        height: '4rem',
+        width: '100%',
+    },
+    cardIcon: {
+        width: '2.5rem',
+        height: '2.5rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        borderRadius: 12
+
+    },
+    cardValue: {
+        flex: 1,
     },
     card: {
         padding: '1rem',
         cursor: 'pointer',
         transition: '0.3s',
         touchAction: 'manipulation',
+        backgroundColor: 'var(--sub-background-color)',
     },
     selectedCard: {
-        backgroundColor: 'var(--appbar-color)',
+        backgroundColor: '#7163BA',
         color: 'white',
     },
     unselectedCard: {
-        backgroundColor: '#f1f1f1',
-        color: 'black',
+        backgroundColor: 'var(--sub-background-color)',
+        color: 'white',
     },
     confirmButton: {
-        background: 'linear-gradient(180deg, #8B70FB, #5E2FFA)',
+        backgroundColor: '#7163BA',
         color: 'white',
         padding: '1rem 2rem',
         fontWeight: 700,

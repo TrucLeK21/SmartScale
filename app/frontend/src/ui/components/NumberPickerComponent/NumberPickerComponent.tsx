@@ -25,8 +25,8 @@ const HoldableNumberPicker: React.FC<Props> = ({
 
     const changeValue = (delta: number) => {
         setValue((prev) => {
-        const newVal = Math.min(max, Math.max(min, prev + delta * step));
-        return newVal;
+            const newVal = Math.min(max, Math.max(min, prev + delta * step));
+            return newVal;
         });
     };
 
@@ -41,30 +41,31 @@ const HoldableNumberPicker: React.FC<Props> = ({
     };
 
     return (
-        <div className="d-flex flex-column align-items-center">
-            <Button
-                onMouseDown={() => startHold(1)}
-                onMouseUp={stopHold}
-                onMouseLeave={stopHold}
-                onTouchStart={() => startHold(1)}
-                onTouchEnd={stopHold}
-                className="mb-2"
-            >
-                +
-            </Button>
-
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{value}</div>
-
+        <div className="d-flex flex-row align-items-center justify-content-center gap-4">
             <Button
                 onMouseDown={() => startHold(-1)}
                 onMouseUp={stopHold}
                 onMouseLeave={stopHold}
                 onTouchStart={() => startHold(-1)}
                 onTouchEnd={stopHold}
-                className="mt-2"
+            // className="mt-2"
             >
                 -
             </Button>
+
+
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{value}</div>
+            <Button
+                onMouseDown={() => startHold(1)}
+                onMouseUp={stopHold}
+                onMouseLeave={stopHold}
+                onTouchStart={() => startHold(1)}
+                onTouchEnd={stopHold}
+            // className="mb-2"
+            >
+                +
+            </Button>
+
         </div>
     );
 };
