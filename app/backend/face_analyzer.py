@@ -159,6 +159,6 @@ if __name__ == "__main__":
     analyzer.process_image(image_path, key, iv, angle_degrees)
 
     # Optionally delete image after processing
-    # if os.path.exists(image_path):
-    #     os.remove(image_path)
+    if os.path.exists(image_path):
+        os.remove(image_path)
 
