@@ -248,7 +248,7 @@ app.on("ready", () => {
         if (flag) {
             console.log('User data is incomplete:', userData);
 
-            const timeout =20000;
+            const timeout =22000;
             const pollInterval = 100;
 
             const waitForRecognition = () => new Promise<void>((resolve, reject) => {

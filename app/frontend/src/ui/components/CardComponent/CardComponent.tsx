@@ -15,6 +15,7 @@ const CardComponent: React.FC<CardProps> = ({ imageUrl, title, navigateTo, callb
 
   return (
       <Card 
+      style={{ borderRadius: 15 }}
         className="cardButton"
         onClick={() => {
           if (callback) callback(); // Run callback if function is provided
@@ -28,7 +29,7 @@ const CardComponent: React.FC<CardProps> = ({ imageUrl, title, navigateTo, callb
               style={{ height: "150px", width: "auto", objectFit: "contain" }}
             />
             <Card.Body className="p-0 px-3 text-center" style={{height: "50px"}}>
-              <Card.Title className="cardTitle">{title}</Card.Title>
+              <Card.Title className="cardTitle" style={{ color: 'white' }}>{title}</Card.Title>
             </Card.Body>
         </div>
       </Card>

@@ -56,7 +56,7 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({ data }) => {
   ];
 
   return (
-    <Container className="p-5 d-flex flex-column align-items-center">
+    <Container className="px-5 pt-5 pb-3 d-flex flex-column align-items-center">
       <div className="header-section mb-4 text-center text-white">
         <h3>Chỉ Số Sức Khỏe</h3>
         <div className="date-display">Ngày đo: {formattedDate}</div>
@@ -70,14 +70,14 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({ data }) => {
 
           return (
             <Col key={index}>
-              <Card className="metric-card h-100 position-relative" style={{ backgroundColor: 'var(--sub-background-color)' }}>
+              <Card className="metric-card h-100 position-relative pb-2" style={{ backgroundColor: 'var(--sub-background-color)' }}>
                 {!isBMI && hasExplanation && (
                   <OverlayTrigger
-                    placement="top"
+                    placement="bottom-end"
                     delay={{ show: 250, hide: 200 }}
                     overlay={<Tooltip id={`tooltip-${index}`}>{explanation}</Tooltip>}
                   >
-                    <div className="info-icon-wrapper">
+                    <div style={{ position: 'absolute', bottom: '0.5rem', right: '0.5rem', top: 'auto' }} className="info-icon-wrapper">
                       <span className="info-icon fs-5">?</span>
                     </div>
                   </OverlayTrigger>

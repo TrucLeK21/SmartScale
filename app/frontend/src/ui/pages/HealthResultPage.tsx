@@ -103,12 +103,12 @@ const HealthResultPage: React.FC = () => {
       alignItems: 'center',
       background: 'rgba(255, 255, 255, 0.1)',
       backdropFilter: 'blur(6px)',
-      color: '#5f55e8',
+      color: 'white',
       fontSize: '24px',
       borderRadius: '50px 0 0 50px',
       cursor: 'pointer',
       transition: 'background 0.3s ease',
-      left: 0,
+      left: 5,
     },
     swiperButtonNextCustom: {
       position: 'absolute',
@@ -122,12 +122,12 @@ const HealthResultPage: React.FC = () => {
       alignItems: 'center',
       background: 'rgba(255, 255, 255, 0.1)',
       backdropFilter: 'blur(6px)',
-      color: '#5f55e8',
+      color: 'white',
       fontSize: '24px',
       borderRadius: '0 50px 50px 0',
       cursor: 'pointer',
       transition: 'background 0.3s ease',
-      right: 0,
+      right: 5,
     },
   };
 
@@ -158,7 +158,7 @@ const HealthResultPage: React.FC = () => {
               {record ? (
                   <>
                       <HealthMetrics data={record} />
-                      <div className="mt-3 d-flex justify-content-center align-items-center gap-3">
+                      <div className=" d-flex justify-content-center align-items-center gap-3">
                         <button className="custom-btn fs-5" onClick={() => swiperRef.current?.slidePrev()}>
                           Lưu bản ghi <FontAwesomeIcon icon={faDatabase} />
                         </button>

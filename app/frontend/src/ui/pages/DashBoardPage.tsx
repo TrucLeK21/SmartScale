@@ -4,14 +4,11 @@ import BarChartComponent from '../components/ChartComponent/BarChart';
 import LineChartComponent from '../components/ChartComponent/LineChart';
 import PieChartComponent from '../components/ChartComponent/PieChart';
 import useHealthStore from '../hooks/healthStore';
-import { greetingSound } from '../../assets/sounds';
 
 const DashBoardPage = () => {
     const startAnalyzeCallback = () => {
         window.electronAPI.resetUserState();
         useHealthStore.getState().clear();
-        const audio = greetingSound();
-        audio.play();
     };
     useEffect(() => {
 

@@ -14,6 +14,9 @@ const EncryptToQR: React.FC<EncryptToQRProps> = ({ data, size = 128 }) => {
         container: {
             position: 'relative',
             display: 'inline-block',
+            padding: '2rem',
+            backgroundColor: 'white',
+            borderRadius: 15
         },
         logo: {
             position: 'absolute',
@@ -62,7 +65,10 @@ const EncryptToQR: React.FC<EncryptToQRProps> = ({ data, size = 128 }) => {
 
     return (
         <div style={styles.container}>
-        <QRCodeSVG value={encryptedData} size={size} />
+        <QRCodeSVG 
+        value={encryptedData} 
+        size={size} 
+        />
         <img src={bkLogo} alt="BK Logo" style={styles.logo} />
         </div>
     );

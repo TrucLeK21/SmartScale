@@ -107,7 +107,7 @@ function AIPage() {
             ) : ( */}
                 <div style={styles.frame}>
 
-                    <div style={styles.content}>
+                    <div className='text-light' style={styles.content}>
                         <h2 className="mb-3">Tổng Quan</h2>
                         <p>{parsedResponse.overview}</p>
 
@@ -115,13 +115,13 @@ function AIPage() {
                             <div className="col-6">
                                 <h4>Chế Độ Ăn</h4>
                                 <p><strong>Lượng calo:</strong></p>
-                                <ul>
+                                <ul className='fw-light'>
                                     <li>Duy trì: {parsedResponse.diet.calories.maintain}</li>
                                     <li>Giảm mỡ: {parsedResponse.diet.calories.cut}</li>
                                     <li>Tăng cơ: {parsedResponse.diet.calories.bulk}</li>
                                 </ul>
                                 <p><strong>Thành phần dinh dưỡng: </strong></p>
-                                <ul>
+                                <ul className='fw-light'>
                                     <li>Protein: {parsedResponse.diet.macros.protein}</li>
                                     <li>Carbs: {parsedResponse.diet.macros.carbs}</li>
                                     <li>Fats: {parsedResponse.diet.macros.fats}</li>
@@ -155,7 +155,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         touchAction: 'pan-y',
     },
     frame: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: 'var(--sub-background-color)',
         padding: '1rem',
         borderRadius: '1rem',
         width: '100%',
@@ -169,6 +169,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     } as React.CSSProperties,
     content: {
         padding: '1rem',
+
     },
     errorContainer: {
         display: 'flex',
