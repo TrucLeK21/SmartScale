@@ -9,6 +9,8 @@ import calculateRecord from './calculateMetrics.js';
 import { SerialPort, ReadlineParser } from 'serialport';
 import crypto from 'crypto';
 import dayjs from 'dayjs';
+import iconv from 'iconv-lite';
+
 
 
 const SHOW_PYTHON_ERRORS = false;
@@ -42,6 +44,7 @@ const openSerialPort = (portNum: string) => {
         createPort(portNum);
     }
 };
+
 
 type ParsedCCCD = {
     cccd_id: string;
@@ -248,7 +251,7 @@ app.on("ready", () => {
         if (flag) {
             console.log('User data is incomplete:', userData);
 
-            const timeout =22000;
+            const timeout = 22000;
             const pollInterval = 100;
 
             const waitForRecognition = () => new Promise<void>((resolve, reject) => {
@@ -264,10 +267,10 @@ app.on("ready", () => {
                 }, pollInterval);
             });
             if (!faceRecognitionDone) {
-                console.log("start wait: " , Date.now());
+                console.log("start wait: ", Date.now());
 
                 await waitForRecognition();
-                console.log("end wait: " , Date.now());
+                console.log("end wait: ", Date.now());
 
             }
 
@@ -410,6 +413,87 @@ app.on("ready", () => {
         console.log(userState.get());
         console.log('Parsed CCCD data:', data);
     });
+
+    ipcMain.on('start-scan', async () => {
+        const GM65_VID = '002C';
+
+        try {
+            const ports = await SerialPort.list();
+            const gm65Port = ports.find(p => p.vendorId?.toUpperCase() === GM65_VID);
+
+            if (!gm65Port) {
+                console.log("GM65 not found");
+                return;
+            }
+
+            console.log('GM65 detected on port:', gm65Port.path);
+
+            openSerialPort(gm65Port.path); // bạn phải đảm bảo biến `port` đang dùng là toàn cục
+            let scanCompleted = false;
+
+            const stopTriggerCmd = Buffer.from([0x7E, 0x00, 0x08, 0x01, 0x00, 0x02, 0x00, 0xAB, 0xCD]);
+
+            const timeoutHandle = setTimeout(() => {
+                if (!scanCompleted) {
+                    console.log("Timeout: No barcode scanned within 20s.");
+
+                    port?.write(stopTriggerCmd, err => {
+                        if (err) console.error("Error sending stop trigger:", err);
+                    });
+
+                    port?.close(err => {
+                        if (err) console.error("Error closing port after timeout:", err);
+                        else console.log("Port closed after timeout");
+                    });
+                }
+            }, 20000);
+
+            port?.on('data', (data) => {
+                if (scanCompleted) return;
+
+                const buffer = Buffer.from(data, 'binary');
+
+                if (buffer.length <= 8 && buffer.toString().includes('31')) {
+                    console.log("Ignored ACK response:", buffer.toString());
+                    return;
+                }
+
+                scanCompleted = true;
+                clearTimeout(timeoutHandle);
+
+                const decoded = iconv.decode(buffer, 'gbk').trim();
+                // const decoded = buffer.toString('utf8').trim();
+
+                console.log("Scanned barcode:", decoded);
+
+                BrowserWindow.getAllWindows()[0]?.webContents.send('scan-data', { barcode: decoded });
+
+                port?.write(stopTriggerCmd, err => {
+                    if (err) console.error("Error sending stop trigger:", err);
+                });
+
+                port?.close(err => {
+                    if (err) console.error("Error closing port:", err);
+                    else console.log("Port closed after scan");
+                });
+            });
+
+            setTimeout(() => {
+                const triggerCmd = Buffer.from([0x7E, 0x00, 0x08, 0x01, 0x00, 0x02, 0x01, 0xAB, 0xCD]);
+                port?.write(triggerCmd, err => {
+                    if (err) console.error("Trigger error:", err);
+                    else console.log("Trigger sent to GM65");
+                });
+            }, 300);
+        } catch (error) {
+            console.error("Error setting up GM65:", error);
+        }
+    });
+
+
+
+
+
 })
 
 

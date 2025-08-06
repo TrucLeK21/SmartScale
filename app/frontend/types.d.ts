@@ -26,6 +26,8 @@ type EventPayloadMapping = {
     'rotate-camera': Direction;
     'get-ai-response': UserData;
     'start-cccd': ParsedCCCD;
+    'start-scan': void;
+    'scan-data': { barcode: string };
 };
 
 type UserData = {
@@ -108,5 +110,7 @@ interface Window {
         rotateCamera: (direction: Direction) => void;
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
         startCCCD: (data: ParsedCCCD) => void;
+        startScan: () => void;
+        onScanResult: (callback: (data: { barcode: string }) => void) => UnsubscribeFunction;
     };
 }

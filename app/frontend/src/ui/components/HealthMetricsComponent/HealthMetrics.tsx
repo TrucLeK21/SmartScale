@@ -125,7 +125,7 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({ data }) => {
         })}
       </Row>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal className="overview-modal" show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Body>
           <div className="evaluation-section mt-4">
             <h4>Tình trạng tổng quan</h4>
