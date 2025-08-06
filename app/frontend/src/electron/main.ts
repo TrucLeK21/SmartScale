@@ -114,6 +114,7 @@ app.on("ready", () => {
         const pythonScriptPath = getPythonScriptPath("weight_scale.py");
 
         const ESP32_VID = "303A"; // Espressif VID
+		console.log("hello")
 
         try {
             const ports = await SerialPort.list();
