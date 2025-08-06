@@ -2,9 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
 import { useNavigate } from "react-router-dom";
 
-// Hàm parse CCCD từ chuỗi quét được
-const parseCCCDData = (data: string) => {
-    const parts = data.split("|").map((p) => p.trim());
+type CCCDParsed = {
+    cccd_id: string;
+    cmnd_id: string;
+    name: string;
+    dob: string;
+    gender: string;
+    address: string;
+    issue_date: string;
+};
+
+const parseCCCDData = (data: string): CCCDParsed | null => {
+    const parts = data.split("|").map(p => p.trim());
     if (parts.length < 6) return null;
 
     const formatDate = (str: string) => {
@@ -30,85 +39,107 @@ const parseCCCDData = (data: string) => {
 };
 
 const QRScanPage: React.FC = () => {
-    const videoRef = useRef<HTMLVideoElement>(null);
+    const [mode, setMode] = useState<"camera" | "gm65">("camera");
     const [scanResult, setScanResult] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const codeReader = new BrowserQRCodeReader();
-        let controls: IScannerControls;
+        if (mode === "camera") {
+            const codeReader = new BrowserQRCodeReader();
+            let controls: IScannerControls;
 
-        const startScanner = async () => {
-            try {
-                const videoInputDevices =
-                    await BrowserQRCodeReader.listVideoInputDevices();
-                if (videoInputDevices.length === 0) {
-                    setErrorMsg("Không tìm thấy camera nào.");
-                    return;
-                }
-
-                const selectedDeviceId = videoInputDevices[0].deviceId;
-
-                controls = await codeReader.decodeFromVideoDevice(
-                    selectedDeviceId,
-                    videoRef.current!,
-                    (result, error, ctrl) => {
-                        if (result) {
-                            setScanResult(result.getText());
-                            const parsedData = parseCCCDData(result.getText());
-                            if (parsedData) {
-                                window.electronAPI.startCCCD(parsedData);
-
-                                console.log("Parsed CCCD Data:", parsedData);
-                            }
-                            ctrl.stop(); // Tự động dừng khi có kết quả
-                            navigate("/weight");
-                        }
-                        if (error) {
-                            console.error("Error decoding QR code:", error);
-                        }
+            const startScanner = async () => {
+                try {
+                    const videoDevices = await BrowserQRCodeReader.listVideoInputDevices();
+                    if (videoDevices.length === 0) {
+                        setErrorMsg("Không tìm thấy camera.");
+                        return;
                     }
-                );
-            } catch (err: unknown) {
-                if (err instanceof Error) {
-                    setErrorMsg("Không thể khởi động camera: " + err.message);
-                } else {
-                    setErrorMsg(
-                        "Đã xảy ra lỗi không xác định khi khởi động camera."
+
+                    const selectedDeviceId = videoDevices[0].deviceId;
+
+                    controls = await codeReader.decodeFromVideoDevice(
+                        selectedDeviceId,
+                        videoRef.current!,
+                        (result, error, ctrl) => {
+                            if (result) {
+                                const text = result.getText();
+                                setScanResult(text);
+                                const parsed = parseCCCDData(text);
+                                if (parsed) {
+                                    window.electronAPI.startCCCD(parsed);
+                                    ctrl.stop();
+                                    navigate("/weight");
+                                }
+                            }
+
+                            // Bỏ qua NotFoundException
+                            if (error && error.name !== "NotFoundException") {
+                                console.error("Decode error:", error);
+                            }
+                        }
                     );
+
+                } catch (e) {
+                    console.error("Error starting scanner:", e);
+                    setErrorMsg("Không thể mở camera.");
                 }
-            }
-        };
+            };
 
-        startScanner();
+            startScanner();
 
-        return () => {
-            controls?.stop();
-        };
-    }, []);
+            return () => {
+                controls?.stop();
+            };
+        }
+
+        if (mode === "gm65") {
+            // Gửi yêu cầu bắt đầu quét
+            window.electronAPI.startScan();
+
+            // Lắng nghe kết quả từ GM65
+            const unsubscribe = window.electronAPI.onScanResult(({ barcode }) => {
+                console.log("Scan result after callback:", barcode);
+                setScanResult(barcode);
+                const parsed = parseCCCDData(barcode);
+                if (parsed) {
+                    window.electronAPI.startCCCD(parsed);
+                    navigate("/weight");
+                }
+            });
+
+            return () => {
+                unsubscribe();
+            };
+        }
+    }, [mode, navigate]);
 
     return (
         <div style={styles.container}>
-            <h2 className="text-light">Quét mã QR</h2>
+            <h2 className="text-light">Quét mã QR / CCCD</h2>
 
-            <div style={styles.wrapper}>
-                <video ref={videoRef} style={styles.video} />
-
-                {/* Overlay */}
-                <div style={styles.overlay} />
-                {/* Hướng dẫn */}
-                <div style={styles.tutorialText}>
-                    Đưa mã QR vào khung để quét
-                </div>
+            {/* Nút chuyển chế độ */}
+            <div style={styles.modeToggle}>
+                <button onClick={() => setMode("camera")} disabled={mode === "camera"}>📷 Camera</button>
+                <button onClick={() => setMode("gm65")} disabled={mode === "gm65"}>🔌 GM65</button>
             </div>
 
-            {scanResult && (
-                <div style={{ marginTop: 20, color: "green" }}>
-                    ✅ Mã QR: <strong>{scanResult}</strong>
+            {/* Camera video */}
+            {mode === "camera" && (
+                <div style={styles.wrapper}>
+                    <video ref={videoRef} style={styles.video} />
+                    <div style={styles.overlay} />
+                    <div style={styles.tutorialText}>Đưa mã QR vào khung để quét</div>
                 </div>
             )}
 
+            {scanResult && (
+                <div style={{ marginTop: 20, color: "green" }}>
+                    ✅ Mã quét được: <strong>{scanResult}</strong>
+                </div>
+            )}
             {errorMsg && (
                 <div style={{ marginTop: 20, color: "red" }}>
                     ❌ Lỗi: {errorMsg}
@@ -128,8 +159,13 @@ const styles: { [key: string]: React.CSSProperties } = {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "transparent",
-        flex: 1,
+        backgroundColor: 'transparent',
+        flex: 1
+    },
+    modeToggle: {
+        display: "flex",
+        gap: 10,
+        marginBottom: 20,
     },
     wrapper: {
         position: "relative",
@@ -154,7 +190,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         border: "100px solid rgba(0,0,0,0.5)",
         borderTop: "80px solid rgba(0,0,0,0.5)",
         borderBottom: "80px solid rgba(0,0,0,0.5)",
-        pointerEvents: "none", // Đảm bảo không cản tương tác video
+        pointerEvents: "none",
         borderRadius: 8,
     },
     tutorialText: {
@@ -166,5 +202,5 @@ const styles: { [key: string]: React.CSSProperties } = {
         color: "#fff",
         textShadow: "0 0 5px #000",
         fontWeight: "bold",
-    },
+    }
 };

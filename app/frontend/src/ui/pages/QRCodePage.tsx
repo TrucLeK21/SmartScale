@@ -71,7 +71,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         padding: '3rem 5rem',
     },
     frame: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: 'var(--sub-background-color)',
         borderRadius: '1rem',
         height: '100%',
         width: '100%',
@@ -79,11 +79,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     title: {
         fontSize: '1.5rem',
         fontWeight: 'bold',
-        color: '#333',
+        color: '#fff',
     },
     instruction: {
         fontSize: '1rem',
-        color: '#555',
+        color: 'whitesmoke',
         marginBottom: '10px',
         lineHeight: '1.5',
     },

@@ -30,7 +30,7 @@ const NewNabarComponent: React.FC = () => {
                         </li>
                         <li >
                             <NavLink
-                                to="/qr-scan"
+                                to="/home"
                                 title="Phân tích sức khỏe"
                                 className={({ isActive }) => isActive ? "active" : ""}
                             >

@@ -10,6 +10,8 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     rotateCamera: (direction) => ipcSend('rotate-camera', direction),
     getAIResponse: (userData) => ipcInvoke<'get-ai-response', AIResponse>('get-ai-response', userData),
     startCCCD: (data) => ipcSend('start-cccd', data),
+    startScan: () => ipcSend('start-scan'),
+    onScanResult: (callback) => ipcOn('scan-data', callback),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(
