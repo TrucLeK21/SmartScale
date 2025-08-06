@@ -14,6 +14,7 @@ import calculateRecord from "./calculateMetrics.js";
 import { SerialPort, ReadlineParser } from "serialport";
 import crypto from "crypto";
 import dayjs from "dayjs";
+import iconv from "iconv-lite"
 
 const SHOW_PYTHON_ERRORS = false;
 let faceRecognitionDone = false;
