@@ -3,6 +3,19 @@
 This document explains how to set up and run both the **Frontend** (Electron + React) and **Backend** (Python) parts of the project.
 
 ---
+## Prerequisite: Install Visual Studio Build Tools (Windows Only)
+You need to install the **Visual Studio Build Tools**:
+
+### **Steps to Install Visual Studio Build Tools:**
+
+1. **Download the installer:**  
+https://visualstudio.microsoft.com/visual-cpp-build-tools/
+
+2. **During installation, make sure to select the following components:**
+   - **Desktop development with C++**
+   - **MSVC v142 or newer** (C++ x64/x86 build tools)
+   - **Windows 10 SDK** (or **Windows 11 SDK** depending on your system)
+   - **C++ CMake tools for Windows**
 
 ## Frontend Setup (Electron + React)
 
