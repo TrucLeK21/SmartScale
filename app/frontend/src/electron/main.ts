@@ -403,15 +403,47 @@ app.on("ready", () => {
         }
     });
 
-    ipcMain.on('start-cccd', (_evnent, data: ParsedCCCD) => {
-        const age = dayjs().diff(dayjs(data.dob, 'YYYY-MM-DD'), 'year');
+    const parseCCCDData = (data: string): ParsedCCCD | null => {
+        const parts = data.split("|").map(p => p.trim());
+        if (parts.length < 6) return null;
+
+        const formatDate = (str: string) => {
+            if (str.length !== 8) return "";
+            const day = str.slice(0, 2);
+            const month = str.slice(2, 4);
+            const year = str.slice(4, 8);
+            return `${year}-${month}-${day}`; // yyyy-MM-dd
+        };
+
+        const [cccd_id, cmnd_id, name, dobRaw, gender, address, issueDateRaw = ""] = parts;
+
+        return {
+            cccd_id,
+            cmnd_id,
+            name,
+            dob: formatDate(dobRaw),
+            gender,
+            address,
+            issue_date: issueDateRaw ? formatDate(issueDateRaw) : "",
+        };
+    };
+
+    ipcMain.on('start-cccd', (_event, data: string) => {
+        console.log("Received CCCD data:", data);
+        console.log("Buffer:", Buffer.from(data, 'utf8'));
+        const parsedData = parseCCCDData(data);
+        if (!parsedData) {
+            console.error("Invalid CCCD data format");
+            return;
+        }
+        const age = dayjs().diff(dayjs(parsedData.dob, 'YYYY-MM-DD'), 'year');
 
         userState.set("age", age);
-        userState.set("gender", data.gender.toLowerCase() === "nam" ? "male" : "female");
+        userState.set("gender", parsedData.gender.toLowerCase() === "nam" ? "male" : "female");
         userState.set("race", 'asian');
 
         console.log(userState.get());
-        console.log('Parsed CCCD data:', data);
+        console.log('Parsed CCCD data:', parsedData);
     });
 
     ipcMain.on('start-scan', async () => {

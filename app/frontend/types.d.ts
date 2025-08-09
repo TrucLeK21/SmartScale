@@ -25,7 +25,7 @@ type EventPayloadMapping = {
     'get-face-data': void;
     'rotate-camera': Direction;
     'get-ai-response': UserData;
-    'start-cccd': ParsedCCCD;
+    'start-cccd': string;
     'start-scan': void;
     'scan-data': { barcode: string };
 };
@@ -109,7 +109,7 @@ interface Window {
         getFaceData: () => Promise<FaceData>;
         rotateCamera: (direction: Direction) => void;
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
-        startCCCD: (data: ParsedCCCD) => void;
+        startCCCD: (data: string) => void;
         startScan: () => void;
         onScanResult: (callback: (data: { barcode: string }) => void) => UnsubscribeFunction;
     };

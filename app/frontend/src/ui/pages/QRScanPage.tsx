@@ -2,52 +2,44 @@ import { useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
 import { useNavigate } from "react-router-dom";
 
-type CCCDParsed = {
-    cccd_id: string;
-    cmnd_id: string;
-    name: string;
-    dob: string;
-    gender: string;
-    address: string;
-    issue_date: string;
-};
 
-const parseCCCDData = (data: string): CCCDParsed | null => {
-    const parts = data.split("|").map(p => p.trim());
-    if (parts.length < 6) return null;
+// const parseCCCDData = (data: string): CCCDParsed | null => {
+//     const parts = data.split("|").map(p => p.trim());
+//     if (parts.length < 6) return null;
 
-    const formatDate = (str: string) => {
-        if (str.length !== 8) return "";
-        const day = str.slice(0, 2);
-        const month = str.slice(2, 4);
-        const year = str.slice(4, 8);
-        return `${year}-${month}-${day}`; // yyyy-MM-dd
-    };
+//     const formatDate = (str: string) => {
+//         if (str.length !== 8) return "";
+//         const day = str.slice(0, 2);
+//         const month = str.slice(2, 4);
+//         const year = str.slice(4, 8);
+//         return `${year}-${month}-${day}`; // yyyy-MM-dd
+//     };
 
-    const [cccd_id, cmnd_id, name, dobRaw, gender, address, issueDateRaw = ""] = parts;
+//     const [cccd_id, cmnd_id, name, dobRaw, gender, address, issueDateRaw = ""] = parts;
 
-    return {
-        cccd_id,
-        cmnd_id,
-        name,
-        dob: formatDate(dobRaw),
-        gender,
-        address,
-        issue_date: issueDateRaw ? formatDate(issueDateRaw) : "",
-    };
-};
+//     return {
+//         cccd_id,
+//         cmnd_id,
+//         name,
+//         dob: formatDate(dobRaw),
+//         gender,
+//         address,
+//         issue_date: issueDateRaw ? formatDate(issueDateRaw) : "",
+//     };
+// };
 
 const QRScanPage: React.FC = () => {
     const [mode, setMode] = useState<"camera" | "gm65">("camera");
-    const [scanResult, setScanResult] = useState<string | null>(null);
+    // const [scanResult, setScanResult] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
+        let controls: IScannerControls;
+
         if (mode === "camera") {
             const codeReader = new BrowserQRCodeReader();
-            let controls: IScannerControls;
 
             const startScanner = async () => {
                 try {
@@ -57,7 +49,7 @@ const QRScanPage: React.FC = () => {
                         return;
                     }
 
-                    const selectedDeviceId = videoDevices[0].deviceId;
+                    const selectedDeviceId = videoDevices[1].deviceId;
 
                     controls = await codeReader.decodeFromVideoDevice(
                         selectedDeviceId,
@@ -65,19 +57,19 @@ const QRScanPage: React.FC = () => {
                         (result, error, ctrl) => {
                             if (result) {
                                 const text = result.getText();
-                                setScanResult(text);
-                                const parsed = parseCCCDData(text);
-                                if (parsed) {
-                                    window.electronAPI.startCCCD(parsed);
+                                console.log("Scan result:", String(text));
+                                // setScanResult(text);
+                                if (text) {
+                                    window.electronAPI.startCCCD(text);
                                     ctrl.stop();
                                     navigate("/weight");
                                 }
                             }
 
                             // Bỏ qua NotFoundException
-                            if (error && error.name !== "NotFoundException") {
-                                console.error("Decode error:", error);
-                            }
+                            // if (error && error.name !== "NotFoundException") {
+                            //     console.error("Decode error:", error);
+                            // }
                         }
                     );
 
@@ -94,54 +86,80 @@ const QRScanPage: React.FC = () => {
             };
         }
 
-        if (mode === "gm65") {
-            // Gửi yêu cầu bắt đầu quét
-            window.electronAPI.startScan();
+        // if (mode === "gm65") {
+        //     // Gửi yêu cầu bắt đầu quét
+        //     window.electronAPI.startScan();
 
-            // Lắng nghe kết quả từ GM65
-            const unsubscribe = window.electronAPI.onScanResult(({ barcode }) => {
-                console.log("Scan result after callback:", barcode);
-                setScanResult(barcode);
-                const parsed = parseCCCDData(barcode);
-                if (parsed) {
-                    window.electronAPI.startCCCD(parsed);
-                    navigate("/weight");
-                }
-            });
+        //     // Lắng nghe kết quả từ GM65
+        //     const unsubscribe = window.electronAPI.onScanResult(({ barcode }) => {
+        //         console.log("Scan result after callback:", barcode);
+        //         // setScanResult(barcode);
+        //         const parsed = parseCCCDData(barcode);
+        //         if (parsed) {
+        //             window.electronAPI.startCCCD(parsed);
+        //             navigate("/weight");
+        //         }
+        //     });
 
-            return () => {
-                unsubscribe();
-            };
-        }
+        //     return () => {
+        //         unsubscribe();
+        //     };
+        // }
     }, [mode, navigate]);
 
     return (
         <div style={styles.container}>
-            <h2 className="text-light">Quét mã QR / CCCD</h2>
-
-            {/* Nút chuyển chế độ */}
-            <div style={styles.modeToggle}>
-                <button onClick={() => setMode("camera")} disabled={mode === "camera"}>📷 Camera</button>
-                <button onClick={() => setMode("gm65")} disabled={mode === "gm65"}>🔌 GM65</button>
-            </div>
-
-            {/* Camera video */}
-            {mode === "camera" && (
-                <div style={styles.wrapper}>
-                    <video ref={videoRef} style={styles.video} />
-                    <div style={styles.overlay} />
-                    <div style={styles.tutorialText}>Đưa mã QR vào khung để quét</div>
+            <div style={styles.wrapper}>
+                <div style={styles.header}>
+                    <h2 className="text-light mb-0">Quét mã QR / CCCD</h2>
                 </div>
-            )}
 
+
+                {/* Camera video */}
+                {mode === "camera" && (
+                    <div style={styles.body}>
+                        <video ref={videoRef} style={styles.video} />
+                        <div style={styles.overlay} />
+                        <div style={styles.tutorialText}>Đưa mã QR vào khung để quét</div>
+                    </div>
+                )}
+
+                {/* Cảm biến */}
+                {mode === "gm65" && (
+                    <div style={styles.body}>
+                        <h5 className="text-light">Hãy đưa căn cước công dân vào vị trí của cảm biến</h5>
+                    </div>
+
+                )}
+
+                {/* Nút chuyển chế độ */}
+                <div style={styles.modeToggle}>
+                    <button
+                        style={{ width: 100 }}
+                        onClick={() => setMode("camera")}
+                        disabled={mode === "camera"}
+                        className={`btn ${mode === "camera" ? "btn-outline-primary bg-light" : "btn-primary"} `}>
+                        Camera
+                    </button>
+                    <button
+                        style={{ width: 100 }}
+                        onClick={() => setMode("gm65")}
+                        disabled={mode === "gm65"}
+                        className={`btn ${mode === "gm65" ? "btn-outline-primary bg-light" : "btn-primary"}`}>
+                        Cảm biến
+                    </button>
+                </div>
+
+            </div>
+            {/*             
             {scanResult && (
                 <div style={{ marginTop: 20, color: "green" }}>
                     ✅ Mã quét được: <strong>{scanResult}</strong>
                 </div>
-            )}
+            )} */}
             {errorMsg && (
                 <div style={{ marginTop: 20, color: "red" }}>
-                    ❌ Lỗi: {errorMsg}
+                    Đã có lỗi xảy ra: {errorMsg}
                 </div>
             )}
         </div>
@@ -159,19 +177,46 @@ const styles: { [key: string]: React.CSSProperties } = {
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: 'transparent',
-        flex: 1
+        width: "100%",
+        height: "100vh",
+    },
+    wrapper: {
+        width: "80%",
+        height: "80%",
+        backgroundColor: "var(--sub-background-color)",
+        // display: "flex",
+        // flexDirection: "column",
+        // justifyContent: "center",
+        // alignItems: "center",
+        borderRadius: 8,
+    },
+    header: {
+        marginBottom: 20,
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        padding: 10,
+        borderRadius: "8px 8px 0 0",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
     },
     modeToggle: {
         display: "flex",
-        gap: 10,
-        marginBottom: 20,
+        gap: 20,
+        marginTop: 20,
+        width: "100%",
+        justifyContent: "center",
+        padding: 10,
+        alignItems: "center",
     },
-    wrapper: {
+    body: {
         position: "relative",
         width: "100%",
         maxWidth: 500,
         aspectRatio: "4/3",
         margin: "0 auto",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
     },
     video: {
         width: "100%",
