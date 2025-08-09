@@ -54,7 +54,7 @@ const QRScanPage: React.FC = () => {
                     controls = await codeReader.decodeFromVideoDevice(
                         selectedDeviceId,
                         videoRef.current!,
-                        (result, error, ctrl) => {
+                        (result, _, ctrl) => {
                             if (result) {
                                 const text = result.getText();
                                 console.log("Scan result:", String(text));
