@@ -10,7 +10,7 @@ import { SerialPort, ReadlineParser } from 'serialport';
 import crypto from 'crypto';
 import dayjs from 'dayjs';
 import iconv from 'iconv-lite';
-import { initDB, getAllRecords, addRecord, updateRecord, deleteRecord } from './db.js'
+import { initDB, getAllRecords, addRecord, updateRecord, deleteRecord, getRecordsByDatePaginated } from './db.js'
 
 
 
@@ -532,6 +532,17 @@ app.on("ready", async () => {
     ipcMain.handle('update-record', (e, index, record) => updateRecord(index, record))
 
     ipcMain.handle('delete-record', (e, index) => deleteRecord(index))
+
+    ipcMain.handle('get-record-by-date', async (e, args: GetRecordByDateArgs) => {
+        const { startDate, endDate, page, pageSize } = args;
+        return await getRecordsByDatePaginated(
+            new Date(startDate),
+            new Date(endDate),
+            page ?? 1,
+            pageSize ?? 10
+        );
+    });
+
 
 
 

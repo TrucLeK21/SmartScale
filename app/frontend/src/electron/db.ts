@@ -90,9 +90,13 @@ export async function getRecordsByDatePaginated(
   currentPage: number
 }> {
   await db.read();
-
   const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
   const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  console.log(`Filtering records from ${start.toISOString()} to ${end.toISOString()}`);
 
   // Lọc các record theo ngày (và bỏ qua record null)
   const filtered = (db.data?.records ?? []).filter((item) => {
@@ -100,6 +104,8 @@ export async function getRecordsByDatePaginated(
     const recordDate = new Date(item.record.date);
     return recordDate >= start && recordDate <= end;
   });
+
+  console.log(`Found ${filtered.length} records in the specified date range.`);
 
   const totalRecords = filtered.length;
   const totalPages = Math.ceil(totalRecords / pageSize);

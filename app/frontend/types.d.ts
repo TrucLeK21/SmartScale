@@ -16,6 +16,20 @@ interface WeightPayload {
     message: string;
 }
 
+type GetRecordByDateArgs = {
+    startDate: string; // hoặc Date, nhưng thường IPC nên truyền string
+    endDate: string;
+    page?: number;
+    pageSize?: number;
+};
+
+type GetRecordByDateResult = {
+    data: RecordData[];
+    totalRecords: number;
+    totalPages: number;
+    currentPage: number;
+};
+
 type EventPayloadMapping = {
     'start-ble': void;
     'weight-data': WeightPayload;
@@ -30,10 +44,11 @@ type EventPayloadMapping = {
     'scan-data': { barcode: string };
 
     'get-all-records': void;
-    'get-record': number;                
-    'add-record': Data;             
+    'get-record': number;
+    'add-record': Data;
     'update-record': [number, Partial<Data>];
     'delete-record': number;
+    'get-record-by-date': GetRecordByDateArgs;
 };
 
 type UserData = {
@@ -135,5 +150,9 @@ interface Window {
         addRecord: (record: Data) => Promise<void>;                  // Thêm record, không trả về gì
         updateRecord: (index: number, record: Partial<Data>) => Promise<boolean>;  // Cập nhật trả về true/false
         deleteRecord: (index: number) => Promise<boolean>;
+        getRecordByDate: (
+            args: GetRecordByDateArgs
+        ) => Promise<GetRecordByDateResult>;
+
     };
 }

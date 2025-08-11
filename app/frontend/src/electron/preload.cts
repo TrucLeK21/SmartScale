@@ -18,6 +18,7 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     addRecord: (record) => ipcInvoke('add-record', record),
     updateRecord: (index, record) => ipcInvoke('update-record', [index, record]),
     deleteRecord: (index) => ipcInvoke('delete-record', index),
+    getRecordByDate: (args) => ipcInvoke<'get-record-by-date', GetRecordByDateResult>('get-record-by-date', args),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(
