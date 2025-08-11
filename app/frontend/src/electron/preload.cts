@@ -4,7 +4,7 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     startBLE: () => ipcSend('start-ble'),
     startFaceAnalyzer: (data) => ipcSend('start-face', data),
     onGettingWeight: (callback) => ipcOn('weight-data', callback),
-    getMetrics:  (faceData) => ipcInvoke<'get-metrics', HealthRecord>('get-metrics', faceData),
+    getMetrics: (faceData) => ipcInvoke<'get-metrics', HealthRecord>('get-metrics', faceData),
     resetUserState: () => ipcSend('reset-user-state'),
     getFaceData: () => ipcInvoke<'get-face-data', FaceData>('get-face-data'),
     rotateCamera: (direction) => ipcSend('rotate-camera', direction),
@@ -12,6 +12,12 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     startCCCD: (data) => ipcSend('start-cccd', data),
     startScan: () => ipcSend('start-scan'),
     onScanResult: (callback) => ipcOn('scan-data', callback),
+
+    getAllRecords: () => ipcInvoke('get-all-records'),
+    getRecord: (index) => ipcInvoke('get-record', index),
+    addRecord: (record) => ipcInvoke('add-record', record),
+    updateRecord: (index, record) => ipcInvoke('update-record', [index, record]),
+    deleteRecord: (index) => ipcInvoke('delete-record', index),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(

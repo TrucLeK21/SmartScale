@@ -28,6 +28,12 @@ type EventPayloadMapping = {
     'start-cccd': string;
     'start-scan': void;
     'scan-data': { barcode: string };
+
+    'get-all-records': void;
+    'get-record': number;                
+    'add-record': Data;             
+    'update-record': [number, Partial<Data>];
+    'delete-record': number;
 };
 
 type UserData = {
@@ -62,6 +68,17 @@ interface HealthRecord {
     idealWeight: number;
     overviewScore: OverallHealthEvaluation;
 };
+
+interface RecordData {
+    gender: string
+    race: string
+    activityFactor: number
+    record: HealthRecord | null
+}
+
+interface DBData {
+    records: RecordData[]
+}
 
 type Direction = "up" | "down" | "stop" | "default";
 
@@ -112,5 +129,11 @@ interface Window {
         startCCCD: (data: string) => void;
         startScan: () => void;
         onScanResult: (callback: (data: { barcode: string }) => void) => UnsubscribeFunction;
+
+        getAllRecords: () => Promise<Data[]>;                       // Trả về mảng Data
+        getRecord: (index: number) => Promise<Data | null>;         // Trả về 1 record hoặc null
+        addRecord: (record: Data) => Promise<void>;                  // Thêm record, không trả về gì
+        updateRecord: (index: number, record: Partial<Data>) => Promise<boolean>;  // Cập nhật trả về true/false
+        deleteRecord: (index: number) => Promise<boolean>;
     };
 }

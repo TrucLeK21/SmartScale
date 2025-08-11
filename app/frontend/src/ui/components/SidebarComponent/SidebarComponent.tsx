@@ -42,7 +42,7 @@ const NewNabarComponent: React.FC = () => {
                         </li>
                         <li >
                             <NavLink
-                                to=""
+                                to="/history"
                                 title="Lịch sử"
                                 className={({ isActive }) => isActive ? "active" : ""}>
                                 <i className="bi bi-clock-history"></i>

@@ -10,6 +10,7 @@ import { SerialPort, ReadlineParser } from 'serialport';
 import crypto from 'crypto';
 import dayjs from 'dayjs';
 import iconv from 'iconv-lite';
+import { initDB, getAllRecords, addRecord, updateRecord, deleteRecord } from './db.js'
 
 
 
@@ -61,7 +62,8 @@ const createPort = (portNum: string) => {
     parser = port.pipe(new ReadlineParser());
 };
 
-app.on("ready", () => {
+app.on("ready", async () => {
+    await initDB();
     const { width, height } = screen.getPrimaryDisplay().workAreaSize
     const mainWindow = new BrowserWindow({
         width,
@@ -522,6 +524,14 @@ app.on("ready", () => {
         }
     });
 
+
+    ipcMain.handle('get-all-records', () => getAllRecords())
+
+    ipcMain.handle('add-record', (e, record) => addRecord(record))
+
+    ipcMain.handle('update-record', (e, index, record) => updateRecord(index, record))
+
+    ipcMain.handle('delete-record', (e, index) => deleteRecord(index))
 
 
 

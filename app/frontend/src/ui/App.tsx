@@ -12,6 +12,7 @@ import HealthResultPage from './pages/HealthResultPage';
 import DashBoardPage from './pages/DashBoardPage';
 import NewLayout from './layouts/NewLayout';
 import QRScanPage from './pages/QRScanPage';
+import HistoryPage from './pages/History';
 // import MainLayout from './layouts/MainLayout';
 
 
@@ -33,6 +34,7 @@ function App() {
             <Route path="/test" element={<TestPage />} />
             <Route path="/dashboard" element={<DashBoardPage />} />
             <Route path="/qr-scan" element={<QRScanPage/>} />
+            <Route path="/history" element={<HistoryPage/>} />
           </Routes>
         </NewLayout>
         {/* </MainLayout> */}
