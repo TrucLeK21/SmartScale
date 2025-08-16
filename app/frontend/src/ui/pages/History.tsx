@@ -55,7 +55,6 @@ const HistoryPage: React.FC = () => {
 
     useEffect(() => {
         let filtered = historyData;
-
         if (genderFilter !== "all") {
             filtered = filtered.filter((item) => item.gender === genderFilter);
         }
@@ -205,7 +204,7 @@ const HistoryPage: React.FC = () => {
                                             <td>{item.record?.proteinPercentage ?? "-"}</td>
                                             <td>{item.record?.visceralFat ?? "-"}</td>
                                             <td>{item.record?.idealWeight ?? "-"}</td>
-                                            <td>{item.record?.overviewScore ?? "-"}</td>
+                                            <td>{item.record?.overviewScore?.status ?? "-"}</td>
                                         </tr>
                                     ))
                                 ) : (
@@ -224,7 +223,7 @@ const HistoryPage: React.FC = () => {
                         <div className="left d-flex align-items-center gap-3">
                             <DropDown
                                 options={pageSizeOptions}
-                                placeholder="Số bản ghi"
+                                placeholder={ `${ pageSize }`}
                                 onChange={(value) => {
                                     const newSize = parseInt(value, 10);
                                     if (newSize !== pageSize) {
@@ -234,7 +233,7 @@ const HistoryPage: React.FC = () => {
                                     }
                                 }}
                             />
-                            <span> bản ghi / Trang</span>
+                            <span> / Trang</span>
                         </div>
                         <span>
                             Hiển thị {(currentPage - 1) * pageSize + 1}–
