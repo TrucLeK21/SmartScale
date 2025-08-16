@@ -1,24 +1,24 @@
 {
-    "appId": "com.trucle.health-app",
-    "files": ["dist-electron", "dist-react"],
-    "extraResources": [
-      "dist-electron/preload.cjs",
-      "src/assets/**",
-      {
-        "from": "../backend",
-        "to": "backend",
-        "filter": ["**/*"]
-      }
-    ],
-    "icon": "./desktopIcon.png",
-    "mac": {
-      "target": "dmg"
-    },
-    "linux": {
-      "target": "AppImage",
-      "category": "Utility"
-    },
-    "win": {
-      "target": ["portable", "msi"]
+  "appId": "com.trucle.health-app",
+  "files": ["dist-electron", "dist-react"],
+  "extraResources": [
+    "dist-electron/preload.cjs",
+    "src/assets/**",
+    {
+      "from": "../backend",
+      "to": "backend",
+      "filter": ["**/*", "!venv/**"]
     }
+  ],
+  "icon": "./desktopIcon.png",
+  "mac": {
+    "target": "dmg"
+  },
+  "linux": {
+    "target": "AppImage",
+    "category": "Utility"
+  },
+  "win": {
+    "target": ["portable", "msi"]
   }
+}
