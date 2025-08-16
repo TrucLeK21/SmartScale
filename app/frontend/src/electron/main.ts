@@ -15,6 +15,8 @@ import { SerialPort, ReadlineParser } from "serialport";
 import crypto from "crypto";
 import dayjs from "dayjs";
 import iconv from "iconv-lite";
+import { initDB, getAllRecords, addRecord, updateRecord, deleteRecord, getRecordsByDatePaginated } from './db.js'
+
 
 const SHOW_PYTHON_ERRORS = false;
 let faceRecognitionDone = false;
@@ -92,37 +94,36 @@ type ParsedCCCD = {
     issue_date: string;
 };
 
-app.on("ready", () => {
-    const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-    const mainWindow = new BrowserWindow({
-        width,
-        height,
-        webPreferences: {
-            preload: getPreloadPath(),
-        },
-    });
-    if (isDev()) {
-        mainWindow.webContents.session.clearCache();
-        mainWindow.loadURL("http://localhost:5123/");
-    } else {
-        mainWindow.loadFile(
-            path.join(app.getAppPath(), "/dist-react/index.html")
-        );
+app.on("ready", async () => {
+  await initDB();
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize
+  const mainWindow = new BrowserWindow({
+    width,
+    height,
+    webPreferences: {
+      preload: getPreloadPath(),
     }
+  });
+  if (isDev()) {
+    mainWindow.webContents.session.clearCache();
+    mainWindow.loadURL('http://localhost:5123/');
+  } else {
+    mainWindow.loadFile(path.join(app.getAppPath(), '/dist-react/index.html'));
+  }
 
     ipcMain.on("start-ble", async () => {
         const pythonEnvPath = getPythonEnvPath();
         const pythonScriptPath = getPythonScriptPath("weight_scale.py");
 
-        try {
-            const ports = await SerialPort.list();
-            const esp32Port = ports.find(
-                (port) =>
-                    port.vendorId && port.vendorId.toUpperCase() === ESP32_VID
-            );
+    try {
+      const ports = await SerialPort.list();
+      const esp32Port = ports.find(
+        (port) => port.vendorId && port.vendorId.toUpperCase() === ESP32_VID
+      );
+      const debugging = true;
+      if (esp32Port && !debugging) {
 
-            if (esp32Port) {
-                console.log("ESP32 detected on port:", esp32Port.path);
+        console.log("ESP32 detected on port:", esp32Port.path);
 
                 await openSerialPort(esp32Port.path);
 
@@ -158,21 +159,21 @@ app.on("ready", () => {
                     }
                 });
 
-                return;
-            }
-            // debugging
-            // else {
-            //   const message = { isStable: true, weight: 65 };
-            //   userState.set("weight", 65);
-            //   BrowserWindow.getAllWindows()[0]?.webContents.send(
-            //     "weight-data",
-            //     message
-            //   );
-            //   return;
-            // }
-        } catch (err) {
-            console.error("Error checking serial ports:", err);
-        }
+        return;
+      }
+      // debugging
+      else {
+        const message = { isStable: true, weight: 65 };
+        userState.set("weight", 65);
+        BrowserWindow.getAllWindows()[0]?.webContents.send(
+          "weight-data",
+          message
+        );
+        return;
+      }
+    } catch (err) {
+      console.error("Error checking serial ports:", err);
+    }
 
         // if ESP32 not found, run python script
         const python = spawn(pythonEnvPath, [pythonScriptPath]);
@@ -482,101 +483,146 @@ app.on("ready", () => {
         }
     });
 
-    ipcMain.on("start-cccd", (_evnent, data: ParsedCCCD) => {
-        const age = dayjs().diff(dayjs(data.dob, "YYYY-MM-DD"), "year");
+  const parseCCCDData = (data: string): ParsedCCCD | null => {
+    const parts = data.split("|").map(p => p.trim());
+    if (parts.length < 6) return null;
 
-        userState.set("age", age);
-        userState.set(
-            "gender",
-            data.gender.toLowerCase() === "nam" ? "male" : "female"
-        );
-        userState.set("race", "asian");
+    const formatDate = (str: string) => {
+      if (str.length !== 8) return "";
+      const day = str.slice(0, 2);
+      const month = str.slice(2, 4);
+      const year = str.slice(4, 8);
+      return `${year}-${month}-${day}`; // yyyy-MM-dd
+    };
 
-        console.log(userState.get());
-        console.log("Parsed CCCD data:", data);
-    });
+    const [cccd_id, cmnd_id, name, dobRaw, gender, address, issueDateRaw = ""] = parts;
 
-    ipcMain.on("start-scan", async () => {
-        try {
-            const ports = await SerialPort.list();
-            const esp32Port = ports.find(
-                (port) =>
-                    port.vendorId && port.vendorId.toUpperCase() === ESP32_VID
-            );
+    return {
+      cccd_id,
+      cmnd_id,
+      name,
+      dob: formatDate(dobRaw),
+      gender,
+      address,
+      issue_date: issueDateRaw ? formatDate(issueDateRaw) : "",
+    };
+  };
 
-            if (!esp32Port) {
-                console.log("GM65 not found");
+  ipcMain.on('start-cccd', (_event, data: string) => {
+    console.log("Received CCCD data:", data);
+    console.log("Buffer:", Buffer.from(data, 'utf8'));
+    const parsedData = parseCCCDData(data);
+    if (!parsedData) {
+      console.error("Invalid CCCD data format");
+      return;
+    }
+    const age = dayjs().diff(dayjs(parsedData.dob, 'YYYY-MM-DD'), 'year');
+
+    userState.set("age", age);
+    userState.set("gender", parsedData.gender.toLowerCase() === "nam" ? "male" : "female");
+    userState.set("race", 'asian');
+
+    console.log(userState.get());
+    console.log('Parsed CCCD data:', parsedData);
+  });
+
+  ipcMain.handle("start-scan", async (): Promise<QrResponseMessage> => {
+    try {
+      const ports = await SerialPort.list();
+      const esp32Port = ports.find(
+        (port) => port.vendorId && port.vendorId.toUpperCase() === ESP32_VID
+      );
+
+      if (!esp32Port) {
+        return { success: false, message: "GM65 not found" };
+      }
+
+      await openSerialPort(esp32Port.path);
+
+      return await new Promise<QrResponseMessage>((resolve) => {
+        let scanCompleted = false;
+
+        const timeoutHandle = setTimeout(() => {
+          if (!scanCompleted) {
+            port?.write("STOP_CCCD\n", (err) => {
+              if (err) console.error("Error sending stop trigger:", err);
+            });
+            resolve({ success: false, message: "Timeout: No barcode scanned within 20s" });
+          }
+        }, 20000);
+
+        console.log("Triggering GM65 to scan...");
+        port?.write("GET_CCCD\n", (err) => {
+          if (err) {
+            resolve({ success: false, message: "Trigger error: " + err.message });
+          } else {
+            console.log("Trigger sent to GM65");
+          }
+        });
+
+        port?.on("data", (data) => {
+          if (scanCompleted) return;
+
+          const received = data.toString().trim();
+          if (received.includes("[INFO]")) {
+            return;
+          } else if (received.includes("[ERROR]")) {
+            resolve({ success: false, message: received });
+          } else if (received.includes("[QR]")) {
+            const match = received.match(/\[QR\] b'(.*)'/);
+
+            if (match && match[1]) {
+              const byteStr = match[1];
+              const buffer = Buffer.from(eval(`"${byteStr}"`), "binary");
+              const decoded = iconv.decode(buffer, "gbk").trim();
+
+              const parsedData = parseCCCDData(decoded);
+              if (!parsedData) {
+                resolve({ success: false, message: "Invalid CCCD data format" });
                 return;
+              }
+
+              const age = dayjs().diff(dayjs(parsedData.dob, "YYYY-MM-DD"), "year");
+
+              userState.set("age", age);
+              userState.set(
+                "gender",
+                parsedData.gender.toLowerCase() === "nam" ? "male" : "female"
+              );
+              userState.set("race", "asian");
+
+              console.log("User state:", userState.get());
+              scanCompleted = true;
+              clearTimeout(timeoutHandle);
+
+              resolve({ success: true, message: "Scan completed" });
             }
+          }
+        });
+      });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      return { success: false, message: msg };
+    }
+  });
 
-            await openSerialPort(esp32Port.path);
-            let scanCompleted = false;
 
-            const timeoutHandle = setTimeout(() => {
-                if (!scanCompleted) {
-                    console.log("Timeout: No barcode scanned within 20s.");
 
-                    port?.write("STOP_CCCD\n", (err) => {
-                        if (err)
-                            console.error("Error sending stop trigger:", err);
-                    });
-                }
-            }, 20000);
+  ipcMain.handle('get-all-records', () => getAllRecords())
 
-            // Gửi lệnh để bắt đầu quét
-            console.log("Triggering GM65 to scan...");
-            port?.write("GET_CCCD\n", (err) => {
-                if (err) console.error("Trigger error:", err);
-                else console.log("Trigger sent to GM65");
-            });
+  ipcMain.handle('add-record', (e, record) => addRecord(record))
 
-            port?.on("data", (data) => {
-                if (scanCompleted) return;
+  ipcMain.handle('update-record', (e, index, record) => updateRecord(index, record))
 
-                const received = data.toString().trim();
-                if (received.includes("[INFO]")) {
-                    console.log("Received info:", received);
-                    return; // Ignore info messages
-                } else if (received.includes("[ERROR]")) {
-                    console.error("Received error:", received);
-                } else if (received.includes("[QR]")) {
-                    console.log("Received QR data:", received);
-                    const match = received.match(/\[QR\] b'(.*)'/);
+  ipcMain.handle('delete-record', (e, index) => deleteRecord(index))
 
-                    if (match && match[1]) {
-                        const byteStr = match[1];
-
-                        const buffer = Buffer.from(
-                            eval(`"${byteStr}"`),
-                            "binary"
-                        );
-
-                        // Decode using GBK encoding
-                        const decoded = iconv.decode(buffer, "gbk");
-
-                        console.log("Decoded QR:", decoded.trim());
-
-                        scanCompleted = true;
-                        clearTimeout(timeoutHandle);
-
-                        BrowserWindow.getAllWindows()[0]?.webContents.send(
-                            "scan-data",
-                            {
-                                barcode: decoded,
-                            }
-                        );
-                    }
-                } else {
-                    return; // Ignore other messages
-                }
-
-                // if (buffer.length <= 8 && buffer.toString().includes("31")) {
-                //   console.log("Ignored ACK response:", buffer.toString());
-                //   return;
-                // }
-            });
-        } catch (error) {
-            console.error("Error setting up GM65:", error);
-        }
-    });
+  ipcMain.handle('get-record-by-date', async (e, args: GetRecordByDateArgs) => {
+    const { startDate, endDate, page, pageSize } = args;
+    return await getRecordsByDatePaginated(
+      new Date(startDate),
+      new Date(endDate),
+      page ?? 1,
+      pageSize ?? 10
+    );
+  });
 });

@@ -16,6 +16,20 @@ interface WeightPayload {
     message: string;
 }
 
+type GetRecordByDateArgs = {
+    startDate: string; // hoặc Date, nhưng thường IPC nên truyền string
+    endDate: string;
+    page?: number;
+    pageSize?: number;
+};
+
+type GetRecordByDateResult = {
+    data: RecordData[];
+    totalRecords: number;
+    totalPages: number;
+    currentPage: number;
+};
+
 type EventPayloadMapping = {
     'start-ble': void;
     'weight-data': WeightPayload;
@@ -25,9 +39,16 @@ type EventPayloadMapping = {
     'get-face-data': void;
     'rotate-camera': Direction;
     'get-ai-response': UserData;
-    'start-cccd': ParsedCCCD;
-    'start-scan': void;
+    'start-cccd': string;
+    'start-scan': QrResponseMessage;
     'scan-data': { barcode: string };
+
+    'get-all-records': void;
+    'get-record': number;
+    'add-record': Data;
+    'update-record': [number, Partial<Data>];
+    'delete-record': number;
+    'get-record-by-date': GetRecordByDateArgs;
 };
 
 type UserData = {
@@ -62,6 +83,17 @@ interface HealthRecord {
     idealWeight: number;
     overviewScore: OverallHealthEvaluation;
 };
+
+interface RecordData {
+    gender: string
+    race: string
+    activityFactor: number
+    record: HealthRecord | null
+}
+
+interface DBData {
+    records: RecordData[]
+}
 
 type Direction = "up" | "down" | "stop" | "default";
 
@@ -99,6 +131,11 @@ type ParsedCCCD = {
     issue_date: string;
 };
 
+type QrResponseMessage = {
+    success: boolean;
+    message: string;
+}
+
 interface Window {
     electronAPI: {
         startBLE: () => void;
@@ -109,8 +146,18 @@ interface Window {
         getFaceData: () => Promise<FaceData>;
         rotateCamera: (direction: Direction) => void;
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
-        startCCCD: (data: ParsedCCCD) => void;
-        startScan: () => void;
+        startCCCD: (data: string) => void;
+        startScan: () => Promise<QrResponseMessage>;
         onScanResult: (callback: (data: { barcode: string }) => void) => UnsubscribeFunction;
+
+        getAllRecords: () => Promise<Data[]>;                       // Trả về mảng Data
+        getRecord: (index: number) => Promise<Data | null>;         // Trả về 1 record hoặc null
+        addRecord: (record: Data) => Promise<void>;                  // Thêm record, không trả về gì
+        updateRecord: (index: number, record: Partial<Data>) => Promise<boolean>;  // Cập nhật trả về true/false
+        deleteRecord: (index: number) => Promise<boolean>;
+        getRecordByDate: (
+            args: GetRecordByDateArgs
+        ) => Promise<GetRecordByDateResult>;
+
     };
 }

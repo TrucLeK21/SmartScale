@@ -97,6 +97,16 @@ const InfoConfirmScreen: React.FC = () => {
                 console.log("Gửi dữ liệu:", formattedData);
                 const metrics = await window.electronAPI.getMetrics(formattedData);
                 console.log("Nhận dữ liệu:", metrics);
+                
+
+                // Lưu dữ liệu vào db
+                await window.electronAPI.addRecord({
+                    gender: formattedData.gender,
+                    race: formattedData.race,
+                    activityFactor: formattedData.activityFactor,
+                    record: metrics,
+                }); 
+
                 set({
                     gender: formattedData.gender,
                     race: formattedData.race,

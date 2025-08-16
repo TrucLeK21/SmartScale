@@ -1,0 +1,31 @@
+
+
+/* Tất cả DayPicker đều nằm trong .rdp-root */
+.rdp-root {
+  --rdp-accent-color: var(--primary-color); /* Màu chính khi chọn */
+  --rdp-accent-background-color: rgba(255,255, 255, 0.1); /* Nền khi hover hoặc selected */
+
+}
+.date-picker-container {
+    padding: 10px 20px;
+    position: relative;
+    background-color: var(--sub-background-color);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    z-index: 100;
+}
+
+.date-picker-container:hover {
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+
+}
+
+.date-modal-container {
+    position: absolute;
+    background-color: var(--sub-background-color);
+    top: 110%;
+    padding: 20px;
+    border-radius: 15px;
+    left: 0;
+}
