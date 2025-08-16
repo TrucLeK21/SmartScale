@@ -12,7 +12,6 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     startCCCD: (data) => ipcSend('start-cccd', data),
     startScan: () => ipcSend('start-scan'),
     onScanResult: (callback) => ipcOn('scan-data', callback),
-
     getAllRecords: () => ipcInvoke('get-all-records'),
     getRecord: (index) => ipcInvoke('get-record', index),
     addRecord: (record) => ipcInvoke('add-record', record),
