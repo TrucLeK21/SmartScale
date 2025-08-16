@@ -40,7 +40,7 @@ type EventPayloadMapping = {
     'rotate-camera': Direction;
     'get-ai-response': UserData;
     'start-cccd': string;
-    'start-scan': void;
+    'start-scan': QrResponseMessage;
     'scan-data': { barcode: string };
 
     'get-all-records': void;
@@ -131,6 +131,11 @@ type ParsedCCCD = {
     issue_date: string;
 };
 
+type QrResponseMessage = {
+    success: boolean;
+    message: string;
+}
+
 interface Window {
     electronAPI: {
         startBLE: () => void;
@@ -142,7 +147,7 @@ interface Window {
         rotateCamera: (direction: Direction) => void;
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
         startCCCD: (data: string) => void;
-        startScan: () => void;
+        startScan: () => Promise<QrResponseMessage>;
         onScanResult: (callback: (data: { barcode: string }) => void) => UnsubscribeFunction;
 
         getAllRecords: () => Promise<Data[]>;                       // Trả về mảng Data

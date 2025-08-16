@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
 import { useNavigate } from "react-router-dom";
 
@@ -35,77 +35,62 @@ const QRScanPage: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const navigate = useNavigate();
 
-    useEffect(() => {
+    const handleScanQR = useCallback(async () => {
         let controls: IScannerControls;
 
         if (mode === "camera") {
             const codeReader = new BrowserQRCodeReader();
 
-            const startScanner = async () => {
-                try {
-                    const videoDevices = await BrowserQRCodeReader.listVideoInputDevices();
-                    if (videoDevices.length === 0) {
-                        setErrorMsg("Không tìm thấy camera.");
-                        return;
-                    }
-
-                    const selectedDeviceId = videoDevices[1].deviceId;
-
-                    controls = await codeReader.decodeFromVideoDevice(
-                        selectedDeviceId,
-                        videoRef.current!,
-                        (result, _, ctrl) => {
-                            if (result) {
-                                const text = result.getText();
-                                console.log("Scan result:", String(text));
-                                // setScanResult(text);
-                                if (text) {
-                                    window.electronAPI.startCCCD(text);
-                                    ctrl.stop();
-                                    navigate("/weight");
-                                }
-                            }
-
-                            // Bỏ qua NotFoundException
-                            // if (error && error.name !== "NotFoundException") {
-                            //     console.error("Decode error:", error);
-                            // }
-                        }
-                    );
-
-                } catch (e) {
-                    console.error("Error starting scanner:", e);
-                    setErrorMsg("Không thể mở camera.");
+            try {
+                const videoDevices = await BrowserQRCodeReader.listVideoInputDevices();
+                if (videoDevices.length === 0) {
+                    setErrorMsg("Không tìm thấy camera.");
+                    return;
                 }
-            };
 
-            startScanner();
+                const selectedDeviceId = videoDevices[1].deviceId;
+
+                controls = await codeReader.decodeFromVideoDevice(
+                    selectedDeviceId,
+                    videoRef.current!,
+                    (result, _, ctrl) => {
+                        if (result) {
+                            const text = result.getText();
+                            console.log("Scan result:", String(text));
+                            if (text) {
+                                window.electronAPI.startCCCD(text);
+                                ctrl.stop();
+                                navigate("/weight");
+                            }
+                        }
+                    }
+                );
+            } catch (e) {
+                console.error("Error starting scanner:", e);
+                setErrorMsg("Không thể mở camera.");
+            }
 
             return () => {
                 controls?.stop();
             };
         }
 
-        // if (mode === "gm65") {
-        //     // Gửi yêu cầu bắt đầu quét
-        //     window.electronAPI.startScan();
-
-        //     // Lắng nghe kết quả từ GM65
-        //     const unsubscribe = window.electronAPI.onScanResult(({ barcode }) => {
-        //         console.log("Scan result after callback:", barcode);
-        //         // setScanResult(barcode);
-        //         const parsed = parseCCCDData(barcode);
-        //         if (parsed) {
-        //             window.electronAPI.startCCCD(parsed);
-        //             navigate("/weight");
-        //         }
-        //     });
-
-        //     return () => {
-        //         unsubscribe();
-        //     };
-        // }
+        if (mode === "gm65") {
+            const result = await window.electronAPI.startScan();
+            if (result.success) {
+                console.log("Scan started successfully");
+                setErrorMsg(null);
+                navigate("/weight");
+            } else {
+                console.error("Scan failed:", result.message);
+                setErrorMsg(result.message);
+            }
+        }
     }, [mode, navigate]);
+
+    useEffect(() => {
+        handleScanQR();
+    }, [handleScanQR]);
 
     return (
         <div style={styles.container}>

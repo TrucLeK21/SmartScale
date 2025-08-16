@@ -10,8 +10,10 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     rotateCamera: (direction) => ipcSend('rotate-camera', direction),
     getAIResponse: (userData) => ipcInvoke<'get-ai-response', AIResponse>('get-ai-response', userData),
     startCCCD: (data) => ipcSend('start-cccd', data),
-    startScan: () => ipcSend('start-scan'),
+
+    startScan: () => ipcInvoke<'start-scan', QrResponseMessage>('start-scan'),
     onScanResult: (callback) => ipcOn('scan-data', callback),
+
     getAllRecords: () => ipcInvoke('get-all-records'),
     getRecord: (index) => ipcInvoke('get-record', index),
     addRecord: (record) => ipcInvoke('add-record', record),
