@@ -6,6 +6,8 @@ import {
   getPythonEnvPath,
   getPythonScriptPath,
   getSavedImagesPath,
+  getPipPath,
+  getPythonDirPath,
 } from "./pathResolver.js";
 import { spawn } from "child_process";
 import fs from "fs";
@@ -23,6 +25,7 @@ import {
   deleteRecord,
   getRecordsByDatePaginated,
 } from "./db.js";
+import { runInCmd } from "./util.js";
 
 const SHOW_PYTHON_ERRORS = false;
 let faceRecognitionDone = false;
@@ -537,7 +540,7 @@ app.on("ready", async () => {
     console.log("Parsed CCCD data:", parsedData);
   });
 
-  ipcMain.handle("start-scan", async (): Promise<QrResponseMessage> => {
+  ipcMain.handle("start-scan", async (): Promise<ResponseMessage> => {
     try {
       const ports = await SerialPort.list();
       const esp32Port = ports.find(
@@ -550,7 +553,7 @@ app.on("ready", async () => {
 
       await openSerialPort(esp32Port.path);
 
-      return await new Promise<QrResponseMessage>((resolve) => {
+      return await new Promise<ResponseMessage>((resolve) => {
         let scanCompleted = false;
 
         const timeoutHandle = setTimeout(() => {
@@ -647,5 +650,24 @@ app.on("ready", async () => {
       page ?? 1,
       pageSize ?? 10
     );
+  });
+
+  ipcMain.handle("ensure-pip", async () => {
+    const pythonDir = getPythonDirPath();
+    const pythonExe = getPythonEnvPath();
+    const pipExe = getPipPath();
+    const getPip = getPythonScriptPath("get-pip.py");
+    // const reqFile = path.join(process.resourcesPath, "requirements.txt");
+
+    try {
+      if (!fs.existsSync(pipExe)) {
+        await runInCmd(pythonExe, [getPip], pythonDir);
+      }
+      // await runInCmd(pipExe, ["install", "-r", reqFile], pythonDir);
+      return { success: true, message: "Install successfully!" };
+    } catch (e) {
+      console.error("ensure-pip failed:", e);
+      return { success: false, message: e };
+    }
   });
 });

@@ -10,16 +10,14 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     rotateCamera: (direction) => ipcSend('rotate-camera', direction),
     getAIResponse: (userData) => ipcInvoke<'get-ai-response', AIResponse>('get-ai-response', userData),
     startCCCD: (data) => ipcSend('start-cccd', data),
-
-    startScan: () => ipcInvoke<'start-scan', QrResponseMessage>('start-scan'),
-    onScanResult: (callback) => ipcOn('scan-data', callback),
-
+    startScan: () => ipcInvoke<'start-scan', ResponseMessage>('start-scan'),
     getAllRecords: () => ipcInvoke('get-all-records'),
     getRecord: (index) => ipcInvoke('get-record', index),
     addRecord: (record) => ipcInvoke('add-record', record),
     updateRecord: (index, record) => ipcInvoke('update-record', [index, record]),
     deleteRecord: (index) => ipcInvoke('delete-record', index),
     getRecordByDate: (args) => ipcInvoke<'get-record-by-date', GetRecordByDateResult>('get-record-by-date', args),
+    ensurePipAndPackages: () => ipcInvoke<'ensure-pip', ResponseMessage>("ensure-pip"),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(
