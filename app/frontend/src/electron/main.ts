@@ -23,7 +23,8 @@ import {
   deleteRecord, 
   getRecordsByDatePaginated, 
   getRecordById,
-  getOverviewData
+  getOverviewData,
+  getLineChartData
 } from './db.js'
 
 
@@ -537,7 +538,7 @@ app.on("ready", async () => {
     console.log('Parsed CCCD data:', parsedData);
   });
 
-  ipcMain.handle("start-scan", async (): Promise<QrResponseMessage> => {
+  ipcMain.handle("start-scan", async (): Promise<ResponseMessage> => {
     try {
       const ports = await SerialPort.list();
       const esp32Port = ports.find(
@@ -550,7 +551,7 @@ app.on("ready", async () => {
 
       await openSerialPort(esp32Port.path);
 
-      return await new Promise<QrResponseMessage>((resolve) => {
+      return await new Promise<ResponseMessage>((resolve) => {
         let scanCompleted = false;
 
         const timeoutHandle = setTimeout(() => {
@@ -642,6 +643,10 @@ app.on("ready", async () => {
   ipcMain.handle('get-overview-data', async (e, { startDate, endDate }) => {
     const response = await getOverviewData(new Date(startDate), new Date(endDate));
     return response;
+  });
+
+  ipcMain.handle('get-line-chart-data', async (e, { startDate, endDate, metricKey }) => {
+    return await getLineChartData(new Date(startDate), new Date(endDate), metricKey);
   });
 
 

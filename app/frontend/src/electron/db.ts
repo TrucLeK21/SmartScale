@@ -176,9 +176,16 @@ export async function getOverviewData(
   }
 
   // Tính tổng bằng reduce
-  const totalWeight = filtered.reduce((sum, r) => sum + (r.record?.weight ?? 0), 0);
+  const totalWeight = filtered.reduce((sum, r, index) => {
+    const current = r.record?.weight ?? 0;
+    console.log(
+      `Index ${index}: sum = ${sum}, current weight = ${current}, new sum = ${sum + current}`
+    );
+    return sum + current;
+  }, 0);
   const totalBMI = filtered.reduce((sum, r) => sum + (r.record?.bmi ?? 0), 0);
   const totalFatPercentage = filtered.reduce((sum, r) => sum + (r.record?.fatPercentage ?? 0), 0);
+
 
   // Trả về dữ liệu tổng quan
   return {
@@ -189,6 +196,65 @@ export async function getOverviewData(
 
   };
 }
+type MetricKey = keyof RecordData | keyof HealthRecord;
+
+export async function getLineChartData(
+  startDate: Date,
+  endDate: Date,
+  metricKey: MetricKey = "weight"
+): Promise<ChartData[]> {
+  await db.read();
+
+  const normalizedStartDate = new Date(startDate);
+  normalizedStartDate.setHours(0, 0, 0, 0);
+
+  const normalizedEndDate = new Date(endDate);
+  normalizedEndDate.setHours(23, 59, 59, 999);
+
+  const records = db.data?.records ?? [];
+  if (records.length === 0) {
+    return [];
+  }
+
+  // Gom dữ liệu theo ngày
+  const grouped: Record<string, number[]> = {};
+
+  records.forEach(record => {
+    const recordDate = record.record?.date
+      ? new Date(record.record.date)
+      : null;
+
+    const metricValue =
+      record[metricKey as keyof RecordData] ??
+      record.record?.[metricKey as keyof HealthRecord];
+
+    if (
+      recordDate !== null &&
+      recordDate >= normalizedStartDate &&
+      recordDate <= normalizedEndDate &&
+      metricValue != null
+    ) {
+      const dayKey = recordDate.toISOString().split("T")[0];
+
+      if (!grouped[dayKey]) {
+        grouped[dayKey] = [];
+      }
+      grouped[dayKey].push(metricValue as number);
+    }
+  });
+
+  // Tính trung bình mỗi ngày
+  const chartData = Object.entries(grouped)
+    .map(([date, values]) => ({
+      date,
+      value: values.reduce((a, b) => a + b, 0) / values.length
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  return chartData;
+}
+
+
 
 
 

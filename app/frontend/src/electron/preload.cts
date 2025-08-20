@@ -11,7 +11,7 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     getAIResponse: (userData) => ipcInvoke<'get-ai-response', AIResponse>('get-ai-response', userData),
     startCCCD: (data) => ipcSend('start-cccd', data),
 
-    startScan: () => ipcInvoke<'start-scan', QrResponseMessage>('start-scan'),
+    startScan: () => ipcInvoke<'start-scan', ResponseMessage>('start-scan'),
     onScanResult: (callback) => ipcOn('scan-data', callback),
 
     getAllRecords: () => ipcInvoke('get-all-records'),
@@ -21,6 +21,7 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     deleteRecord: (id) => ipcInvoke('delete-record', id),
     getRecordByDate: (args) => ipcInvoke<'get-record-by-date', GetRecordByDateResult>('get-record-by-date', args),
     getOverviewData: (startDate, endDate) => ipcInvoke<'get-overview-data', OverviewData>('get-overview-data', { startDate, endDate }),
+    getLineChartData: (startDate, endDate, metricKey) => ipcInvoke<'get-line-chart-data', ChartData[]>('get-line-chart-data', { startDate, endDate, metricKey }),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(

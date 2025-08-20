@@ -37,6 +37,11 @@ type OverviewData = {
     averageFatPercentage: number;
 }
 
+type ChartData = {
+    date: string;
+    value: number;
+}
+
 type EventPayloadMapping = {
     'start-ble': void;
     'weight-data': WeightPayload;
@@ -57,6 +62,7 @@ type EventPayloadMapping = {
     'delete-record': string;
     'get-record-by-date': GetRecordByDateArgs;
     'get-overview-data': { startDate: Date, endDate: Date };
+    'get-line-chart-data': { startDate: Date, endDate: Date, metricKey: MetricKey };
 };
 
 type UserData = {
@@ -141,7 +147,7 @@ type ParsedCCCD = {
     issue_date: string;
 };
 
-type QrResponseMessage = {
+type ResponseMessage = {
     success: boolean;
     message: string;
 }
@@ -157,7 +163,7 @@ interface Window {
         rotateCamera: (direction: Direction) => void;
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
         startCCCD: (data: string) => void;
-        startScan: () => Promise<QrResponseMessage>;
+        startScan: () => Promise<ResponseMessage>;
         onScanResult: (callback: (data: { barcode: string }) => void) => UnsubscribeFunction;
 
         getAllRecords: () => Promise<RecordData[]>;
@@ -169,6 +175,7 @@ interface Window {
             args: GetRecordByDateArgs
         ) => Promise<GetRecordByDateResult>;
         getOverviewData: (startDate: Date, endDate: Date) => Promise<OverviewData>;
+        getLineChartData: (startDate: Date, endDate: Date, metricKey: MetricKey) => Promise<ChartData[]>;
 
     };
 }
