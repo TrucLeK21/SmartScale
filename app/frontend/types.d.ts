@@ -30,6 +30,13 @@ type GetRecordByDateResult = {
     currentPage: number;
 };
 
+type OverviewData = {
+    totalRecords: number;
+    averageWeight: number;
+    averageBMI: number;
+    averageFatPercentage: number;
+}
+
 type EventPayloadMapping = {
     'start-ble': void;
     'weight-data': WeightPayload;
@@ -44,11 +51,12 @@ type EventPayloadMapping = {
     'scan-data': { barcode: string };
 
     'get-all-records': void;
-    'get-record': number;
+    'get-record': string;
     'add-record': Data;
-    'update-record': [number, Partial<Data>];
-    'delete-record': number;
+    'update-record': [string, Partial<Data>];
+    'delete-record': string;
     'get-record-by-date': GetRecordByDateArgs;
+    'get-overview-data': { startDate: Date, endDate: Date };
 };
 
 type UserData = {
@@ -63,6 +71,7 @@ type FaceData = {
     age: number;
     gender: string;
     race: string;
+    height?: number;
 };
 
 interface HealthRecord {
@@ -85,6 +94,7 @@ interface HealthRecord {
 };
 
 interface RecordData {
+    id?: string;
     gender: string
     race: string
     activityFactor: number
@@ -150,14 +160,15 @@ interface Window {
         startScan: () => Promise<QrResponseMessage>;
         onScanResult: (callback: (data: { barcode: string }) => void) => UnsubscribeFunction;
 
-        getAllRecords: () => Promise<Data[]>;                       // Trả về mảng Data
-        getRecord: (index: number) => Promise<Data | null>;         // Trả về 1 record hoặc null
-        addRecord: (record: Data) => Promise<void>;                  // Thêm record, không trả về gì
-        updateRecord: (index: number, record: Partial<Data>) => Promise<boolean>;  // Cập nhật trả về true/false
-        deleteRecord: (index: number) => Promise<boolean>;
+        getAllRecords: () => Promise<RecordData[]>;
+        getRecord: (id: string) => Promise<RecordData | null>;
+        addRecord: (record: RecordData) => Promise<void>;
+        updateRecord: (id: string, record: Partial<RecordData>) => Promise<boolean>;
+        deleteRecord: (id: string) => Promise<boolean>;
         getRecordByDate: (
             args: GetRecordByDateArgs
         ) => Promise<GetRecordByDateResult>;
+        getOverviewData: (startDate: Date, endDate: Date) => Promise<OverviewData>;
 
     };
 }

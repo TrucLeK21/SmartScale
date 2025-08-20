@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import LoadingScreen from '../components/LoadingScreenComponent/LoadingScreen';
 import useHealthStore from '../hooks/healthStore';
-
 // const user_data1 = {
 //     "activityFactor": 1.2,
 //     "gender": "male",

@@ -15,7 +15,16 @@ import { SerialPort, ReadlineParser } from "serialport";
 import crypto from "crypto";
 import dayjs from "dayjs";
 import iconv from "iconv-lite";
-import { initDB, getAllRecords, addRecord, updateRecord, deleteRecord, getRecordsByDatePaginated } from './db.js'
+import { 
+  initDB, 
+  getAllRecords, 
+  addRecord, 
+  updateRecord, 
+  deleteRecord, 
+  getRecordsByDatePaginated, 
+  getRecordById,
+  getOverviewData
+} from './db.js'
 
 
 const SHOW_PYTHON_ERRORS = false;
@@ -347,6 +356,7 @@ app.on("ready", async () => {
       race: userData.race,
       gender: userData.gender,
       age: userData.age,
+      height: userData.height,
     };
   });
 
@@ -425,6 +435,21 @@ app.on("ready", async () => {
   });
 
   ipcMain.handle("get-ai-response", async (_event, userData) => {
+
+    if(isDev()) return {
+        overview: "Đang ở chế độ phát triển, không gọi API AI",
+        diet: {
+          calories: { maintain: "", cut: "", bulk: "" },
+          macros: { protein: "", carbs: "", fats: "" },
+          supplements: "",
+        },
+        workout: {
+          cardio: "",
+          strength: [],
+          frequency: "",
+          note: "",
+        },
+      };
     const _baseUrl =
       "https://health-app-server-j2mc.onrender.com/api/ai/generate-advice"; // Thay bằng URL của server Python
     try {
@@ -598,6 +623,8 @@ app.on("ready", async () => {
 
   ipcMain.handle('add-record', (e, record) => addRecord(record))
 
+  ipcMain.handle('get-record', (e, id) => getRecordById(id))
+
   ipcMain.handle('update-record', (e, index, record) => updateRecord(index, record))
 
   ipcMain.handle('delete-record', (e, index) => deleteRecord(index))
@@ -611,4 +638,11 @@ app.on("ready", async () => {
       pageSize ?? 10
     );
   });
+
+  ipcMain.handle('get-overview-data', async (e, { startDate, endDate }) => {
+    const response = await getOverviewData(new Date(startDate), new Date(endDate));
+    return response;
+  });
+
+
 });

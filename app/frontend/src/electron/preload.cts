@@ -15,11 +15,12 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     onScanResult: (callback) => ipcOn('scan-data', callback),
 
     getAllRecords: () => ipcInvoke('get-all-records'),
-    getRecord: (index) => ipcInvoke('get-record', index),
+    getRecord: (id) => ipcInvoke('get-record', id),
     addRecord: (record) => ipcInvoke('add-record', record),
-    updateRecord: (index, record) => ipcInvoke('update-record', [index, record]),
-    deleteRecord: (index) => ipcInvoke('delete-record', index),
+    updateRecord: (id, record) => ipcInvoke('update-record', [id, record]),
+    deleteRecord: (id) => ipcInvoke('delete-record', id),
     getRecordByDate: (args) => ipcInvoke<'get-record-by-date', GetRecordByDateResult>('get-record-by-date', args),
+    getOverviewData: (startDate, endDate) => ipcInvoke<'get-overview-data', OverviewData>('get-overview-data', { startDate, endDate }),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(
