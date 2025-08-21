@@ -9,23 +9,23 @@ import DatePicker from '../components/DatePickerComponent/DatePicker';
 import DropDown from '../components/DropDownComponent/DropDown';
 
 const metricOptions = [
-    { value: "activityFactor", label: "Hệ số hoạt động" },
-    { value: "height", label: "Chiều cao" },
-    { value: "weight", label: "Cân nặng" },
-    { value: "age", label: "Tuổi" },
-    { value: "bmi", label: "BMI" },
-    { value: "bmr", label: "BMR" },
-    { value: "tdee", label: "TDEE" },
-    { value: "lbm", label: "Khối lượng nạc (LBM)" },
-    { value: "fatPercentage", label: "Tỉ lệ mỡ (%)" },
-    { value: "waterPercentage", label: "Nước trong cơ thể (%)" },
-    { value: "boneMass", label: "Khối lượng xương" },
-    { value: "muscleMass", label: "Khối lượng cơ" },
-    { value: "proteinPercentage", label: "Protein (%)" },
-    { value: "visceralFat", label: "Mỡ nội tạng" },
-    { value: "idealWeight", label: "Cân nặng lý tưởng" },
-    { value: "overviewScore", label: "Điểm tổng quan" },
+    { value: "activityFactor", label: "Hệ số hoạt động", unit: "" },
+    { value: "height", label: "Chiều cao", unit: "cm" },
+    { value: "weight", label: "Cân nặng", unit: "kg" },
+    { value: "age", label: "Tuổi", unit: "năm" },
+    { value: "bmi", label: "BMI", unit: "kg/m²" },
+    { value: "bmr", label: "BMR", unit: "kcal/ngày" },
+    { value: "tdee", label: "TDEE", unit: "kcal/ngày" },
+    { value: "lbm", label: "Khối lượng nạc (LBM)", unit: "kg" },
+    { value: "fatPercentage", label: "Tỉ lệ mỡ", unit: "%" },
+    { value: "waterPercentage", label: "Nước trong cơ thể", unit: "%" },
+    { value: "boneMass", label: "Khối lượng xương", unit: "kg" },
+    { value: "muscleMass", label: "Khối lượng cơ", unit: "kg" },
+    { value: "proteinPercentage", label: "Protein", unit: "%" },
+    { value: "visceralFat", label: "Mỡ nội tạng", unit: "level" },
+    { value: "idealWeight", label: "Cân nặng lý tưởng", unit: "kg" },
 ];
+
 
 
 const DashBoardPage = () => {
@@ -38,7 +38,8 @@ const DashBoardPage = () => {
     const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
     const [dataKey, setDataKey] = useState<string>('weight');
     const [dataByKey, setDataByKey] = useState<ChartData[]>([]);
-
+    const [bmiGroupData, setBmiGroupData] = useState<BMIGroupData[]>([]);
+    const [bmiGroupByGender, setBmiGroupByGender] = useState<BMIGroupByGender[]>([]);
 
     const startAnalyzeCallback = () => {
         window.electronAPI.resetUserState();
@@ -49,6 +50,11 @@ const DashBoardPage = () => {
         const option = metricOptions.find((m) => m.value === key);
         return option ? option.label : key;
     };
+
+    const getMetricUnit = (key: string) => {
+        const option = metricOptions.find((m) => m.value === key);
+        return option ? option.unit : '';
+    }
 
     const fetchDataByKey = async (startDate: Date, endDate: Date, key: string) => {
         try {
@@ -68,9 +74,30 @@ const DashBoardPage = () => {
         }
     }
 
+    const fetchBMIGroupData = async (startDate: Date, endDate: Date) => {
+        try {
+            const result = await window.electronAPI.getBMIGroupData(startDate, endDate);
+            setBmiGroupData(result);
+        }
+        catch (error) {
+            console.error('Lỗi khi lấy dữ liệu phân bố BMI', error);
+        }
+    }
+
+    const fetchBMIGroupByGender = async (startDate: Date, endDate: Date) => {
+        try {
+            const result = await window.electronAPI.getBMIGroupByGender(startDate, endDate);
+            setBmiGroupByGender(result);
+        } catch (error) {
+            console.error('Lỗi khi lấy dữ liệu phân bố BMI theo độ tuổi, giới tính', error);
+        }
+    }
+
     useEffect(() => {
         if (dateRange?.from && dateRange?.to) {
             fetchOverviewData(dateRange.from, dateRange.to);
+            fetchBMIGroupData(dateRange.from, dateRange.to);
+            fetchBMIGroupByGender(dateRange.from, dateRange.to);
         }
     }, [dateRange]);
 
@@ -85,8 +112,8 @@ const DashBoardPage = () => {
     }, []);
 
     useEffect(() => {
-        console.table(dataByKey);
-    }, [dataByKey]);
+        console.table(bmiGroupByGender);
+    }, [bmiGroupByGender]);
     return (
         <div className="main-content">
             <header className="main-header">
@@ -166,7 +193,7 @@ const DashBoardPage = () => {
 
                         </div>
                         <div className="main-chart">
-                            <LineChartComponent data={dataByKey} title={getMetricLabel(dataKey)} />
+                            <LineChartComponent data={dataByKey} title={getMetricLabel(dataKey)} unit={getMetricUnit(dataKey)} />
                         </div>
                     </div>
 
@@ -183,7 +210,7 @@ const DashBoardPage = () => {
                             <span>Biểu đồ phân bố BMI</span>
                         </div>
                         <div className="chart-container">
-                            <PieChartComponent />
+                            <PieChartComponent data={bmiGroupData} />
 
                         </div>
                     </div>
@@ -196,7 +223,7 @@ const DashBoardPage = () => {
                             <span>Biểu đồ BMI trung bình theo độ tuổi và giới tính</span>
                         </div>
                         <div className="chart-container">
-                            <BarChartComponent />
+                            <BarChartComponent data={bmiGroupByGender}/>
 
                         </div>
                     </div>

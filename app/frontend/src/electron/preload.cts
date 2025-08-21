@@ -22,6 +22,8 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     getRecordByDate: (args) => ipcInvoke<'get-record-by-date', GetRecordByDateResult>('get-record-by-date', args),
     getOverviewData: (startDate, endDate) => ipcInvoke<'get-overview-data', OverviewData>('get-overview-data', { startDate, endDate }),
     getLineChartData: (startDate, endDate, metricKey) => ipcInvoke<'get-line-chart-data', ChartData[]>('get-line-chart-data', { startDate, endDate, metricKey }),
+    getBMIGroupData: (startDate, endDate) => ipcInvoke<'get-bmi-group-data', BMIGroupData[]>('get-bmi-group-data', { startDate, endDate }),
+    getBMIGroupByGender: (startDate, endDate) => ipcInvoke<'get-bmi-group-by-gender', BMIGroupByGender[]>('get-bmi-group-by-gender', { startDate, endDate }),
 } satisfies Window['electronAPI']);
 
 function ipcSend<Key extends keyof EventPayloadMapping>(

@@ -24,7 +24,9 @@ import {
   getRecordsByDatePaginated, 
   getRecordById,
   getOverviewData,
-  getLineChartData
+  getLineChartData,
+  getBMIGroupData,
+  getBMIGroupByGender
 } from './db.js'
 
 
@@ -647,6 +649,17 @@ app.on("ready", async () => {
 
   ipcMain.handle('get-line-chart-data', async (e, { startDate, endDate, metricKey }) => {
     return await getLineChartData(new Date(startDate), new Date(endDate), metricKey);
+  });
+
+  ipcMain.handle('get-bmi-group-data', async (e, { startDate, endDate }) => {
+    const response = await getBMIGroupData(new Date(startDate), new Date(endDate));
+    return response;
+  });
+
+  ipcMain.handle('get-bmi-group-by-gender', async (e, { startDate, endDate }) => {
+    const response = await getBMIGroupByGender(new Date(startDate), new Date(endDate));
+    return response;
+
   });
 
 

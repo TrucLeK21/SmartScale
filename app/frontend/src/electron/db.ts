@@ -176,13 +176,7 @@ export async function getOverviewData(
   }
 
   // Tính tổng bằng reduce
-  const totalWeight = filtered.reduce((sum, r, index) => {
-    const current = r.record?.weight ?? 0;
-    console.log(
-      `Index ${index}: sum = ${sum}, current weight = ${current}, new sum = ${sum + current}`
-    );
-    return sum + current;
-  }, 0);
+  const totalWeight = filtered.reduce((sum, r) => sum + (r.record?.weight ?? 0), 0);
   const totalBMI = filtered.reduce((sum, r) => sum + (r.record?.bmi ?? 0), 0);
   const totalFatPercentage = filtered.reduce((sum, r) => sum + (r.record?.fatPercentage ?? 0), 0);
 
@@ -254,6 +248,123 @@ export async function getLineChartData(
   return chartData;
 }
 
+
+export async function getBMIGroupData(startDate: Date, endDate: Date): Promise<BMIGroupData[]> {
+  const groups: BMIGroupData[] = [
+    { name: "Gầy (<18.5)", value: 0 },
+    { name: "Bình thường (18.5 - 24.9)", value: 0 },
+    { name: "Thừa cân (25 - 29.9)", value: 0 },
+    { name: "Béo phì (≥30)", value: 0 },
+  ];
+
+
+  await db.read();
+
+  const normalizedStartDate = new Date(startDate);
+  normalizedStartDate.setHours(0, 0, 0, 0);
+
+  const normalizedEndDate = new Date(endDate);
+  normalizedEndDate.setHours(23, 59, 59, 999);
+
+
+  const records = db.data?.records ?? [];
+  if (records.length === 0) {
+    return groups;
+  }
+
+  const filtered = db.data.records.filter((item) => {
+    if (!item.record?.date) return false;
+    const recordDate = new Date(item.record.date);
+    return recordDate >= normalizedStartDate && recordDate <= normalizedEndDate;
+  });
+
+  filtered.forEach(record => {
+    const bmi = record.record?.bmi;
+    if (bmi == null) return;
+
+    if (bmi < 18.5) {
+      groups[0].value++;
+    } else if (bmi < 25) {
+      groups[1].value++;
+    } else if (bmi < 30) {
+      groups[2].value++;
+    } else {
+      groups[3].value++;
+    }
+  });
+
+  return groups;
+}
+
+export async function getBMIGroupByGender(
+  startDate: Date,
+  endDate: Date
+): Promise<BMIGroupByGender[]> {
+  const groups: BMIGroupByGender[] = [
+    { ageGroup: '<18', maleBMI: 0, femaleBMI: 0 },
+    { ageGroup: '18-25', maleBMI: 0, femaleBMI: 0 },
+    { ageGroup: '26-35', maleBMI: 0, femaleBMI: 0 },
+    { ageGroup: '36-45', maleBMI: 0, femaleBMI: 0 },
+    { ageGroup: '46-55', maleBMI: 0, femaleBMI: 0 },
+    { ageGroup: '56+', maleBMI: 0, femaleBMI: 0 },
+  ];
+
+  await db.read();
+
+  const normalizedStartDate = new Date(startDate);
+  normalizedStartDate.setHours(0, 0, 0, 0);
+
+  const normalizedEndDate = new Date(endDate);
+  normalizedEndDate.setHours(23, 59, 59, 999);
+
+  const records = db.data?.records ?? [];
+  if (records.length === 0) return groups;
+
+  const filtered = records.filter((item) => {
+    if (!item.record?.date) return false;
+    const recordDate = new Date(item.record.date);
+    return recordDate >= normalizedStartDate && recordDate <= normalizedEndDate;
+  });
+
+  const totals = groups.map(() => ({ maleSum: 0, maleCount: 0, femaleSum: 0, femaleCount: 0 }));
+
+  filtered.forEach((item) => {
+    const record = item.record;
+    if (!record) return; // <-- thêm kiểm tra record null
+
+    const age = record.age;
+    const bmi = record.bmi;
+    const gender = item.gender;
+
+    if (bmi == null) return;
+
+    let index = -1;
+    if (age < 18) index = 0;
+    else if (age >= 18 && age <= 25) index = 1;
+    else if (age >= 26 && age <= 35) index = 2;
+    else if (age >= 36 && age <= 45) index = 3;
+    else if (age >= 46 && age <= 55) index = 4;
+    else if (age >= 56) index = 5;
+
+    if (index === -1) return;
+
+    if (gender === 'male') {
+      totals[index].maleSum += bmi;
+      totals[index].maleCount += 1;
+    } else if (gender === 'female') {
+      totals[index].femaleSum += bmi;
+      totals[index].femaleCount += 1;
+    }
+  });
+
+
+  totals.forEach((t, i) => {
+    groups[i].maleBMI = t.maleCount ? parseFloat((t.maleSum / t.maleCount).toFixed(1)) : 0;
+    groups[i].femaleBMI = t.femaleCount ? parseFloat((t.femaleSum / t.femaleCount).toFixed(1)) : 0;
+  });
+
+  return groups;
+}
 
 
 

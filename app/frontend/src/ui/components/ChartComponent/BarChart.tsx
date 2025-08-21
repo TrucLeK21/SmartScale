@@ -11,19 +11,11 @@ import {
     ResponsiveContainer,
 } from 'recharts';
 
-type BMIData = {
-    ageGroup: string;
-    maleBMI: number;
-    femaleBMI: number;
-};
 
-const bmiByAgeAndGender: BMIData[] = [
-    { ageGroup: '18-25', maleBMI: 22.3, femaleBMI: 21.1 },
-    { ageGroup: '26-35', maleBMI: 23.4, femaleBMI: 22.5 },
-    { ageGroup: '36-45', maleBMI: 24.1, femaleBMI: 23.3 },
-    { ageGroup: '46-55', maleBMI: 24.7, femaleBMI: 23.9 },
-    { ageGroup: '56+', maleBMI: 24.2, femaleBMI: 23.7 },
-];
+
+type BarChartComponentProps = {
+    data: BMIGroupByGender[];
+};
 
 type CustomTooltipProps = {
     active?: boolean;
@@ -59,12 +51,12 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     return null;
 };
 
-
-const BarChartComponent = () => {
+const BarChartComponent = ({ data }: BarChartComponentProps) => {
     return (
         <ResponsiveContainer width="100%" height={200}>
             <BarChart
-                data={bmiByAgeAndGender}
+                className='chart-no-outline'
+                data={data}
                 margin={{ top: 20, right: 30, bottom: 20, left: 0 }}
             >
                 <CartesianGrid strokeDasharray="3 3" />

@@ -63,6 +63,8 @@ type EventPayloadMapping = {
     'get-record-by-date': GetRecordByDateArgs;
     'get-overview-data': { startDate: Date, endDate: Date };
     'get-line-chart-data': { startDate: Date, endDate: Date, metricKey: MetricKey };
+    'get-bmi-group-data': {startDate: Date, endDate: Date};
+    'get-bmi-group-by-gender': {startDate: Date, endDate: Date};
 };
 
 type UserData = {
@@ -152,6 +154,17 @@ type ResponseMessage = {
     message: string;
 }
 
+type BMIGroupData = {
+    name: string;
+    value: number;
+}
+
+type BMIGroupByGender = {
+    ageGroup: string;
+    maleBMI: number;
+    femaleBMI: number;
+}
+
 interface Window {
     electronAPI: {
         startBLE: () => void;
@@ -176,6 +189,7 @@ interface Window {
         ) => Promise<GetRecordByDateResult>;
         getOverviewData: (startDate: Date, endDate: Date) => Promise<OverviewData>;
         getLineChartData: (startDate: Date, endDate: Date, metricKey: MetricKey) => Promise<ChartData[]>;
-
+        getBMIGroupData: (startDate: Date, endDate: Date) => Promise<BMIGroupData[]>;
+        getBMIGroupByGender: (startDate: Date, endDate: Date) => Promise<BMIGroupByGender[]>;
     };
 }
