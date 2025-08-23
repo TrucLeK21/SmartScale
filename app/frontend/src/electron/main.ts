@@ -657,13 +657,16 @@ app.on("ready", async () => {
     const pythonExe = getPythonEnvPath();
     const pipExe = getPipPath();
     const getPip = getPythonScriptPath("get-pip.py");
+    const reqFile = getPythonScriptPath("requirements.txt");
     // const reqFile = path.join(process.resourcesPath, "requirements.txt");
 
     try {
       if (!fs.existsSync(pipExe)) {
+        console.log("Start getting pip process...");
         await runInCmd(pythonExe, [getPip], pythonDir);
       }
-      // await runInCmd(pipExe, ["install", "-r", reqFile], pythonDir);
+      console.log("Pip has been installed, installing requirements...");
+      await runInCmd(pipExe, ["install", "-r", reqFile], pythonDir);
       return { success: true, message: "Install successfully!" };
     } catch (e) {
       console.error("ensure-pip failed:", e);
