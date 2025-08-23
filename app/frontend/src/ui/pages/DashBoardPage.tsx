@@ -111,9 +111,6 @@ const DashBoardPage = () => {
         startAnalyzeCallback();
     }, []);
 
-    useEffect(() => {
-        console.table(bmiGroupByGender);
-    }, [bmiGroupByGender]);
     return (
         <div className="main-content">
             <header className="main-header">

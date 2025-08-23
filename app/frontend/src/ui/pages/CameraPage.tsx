@@ -42,7 +42,7 @@ const Face: React.FC = () => {
       // toast.error("Failed to capture photo: Video not available");
       return;
     }
-  
+
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = cameraView.width;
     tempCanvas.height = cameraView.height;
@@ -52,9 +52,9 @@ const Face: React.FC = () => {
       // toast.error("Failed to capture photo: Canvas context not available");
       return;
     }
-  
+
     tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
-  
+
     const croppedCanvas = document.createElement("canvas");
     croppedCanvas.width = 320;
     croppedCanvas.height = 320;
@@ -64,7 +64,7 @@ const Face: React.FC = () => {
       // toast.error("Failed to capture photo: Cropped canvas context not available");
       return;
     }
-  
+
     croppedCtx.drawImage(
       tempCanvas,
       (cameraView.width - 320) / 2,
@@ -76,12 +76,12 @@ const Face: React.FC = () => {
       320,
       320
     );
-  
+
     const croppedImage = croppedCanvas.toDataURL("image/png");
     window.electronAPI.startFaceAnalyzer(croppedImage);
-  
+
     showToast.success("Ảnh được chụp thành công!");
-  
+
     setTimeout(() => {
       navigate("/weight");
     }, 2000);
@@ -112,24 +112,31 @@ const Face: React.FC = () => {
       const canvas = canvasRef.current;
       const video = webcamRef.current?.video;
       if (!canvas || !video) return;
-    
+
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-    
+
       canvas.width = cameraView.width;
       canvas.height = cameraView.height;
-    
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
       ctx.beginPath();
       ctx.rect(fixedBox.x, fixedBox.y, fixedBox.width, fixedBox.height);
       ctx.lineWidth = 3;
-      ctx.strokeStyle = "lime";
+      ctx.strokeStyle = "#14AE8B";
+      ctx.shadowColor = getComputedStyle(document.documentElement)
+        .getPropertyValue("--primary-color")
+        .trim();
+      ctx.shadowBlur = 15;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
       ctx.stroke();
-    
+
+
       const validDetections: FaceDetection.Detection[] = [];
-    
+
       // Handle case when no faces are detected
       if (results.detections.length === 0) {
         if (lastCommandRef.current !== "stop") {
@@ -140,23 +147,23 @@ const Face: React.FC = () => {
         faceInBoxStartTimeRef.current = null;
         return;
       }
-    
+
       results.detections.forEach((detection) => {
         const box = detection.boundingBox;
         const x = (box.xCenter - box.width / 2) * canvas.width;
         const y = (box.yCenter - box.height / 2) * canvas.height;
         const width = box.width * canvas.width;
         const height = box.height * canvas.height;
-    
+
         const isInside =
           x >= fixedBox.x &&
           y >= fixedBox.y &&
           x + width <= fixedBox.x + fixedBox.width &&
           y + height <= fixedBox.y + fixedBox.height;
-    
+
         // Vertical alignment check
         const verticalThreshold = fixedBox.height * 0.1; // 10% of box height as threshold
-    
+
         if (isInside) {
           if (!isSoundPlayed.current) {
             analyzeFaceSound().play();
@@ -192,9 +199,9 @@ const Face: React.FC = () => {
           }
         }
       });
-    
+
       setDetections(validDetections);
-    
+
       if (validDetections.length > 0) {
         if (!faceInBoxStartTimeRef.current) {
           faceInBoxStartTimeRef.current = Date.now();
