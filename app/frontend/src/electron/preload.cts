@@ -12,7 +12,8 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     startCCCD: (data) => ipcSend('start-cccd', data),
 
     startScan: () => ipcInvoke<'start-scan', ResponseMessage>('start-scan'),
-    onScanResult: (callback) => ipcOn('scan-data', callback),
+
+    turnOffQrScanner: () => ipcSend('turn-off-qrscanner'),
 
     getAllRecords: () => ipcInvoke('get-all-records'),
     getRecord: (id) => ipcInvoke('get-record', id),

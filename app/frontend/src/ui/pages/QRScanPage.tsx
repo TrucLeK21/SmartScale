@@ -3,40 +3,36 @@ import { BrowserQRCodeReader, IScannerControls } from "@zxing/browser";
 import { useNavigate } from "react-router-dom";
 
 
-// const parseCCCDData = (data: string): CCCDParsed | null => {
-//     const parts = data.split("|").map(p => p.trim());
-//     if (parts.length < 6) return null;
-
-//     const formatDate = (str: string) => {
-//         if (str.length !== 8) return "";
-//         const day = str.slice(0, 2);
-//         const month = str.slice(2, 4);
-//         const year = str.slice(4, 8);
-//         return `${year}-${month}-${day}`; // yyyy-MM-dd
-//     };
-
-//     const [cccd_id, cmnd_id, name, dobRaw, gender, address, issueDateRaw = ""] = parts;
-
-//     return {
-//         cccd_id,
-//         cmnd_id,
-//         name,
-//         dob: formatDate(dobRaw),
-//         gender,
-//         address,
-//         issue_date: issueDateRaw ? formatDate(issueDateRaw) : "",
-//     };
-// };
 
 const QRScanPage: React.FC = () => {
     const [mode, setMode] = useState<"camera" | "gm65">("camera");
+    const [timeLeft, setTimeLeft] = useState<number>(20);
+    const [isTimeOut, setIsTimeOut] = useState<boolean>(false);
     // const [scanResult, setScanResult] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const controlsRef = useRef<IScannerControls | null>(null);
     const navigate = useNavigate();
 
+    const stopCamera = () => {
+        console.log(">>> stopCamera called");
+        controlsRef.current?.stop();
+        if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+
+            stream.getTracks().forEach(track => {
+                console.log(">>> stopping track:", track.kind);
+                track.stop();
+            });
+
+            videoRef.current.srcObject = null;
+        } 
+    }
+
+
     const handleScanQR = useCallback(async () => {
-        let controls: IScannerControls;
+        stopCamera();
+        window.electronAPI.turnOffQrScanner();
 
         if (mode === "camera") {
             const codeReader = new BrowserQRCodeReader();
@@ -50,7 +46,7 @@ const QRScanPage: React.FC = () => {
 
                 const selectedDeviceId = videoDevices[1].deviceId;
 
-                controls = await codeReader.decodeFromVideoDevice(
+                const controls = await codeReader.decodeFromVideoDevice(
                     selectedDeviceId,
                     videoRef.current!,
                     (result, _, ctrl) => {
@@ -65,17 +61,17 @@ const QRScanPage: React.FC = () => {
                         }
                     }
                 );
+
+                controlsRef.current = controls;
             } catch (e) {
                 console.error("Error starting scanner:", e);
                 setErrorMsg("Không thể mở camera.");
             }
 
-            return () => {
-                controls?.stop();
-            };
         }
 
         if (mode === "gm65") {
+
             const result = await window.electronAPI.startScan();
             if (result.success) {
                 console.log("Scan started successfully");
@@ -86,11 +82,48 @@ const QRScanPage: React.FC = () => {
                 setErrorMsg(result.message);
             }
         }
+
     }, [mode, navigate]);
 
     useEffect(() => {
         handleScanQR();
+
+        return () => {
+            console.log("Cleanup scanner");
+            stopCamera();                  // 🔹 tắt hẳn camera
+            window.electronAPI.turnOffQrScanner();
+        };
     }, [handleScanQR]);
+
+    useEffect(() => {
+        if (mode !== "gm65") {
+            // reset khi chuyển về camera
+            setTimeLeft(20);
+            setIsTimeOut(false);
+            return;
+        }
+
+        if (isTimeOut) return; // nếu hết giờ thì dừng hẳn, chờ user bấm nút
+
+        if (timeLeft === 0) {
+            setIsTimeOut(true);
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft(prev => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [mode, timeLeft, isTimeOut]);
+
+    useEffect(() => {
+        return () => {
+            stopCamera();
+            window.electronAPI.turnOffQrScanner();
+        };
+    }, []);
+
 
     return (
         <div style={styles.container}>
@@ -111,26 +144,64 @@ const QRScanPage: React.FC = () => {
 
                 {/* Cảm biến */}
                 {mode === "gm65" && (
-                    <div style={styles.body}>
-                        <h5 className="text-light">Hãy đưa căn cước công dân vào vị trí của cảm biến</h5>
-                    </div>
+                    <div style={styles.body} className="flex-column">
+                        <h5 className="text-light mb-5">
+                            Hãy đưa căn cước công dân vào vị trí của cảm biến
+                        </h5>
 
+                        {!isTimeOut ? (
+                            <p className="text-light">
+                                <span className="text-success">Đếm ngược:</span> {timeLeft}s
+                            </p>
+                        ) : (
+                            <div style={{ textAlign: "center" }}>
+                                <p className="text-danger"> Hết giờ</p>
+                                <button
+                                    className="btn "
+                                    onClick={() => {
+                                        setTimeLeft(20);
+                                        setIsTimeOut(false);
+                                        handleScanQR();
+                                    }}
+                                    style={{
+                                        backgroundColor: 'var(--sub-background-color-2)',
+                                        color: 'white'
+                                    }}
+                                >
+                                    <i className="bi bi-arrow-counterclockwise me-2"></i>
+                                    Thử lại
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 )}
+
 
                 {/* Nút chuyển chế độ */}
                 <div style={styles.modeToggle}>
                     <button
-                        style={{ width: 100 }}
+                        style={{
+                            width: 100,
+                            backgroundColor: mode === "camera" ? 'var(--primary-color)' : 'var(--sub-background-color)',
+                            border: mode === "camera" ? 'none' : '2px solid var(--primary-color)',
+                            color: "white"
+                        }}
                         onClick={() => setMode("camera")}
                         disabled={mode === "camera"}
-                        className={`btn ${mode === "camera" ? "btn-outline-primary bg-light" : "btn-primary"} `}>
+                        className="btn">
                         Camera
                     </button>
                     <button
-                        style={{ width: 100 }}
+                        style={{
+                            width: 100,
+                            backgroundColor: mode === "gm65" ? 'var(--primary-color)' : 'var(--sub-background-color)',
+                            border: mode === "gm65" ? 'none' : '2px solid var(--primary-color)',
+                            color: "white"
+
+                        }}
                         onClick={() => setMode("gm65")}
                         disabled={mode === "gm65"}
-                        className={`btn ${mode === "gm65" ? "btn-outline-primary bg-light" : "btn-primary"}`}>
+                        className="btn">
                         Cảm biến
                     </button>
                 </div>
@@ -167,12 +238,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     },
     wrapper: {
         width: "80%",
-        height: "80%",
+        height: "85%",
         backgroundColor: "var(--sub-background-color)",
-        // display: "flex",
-        // flexDirection: "column",
-        // justifyContent: "center",
-        // alignItems: "center",
+        position: 'relative',
         borderRadius: 8,
     },
     header: {
@@ -187,11 +255,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     modeToggle: {
         display: "flex",
         gap: 20,
-        marginTop: 20,
         width: "100%",
         justifyContent: "center",
-        padding: 10,
         alignItems: "center",
+        position: 'absolute',
+        bottom: 10,
     },
     body: {
         position: "relative",

@@ -15,13 +15,13 @@ import { SerialPort, ReadlineParser } from "serialport";
 import crypto from "crypto";
 import dayjs from "dayjs";
 import iconv from "iconv-lite";
-import { 
-  initDB, 
-  getAllRecords, 
-  addRecord, 
-  updateRecord, 
-  deleteRecord, 
-  getRecordsByDatePaginated, 
+import {
+  initDB,
+  getAllRecords,
+  addRecord,
+  updateRecord,
+  deleteRecord,
+  getRecordsByDatePaginated,
   getRecordById,
   getOverviewData,
   getLineChartData,
@@ -36,6 +36,9 @@ let port: SerialPort | null = null;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let parser: ReadlineParser | null = null;
 const ESP32_VID = "303A"; // Espressif VID
+
+let timeoutHandle: NodeJS.Timeout | null = null;
+let scanCompleted = false;
 
 const checkPortExists = async (portPath: string): Promise<boolean> => {
   try {
@@ -439,20 +442,20 @@ app.on("ready", async () => {
 
   ipcMain.handle("get-ai-response", async (_event, userData) => {
 
-    if(isDev()) return {
-        overview: "Đang ở chế độ phát triển, không gọi API AI",
-        diet: {
-          calories: { maintain: "", cut: "", bulk: "" },
-          macros: { protein: "", carbs: "", fats: "" },
-          supplements: "",
-        },
-        workout: {
-          cardio: "",
-          strength: [],
-          frequency: "",
-          note: "",
-        },
-      };
+    if (isDev()) return {
+      overview: "Đang ở chế độ phát triển, không gọi API AI",
+      diet: {
+        calories: { maintain: "", cut: "", bulk: "" },
+        macros: { protein: "", carbs: "", fats: "" },
+        supplements: "",
+      },
+      workout: {
+        cardio: "",
+        strength: [],
+        frequency: "",
+        note: "",
+      },
+    };
     const _baseUrl =
       "https://health-app-server-j2mc.onrender.com/api/ai/generate-advice"; // Thay bằng URL của server Python
     try {
@@ -540,6 +543,8 @@ app.on("ready", async () => {
     console.log('Parsed CCCD data:', parsedData);
   });
 
+
+
   ipcMain.handle("start-scan", async (): Promise<ResponseMessage> => {
     try {
       const ports = await SerialPort.list();
@@ -554,9 +559,9 @@ app.on("ready", async () => {
       await openSerialPort(esp32Port.path);
 
       return await new Promise<ResponseMessage>((resolve) => {
-        let scanCompleted = false;
+        scanCompleted = false;
 
-        const timeoutHandle = setTimeout(() => {
+        timeoutHandle = setTimeout(() => {
           if (!scanCompleted) {
             port?.write("STOP_CCCD\n", (err) => {
               if (err) console.error("Error sending stop trigger:", err);
@@ -607,7 +612,10 @@ app.on("ready", async () => {
 
               console.log("User state:", userState.get());
               scanCompleted = true;
-              clearTimeout(timeoutHandle);
+              if (timeoutHandle) {
+                clearTimeout(timeoutHandle);
+                timeoutHandle = null;
+              }
 
               resolve({ success: true, message: "Scan completed" });
             }
@@ -620,7 +628,17 @@ app.on("ready", async () => {
     }
   });
 
+  ipcMain.on("turn-off-qrscanner", () => {
+    port?.write("STOP_CCCD\n", (err) => {
+      if (err) console.error("Error sending stop trigger:", err);
+    });
 
+    // 🔑 reset timeout khi tắt scanner
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+      timeoutHandle = null;
+    }
+  });
 
   ipcMain.handle('get-all-records', () => getAllRecords())
 

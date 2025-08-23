@@ -55,6 +55,8 @@ type EventPayloadMapping = {
     'start-scan': QrResponseMessage;
     'scan-data': { barcode: string };
 
+    'turn-off-qrscanner': void;
+
     'get-all-records': void;
     'get-record': string;
     'add-record': Data;
@@ -177,7 +179,8 @@ interface Window {
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
         startCCCD: (data: string) => void;
         startScan: () => Promise<ResponseMessage>;
-        onScanResult: (callback: (data: { barcode: string }) => void) => UnsubscribeFunction;
+
+        turnOffQrScanner: () => void;
 
         getAllRecords: () => Promise<RecordData[]>;
         getRecord: (id: string) => Promise<RecordData | null>;
@@ -191,5 +194,6 @@ interface Window {
         getLineChartData: (startDate: Date, endDate: Date, metricKey: MetricKey) => Promise<ChartData[]>;
         getBMIGroupData: (startDate: Date, endDate: Date) => Promise<BMIGroupData[]>;
         getBMIGroupByGender: (startDate: Date, endDate: Date) => Promise<BMIGroupByGender[]>;
+
     };
 }
