@@ -30,26 +30,44 @@ type GetRecordByDateResult = {
   currentPage: number;
 };
 
-type EventPayloadMapping = {
-  "start-ble": void;
-  "weight-data": WeightPayload;
-  "start-face": string;
-  "get-metrics": FaceData;
-  "reset-user-state": void;
-  "get-face-data": void;
-  "rotate-camera": Direction;
-  "get-ai-response": UserData;
-  "start-cccd": string;
-  "start-scan": ResponseMessage;
-  "scan-data": { barcode: string };
+type OverviewData = {
+    totalRecords: number;
+    averageWeight: number;
+    averageBMI: number;
+    averageFatPercentage: number;
+}
 
-  "get-all-records": void;
-  "get-record": number;
-  "add-record": Data;
-  "update-record": [number, Partial<Data>];
-  "delete-record": number;
-  "get-record-by-date": GetRecordByDateArgs;
-  "ensure-pip": ResponseMessage;
+type ChartData = {
+    date: string;
+    value: number;
+}
+
+type EventPayloadMapping = {
+    'start-ble': void;
+    'weight-data': WeightPayload;
+    'start-face': string;
+    'get-metrics': FaceData;
+    'reset-user-state': void;
+    'get-face-data': void;
+    'rotate-camera': Direction;
+    'get-ai-response': UserData;
+    'start-cccd': string;
+    'start-scan': QrResponseMessage;
+    'scan-data': { barcode: string };
+
+    'turn-off-qrscanner': void;
+
+    'get-all-records': void;
+    'get-record': string;
+    'add-record': Data;
+    'update-record': [string, Partial<Data>];
+    'delete-record': string;
+    'get-record-by-date': GetRecordByDateArgs;
+    'get-overview-data': { startDate: Date, endDate: Date };
+    'get-line-chart-data': { startDate: Date, endDate: Date, metricKey: MetricKey };
+    'get-bmi-group-data': {startDate: Date, endDate: Date};
+    'get-bmi-group-by-gender': {startDate: Date, endDate: Date};
+    "ensure-pip": ResponseMessage;
 };
 
 type UserData = {
@@ -61,9 +79,10 @@ type UserData = {
 };
 
 type FaceData = {
-  age: number;
-  gender: string;
-  race: string;
+    age: number;
+    gender: string;
+    race: string;
+    height?: number;
 };
 
 interface HealthRecord {
@@ -86,10 +105,11 @@ interface HealthRecord {
 }
 
 interface RecordData {
-  gender: string;
-  race: string;
-  activityFactor: number;
-  record: HealthRecord | null;
+    id?: string;
+    gender: string
+    race: string
+    activityFactor: number
+    record: HealthRecord | null
 }
 
 interface DBData {
@@ -133,32 +153,48 @@ type ParsedCCCD = {
 };
 
 type ResponseMessage = {
-  success: boolean;
-  message: string;
-};
+    success: boolean;
+    message: string;
+}
+
+type BMIGroupData = {
+    name: string;
+    value: number;
+}
+
+type BMIGroupByGender = {
+    ageGroup: string;
+    maleBMI: number;
+    femaleBMI: number;
+}
 
 interface Window {
-  electronAPI: {
-    startBLE: () => void;
-    startFaceAnalyzer: (data: string) => void;
-    onGettingWeight: (
-      callback: (data: WeightPayload) => void
-    ) => UnsubscribeFunction;
-    getMetrics: (faceData: FaceData) => Promise<HealthRecord>;
-    resetUserState: () => void;
-    getFaceData: () => Promise<FaceData>;
-    rotateCamera: (direction: Direction) => void;
-    getAIResponse: (user_data: UserData) => Promise<AIResponse>;
-    startCCCD: (data: string) => void;
-    startScan: () => Promise<ResponseMessage>;
-    getAllRecords: () => Promise<Data[]>; // Trả về mảng Data
-    getRecord: (index: number) => Promise<Data | null>; // Trả về 1 record hoặc null
-    addRecord: (record: Data) => Promise<void>; // Thêm record, không trả về gì
-    updateRecord: (index: number, record: Partial<Data>) => Promise<boolean>; // Cập nhật trả về true/false
-    deleteRecord: (index: number) => Promise<boolean>;
-    getRecordByDate: (
-      args: GetRecordByDateArgs
-    ) => Promise<GetRecordByDateResult>;
-    ensurePipAndPackages: () => Promise<ResponseMessage>;
-  };
+    electronAPI: {
+        startBLE: () => void;
+        startFaceAnalyzer: (data: string) => void;
+        onGettingWeight: (callback: (data: WeightPayload) => void) => UnsubscribeFunction;
+        getMetrics: (faceData: FaceData) => Promise<HealthRecord>;
+        resetUserState: () => void;
+        getFaceData: () => Promise<FaceData>;
+        rotateCamera: (direction: Direction) => void;
+        getAIResponse: (user_data: UserData) => Promise<AIResponse>;
+        startCCCD: (data: string) => void;
+        startScan: () => Promise<ResponseMessage>;
+
+        turnOffQrScanner: () => void;
+
+        getAllRecords: () => Promise<RecordData[]>;
+        getRecord: (id: string) => Promise<RecordData | null>;
+        addRecord: (record: RecordData) => Promise<void>;
+        updateRecord: (id: string, record: Partial<RecordData>) => Promise<boolean>;
+        deleteRecord: (id: string) => Promise<boolean>;
+        getRecordByDate: (
+            args: GetRecordByDateArgs
+        ) => Promise<GetRecordByDateResult>;
+        getOverviewData: (startDate: Date, endDate: Date) => Promise<OverviewData>;
+        getLineChartData: (startDate: Date, endDate: Date, metricKey: MetricKey) => Promise<ChartData[]>;
+        getBMIGroupData: (startDate: Date, endDate: Date) => Promise<BMIGroupData[]>;
+        getBMIGroupByGender: (startDate: Date, endDate: Date) => Promise<BMIGroupByGender[]>;
+        ensurePipAndPackages: () => Promise<ResponseMessage>;
+    };
 }

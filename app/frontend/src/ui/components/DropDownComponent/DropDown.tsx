@@ -12,13 +12,15 @@ interface DropDownProps {
     placeholder?: string;
     onChange?: (value: string) => void;
     iconClass?: string; // icon bên trái của dropdown
+    defaultValue?: string;
 }
 
 const DropDown: React.FC<DropDownProps> = ({
     options,
     placeholder = "Chọn...",
     onChange,
-    iconClass
+    iconClass,
+    defaultValue
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [selected, setSelected] = useState<DropDownOption | null>(null);
@@ -31,7 +33,7 @@ const DropDown: React.FC<DropDownProps> = ({
         setIsOpen(false);
         if (onChange) onChange(option.value);
     };
-    
+
     useEffect(() => {
         if (isOpen && containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
@@ -45,6 +47,13 @@ const DropDown: React.FC<DropDownProps> = ({
             }
         }
     }, [isOpen]);
+
+    useEffect(() => {
+        if (defaultValue) {
+            const found = options.find(opt => opt.value === defaultValue) || null;
+            setSelected(found);
+        }
+    }, [defaultValue, options]);
     return (
         <div className="custom-dropdown" ref={containerRef} >
             <div
@@ -57,7 +66,7 @@ const DropDown: React.FC<DropDownProps> = ({
             </div>
 
             {isOpen && (
-                 <ul className={`dropdown-list ${openUpward ? "upward" : ""}`}>
+                <ul className={`dropdown-list ${openUpward ? "upward" : ""}`}>
                     {options.map((option) => (
                         <li
                             key={option.value}

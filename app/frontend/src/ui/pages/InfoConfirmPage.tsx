@@ -38,6 +38,7 @@ const InfoConfirmScreen: React.FC = () => {
         age: 25,
         gender: 'Nữ',
         race: 'Châu Á',
+        height: 170,
     });
     const set = useHealthStore(state => state.set);
     const navigate = useNavigate();
@@ -52,6 +53,7 @@ const InfoConfirmScreen: React.FC = () => {
                     age: data.age,
                     race: data.race === 'asian' ? 'Châu Á' : 'Khác',
                     gender: data.gender === 'male' ? 'Nam' : 'Nữ',
+                    height: data.height || 170, // Default height if not provided
                 };
                 console.log(displayData);
                 setUserData(displayData);
@@ -90,6 +92,7 @@ const InfoConfirmScreen: React.FC = () => {
                 age: userData.age,
                 gender: genderMap[userData.gender] || userData.gender,
                 race: raceMap[userData.race] || userData.race,
+                height: userData.height,
                 activityFactor,
             };
 
@@ -97,7 +100,7 @@ const InfoConfirmScreen: React.FC = () => {
                 console.log("Gửi dữ liệu:", formattedData);
                 const metrics = await window.electronAPI.getMetrics(formattedData);
                 console.log("Nhận dữ liệu:", metrics);
-                
+
 
                 // Lưu dữ liệu vào db
                 await window.electronAPI.addRecord({
@@ -105,7 +108,7 @@ const InfoConfirmScreen: React.FC = () => {
                     race: formattedData.race,
                     activityFactor: formattedData.activityFactor,
                     record: metrics,
-                }); 
+                });
 
                 set({
                     gender: formattedData.gender,
@@ -186,6 +189,17 @@ const InfoConfirmScreen: React.FC = () => {
                     ))}
                 </Form>
             );
+        } else if (editingField === 'height') {
+            return (
+                <HoldableNumberPicker
+                    min={50}
+                    max={250}
+                    initial={userData.height}
+                    step={1}
+                    onChange={(value) => setTempValue(value)}
+                />
+            );
+
         }
         return null;
     };
@@ -201,8 +215,8 @@ const InfoConfirmScreen: React.FC = () => {
 
                 <div className="w-100 mb-4">
                     <div className="row g-3 text-center">
-                        {['age', 'gender', 'race'].map((field) => (
-                            <div className="col-md-4" key={field}>
+                        {['age', 'gender', 'race', 'height'].map((field) => (
+                            <div className="col-md-3 col-sm-6" key={field}>
                                 <div
                                     className="rounded-3 shadow-sm hover-shadow align-items-center"
                                     style={styles.infoCard}
@@ -267,7 +281,7 @@ const InfoConfirmScreen: React.FC = () => {
             {/* Modal chỉnh sửa thông tin */}
             <Modal show={showModal} onHide={() => setShowModal(false)} centered >
                 <Modal.Header closeButton>
-                    <Modal.Title>Chỉnh sửa {editingField === 'age' ? 'Tuổi' : editingField === 'gender' ? 'Giới tính' : 'Chủng tộc'}</Modal.Title>
+                    <Modal.Title>Chỉnh sửa {editingField === 'age' ? 'Tuổi' : editingField === 'gender' ? 'Giới tính': editingField === 'race' ? 'Chủng tộc' : 'Chiều cao'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className='pl-3'>
                     {renderEditField()}

@@ -185,8 +185,8 @@ const HistoryPage: React.FC = () => {
                             </thead>
                             <tbody>
                                 {filteredData.length > 0 ? (
-                                    filteredData.map((item, idx) => (
-                                        <tr key={idx}>
+                                    filteredData.map((item) => (
+                                        <tr key={item.id}>
                                             <td>{item.record?.date ? new Date(item.record.date).toLocaleDateString() : "-"}</td>
                                             <td>{item.gender === "male" ? "Nam" : "Nữ"}</td>
                                             <td>{item.race === "asian" ? "Châu Á" : "Khác"}</td>

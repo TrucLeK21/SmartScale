@@ -29,7 +29,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
   };
 
   return (
-    <div className="group-container date-picker-container d-flex align-items-center">
+    <div className="group-container date-picker-container" >
       <div className="content-show d-flex gap-2" onClick={togglePicker}>
         <div className="date-picker-icon">
           <i className="bi bi-calendar"></i>

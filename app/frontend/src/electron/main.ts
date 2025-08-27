@@ -24,7 +24,12 @@ import {
   updateRecord,
   deleteRecord,
   getRecordsByDatePaginated,
-} from "./db.js";
+  getRecordById,
+  getOverviewData,
+  getLineChartData,
+  getBMIGroupData,
+  getBMIGroupByGender
+} from './db.js'
 import { runInCmd } from "./util.js";
 
 const SHOW_PYTHON_ERRORS = false;
@@ -33,6 +38,9 @@ let port: SerialPort | null = null;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let parser: ReadlineParser | null = null;
 const ESP32_VID = "303A"; // Espressif VID
+
+let timeoutHandle: NodeJS.Timeout | null = null;
+let scanCompleted = false;
 
 const checkPortExists = async (portPath: string): Promise<boolean> => {
   try {
@@ -355,6 +363,7 @@ app.on("ready", async () => {
       race: userData.race,
       gender: userData.gender,
       age: userData.age,
+      height: userData.height,
     };
   });
 
@@ -554,9 +563,9 @@ app.on("ready", async () => {
       await openSerialPort(esp32Port.path);
 
       return await new Promise<ResponseMessage>((resolve) => {
-        let scanCompleted = false;
+        scanCompleted = false;
 
-        const timeoutHandle = setTimeout(() => {
+        timeoutHandle = setTimeout(() => {
           if (!scanCompleted) {
             port?.write("STOP_CCCD\n", (err) => {
               if (err) console.error("Error sending stop trigger:", err);
@@ -619,7 +628,10 @@ app.on("ready", async () => {
 
               console.log("User state:", userState.get());
               scanCompleted = true;
-              clearTimeout(timeoutHandle);
+              if (timeoutHandle) {
+                clearTimeout(timeoutHandle);
+                timeoutHandle = null;
+              }
 
               resolve({ success: true, message: "Scan completed" });
             }
@@ -632,9 +644,23 @@ app.on("ready", async () => {
     }
   });
 
-  ipcMain.handle("get-all-records", () => getAllRecords());
+  ipcMain.on("turn-off-qrscanner", () => {
+    port?.write("STOP_CCCD\n", (err) => {
+      if (err) console.error("Error sending stop trigger:", err);
+    });
 
-  ipcMain.handle("add-record", (e, record) => addRecord(record));
+    // 🔑 reset timeout khi tắt scanner
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+      timeoutHandle = null;
+    }
+  });
+
+  ipcMain.handle('get-all-records', () => getAllRecords())
+
+  ipcMain.handle('add-record', (e, record) => addRecord(record))
+
+  ipcMain.handle('get-record', (e, id) => getRecordById(id))
 
   ipcMain.handle("update-record", (e, index, record) =>
     updateRecord(index, record)
@@ -650,6 +676,26 @@ app.on("ready", async () => {
       page ?? 1,
       pageSize ?? 10
     );
+  });
+
+  ipcMain.handle('get-overview-data', async (e, { startDate, endDate }) => {
+    const response = await getOverviewData(new Date(startDate), new Date(endDate));
+    return response;
+  });
+
+  ipcMain.handle('get-line-chart-data', async (e, { startDate, endDate, metricKey }) => {
+    return await getLineChartData(new Date(startDate), new Date(endDate), metricKey);
+  });
+
+  ipcMain.handle('get-bmi-group-data', async (e, { startDate, endDate }) => {
+    const response = await getBMIGroupData(new Date(startDate), new Date(endDate));
+    return response;
+  });
+
+  ipcMain.handle('get-bmi-group-by-gender', async (e, { startDate, endDate }) => {
+    const response = await getBMIGroupByGender(new Date(startDate), new Date(endDate));
+    return response;
+
   });
 
   ipcMain.handle("ensure-pip", async () => {

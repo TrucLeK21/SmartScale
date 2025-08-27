@@ -21,3 +21,12 @@ body {
 body::-webkit-scrollbar {
   display: none;
 }
+
+svg:focus {
+  outline: none !important;
+}
+
+path:focus {
+  outline: none !important;
+
+}
