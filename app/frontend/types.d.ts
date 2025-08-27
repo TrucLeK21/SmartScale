@@ -67,7 +67,8 @@ type EventPayloadMapping = {
     'get-line-chart-data': { startDate: Date, endDate: Date, metricKey: MetricKey };
     'get-bmi-group-data': {startDate: Date, endDate: Date};
     'get-bmi-group-by-gender': {startDate: Date, endDate: Date};
-    "ensure-pip": ResponseMessage;
+    "ensure-pip": void;
+    'packages-logs': ResponseMessage;
 };
 
 type UserData = {
@@ -180,9 +181,7 @@ interface Window {
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
         startCCCD: (data: string) => void;
         startScan: () => Promise<ResponseMessage>;
-
         turnOffQrScanner: () => void;
-
         getAllRecords: () => Promise<RecordData[]>;
         getRecord: (id: string) => Promise<RecordData | null>;
         addRecord: (record: RecordData) => Promise<void>;
@@ -195,6 +194,7 @@ interface Window {
         getLineChartData: (startDate: Date, endDate: Date, metricKey: MetricKey) => Promise<ChartData[]>;
         getBMIGroupData: (startDate: Date, endDate: Date) => Promise<BMIGroupData[]>;
         getBMIGroupByGender: (startDate: Date, endDate: Date) => Promise<BMIGroupByGender[]>;
-        ensurePipAndPackages: () => Promise<ResponseMessage>;
+        ensurePipAndPackages: () => void;
+        onGettingEnsureLogs: (callback: (data: ResponseMessage) => void) => UnsubscribeFunction;
     };
 }

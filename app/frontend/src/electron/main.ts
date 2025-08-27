@@ -716,25 +716,92 @@ app.on("ready", async () => {
     }
   );
 
-  ipcMain.handle("ensure-pip", async () => {
+  ipcMain.on("ensure-pip", async () => {
     const pythonDir = getPythonDirPath();
     const pythonExe = getPythonEnvPath();
     const pipExe = getPipPath();
     const getPip = getPythonScriptPath("get-pip.py");
     const reqFile = getPythonScriptPath("requirements.txt");
-    // const reqFile = path.join(process.resourcesPath, "requirements.txt");
+
+    const sendLog = (msg: ResponseMessage) => {
+      BrowserWindow.getAllWindows()[0]?.webContents.send("packages-logs", msg);
+    };
+
+    const runSafe = async (
+      exe: string,
+      args: string[],
+      cwd: string,
+      step: string
+    ): Promise<ResponseMessage> => {
+      try {
+        const { stdout, stderr } = await runInCmd(exe, args, cwd);
+
+        if (stderr && stderr.trim().length > 0) {
+          console.error(`[${step}] Error:`, stderr);
+          return { success: false, message: `[${step}] failed: ${stderr}` };
+        }
+
+        // Nếu stdout rỗng => tự thêm message mặc định
+        const safeOut =
+          stdout && stdout.trim().length > 0
+            ? stdout.trim()
+            : "Command executed successfully ✅";
+
+        console.log(`[${step}] Success:`, safeOut);
+        return {
+          success: true,
+          message: `[${step}] success: ${safeOut}`,
+        };
+      } catch (err: any) {
+        console.error(`[${step}] Exception:`, err);
+        return {
+          success: false,
+          message: `[${step}] exception: ${err.message || err}`,
+        };
+      }
+    };
 
     try {
+      // 1. Kiểm tra pip
       if (!fs.existsSync(pipExe)) {
-        console.log("Start getting pip process...");
-        await runInCmd(pythonExe, [getPip], pythonDir);
+        sendLog({ success: true, message: "Start getting pip process..." });
+        const res = await runSafe(pythonExe, [getPip], pythonDir, "Get pip");
+        sendLog(res);
+        if (!res.success) return;
       }
-      console.log("Pip has been installed, installing requirements...");
-      await runInCmd(pipExe, ["install", "-r", reqFile], pythonDir);
-      return { success: true, message: "Install successfully!" };
-    } catch (e) {
+
+      // 2. Kiểm tra thư viện
+      const checkRes = await runSafe(
+        pipExe,
+        ["check"],
+        pythonDir,
+        "Check requirements"
+      );
+      sendLog(checkRes);
+      if (!checkRes.success) return;
+
+      if (checkRes.message.includes("No broken requirements")) {
+        sendLog({ success: true, message: "All requirements satisfied. ✅" });
+        return;
+      }
+
+      // 3. Cài đặt requirements
+      const installRes = await runSafe(
+        pipExe,
+        ["install", "-r", reqFile],
+        pythonDir,
+        "Install requirements"
+      );
+      sendLog(installRes);
+      if (!installRes.success) return;
+
+      sendLog({ success: true, message: "Environment ready! ✅" });
+    } catch (e: any) {
       console.error("ensure-pip failed:", e);
-      return { success: false, message: e };
+      sendLog({
+        success: false,
+        message: `ensure-pip failed: ${e.message || e}`,
+      });
     }
   });
 });

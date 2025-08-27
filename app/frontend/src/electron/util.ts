@@ -26,23 +26,46 @@ export function isDev(): boolean {
 export function runInCmd(
   cmd: string,
   args: string[],
-  cwd: string
-): Promise<void> {
+  cwd: string,
+  showCmd: boolean = true
+): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     const fullCmd = [cmd, ...args].join(" ");
 
-    const child = spawn("cmd.exe", ["/c", "start", "cmd.exe", "/c", fullCmd], {
+    const spawnArgs = showCmd
+      ? ["/c", "start", "cmd.exe", "/c", fullCmd]
+      : ["/c", fullCmd];
+
+    const child = spawn("cmd.exe", spawnArgs, {
       cwd,
-      windowsHide: false, // enable the cmd window
+      windowsHide: !showCmd, // true = hide window, false = show window
     });
 
-    child.on("error", reject);
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout?.on("data", (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr?.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    child.on("error", (err) => {
+      reject(err);
+    });
+
     child.on("close", (code) => {
       if (code === 0) {
-        console.log(`Install successfully! Command: ${fullCmd}`);
-        resolve();
+        console.log(`Command executed successfully: ${fullCmd}`);
+        resolve({ stdout, stderr });
       } else {
-        reject(new Error(`Process exited with code ${code}`));
+        reject(
+          new Error(
+            `Process exited with code ${code}\nSTDERR:\n${stderr}\nSTDOUT:\n${stdout}`
+          )
+        );
       }
     });
   });

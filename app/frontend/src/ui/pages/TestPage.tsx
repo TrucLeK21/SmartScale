@@ -2,50 +2,52 @@ import { useEffect, useState } from "react";
 import "react-toastify/dist/ReactToastify.css";
 import { showToast } from "../utils/toastUtils";
 
+type ResponseMessage = {
+  success: boolean;
+  message: string;
+};
+
 function App() {
-  const [pipMessage, setPipMessage] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [logs, setLogs] = useState<string[]>([]);
 
   useEffect(() => {
-    // Gọi API ensure-pip và cài package qua electronAPI
-    const checkPip = async () => {
-      try {
-        const result = await window.electronAPI.ensurePipAndPackages();
-        if (result.success) {
-          console.log("Pip/packages installed successfully");
-          setErrorMsg(null);
-          setPipMessage(result.message);
-          showToast.success(result.message);
-        } else {
-          console.error("Ensure-pip failed:", result.message);
-          setErrorMsg(result.message);
-          setPipMessage("Lỗi: " + result.message);
-          showToast.error(result.message);
-        }
-      } catch (err) {
-        console.error("IPC call failed:", err);
-        setErrorMsg("Không thể gọi ensure-pip");
-        setPipMessage("Không thể gọi ensure-pip");
-        showToast.error("Không thể gọi ensure-pip");
-      }
-    };
+    // Gửi yêu cầu check pip/packages
+    window.electronAPI.ensurePipAndPackages();
 
-    checkPip();
+    // Nhận log
+    const unsubscribe = window.electronAPI.onGettingEnsureLogs(
+      (message: ResponseMessage) => {
+        setLogs((prev) => [...prev, message.message]);
+
+        if (message.success) {
+          showToast.success(message.message);
+        } else {
+          showToast.error(message.message);
+        }
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   return (
-    <div
-      className="container-fluid d-flex flex-column align-items-center"
-      style={{ height: "100%" }}
-    >
-      {pipMessage && (
-        <div
-          className={`alert ${errorMsg ? "alert-danger" : "alert-info"} mt-3 text-center`}
-          role="alert"
-        >
-          {pipMessage}
-        </div>
-      )}
+    <div className="container-fluid d-flex flex-column align-items-center" style={{ height: "100%" }}>
+      <div className="mt-3 w-75">
+        {logs.map((msg, idx) => (
+          <div
+            key={idx}
+            className={`alert ${
+              msg.includes("❌")
+                ? "alert-danger"
+                : msg.includes("✅")
+                ? "alert-success"
+                : "alert-info"
+            } mt-2`}
+          >
+            {msg}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
