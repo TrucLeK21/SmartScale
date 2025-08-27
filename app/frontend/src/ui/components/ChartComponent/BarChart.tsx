@@ -62,7 +62,7 @@ const BarChartComponent = ({ data }: BarChartComponentProps) => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="ageGroup" />
                 <YAxis domain={[20, 26]} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip trigger='click' content={<CustomTooltip />} />
                 <Legend verticalAlign="top" />
                 <Bar dataKey="maleBMI" name="Nam" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="femaleBMI" name="Nữ" fill="#ec4899" radius={[4, 4, 0, 0]} />

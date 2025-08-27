@@ -114,7 +114,7 @@ const LineChartComponent = ({ data, title, unit }: LineChartComponentProps) => {
           stroke="#ffffff"
           tick={{ dx: -20, fill: "#ffffff", fontSize: 12 }}
         />
-        <Tooltip content={(props) => <CustomTooltip {...props} unit={unit} mode={mode} />} />
+        <Tooltip trigger='click' content={(props) => <CustomTooltip {...props} unit={unit} mode={mode} />} />
         <Legend />
         <Line
           type="monotone"
