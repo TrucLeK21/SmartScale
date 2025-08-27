@@ -128,7 +128,7 @@ const PieChartComponent: React.FC<PieChartComponentProps> = ({ data, height = 20
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                 </Pie>
-                <Tooltip trigger="click" content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} />
 
                 <Legend
                     content={<CustomLegend />}

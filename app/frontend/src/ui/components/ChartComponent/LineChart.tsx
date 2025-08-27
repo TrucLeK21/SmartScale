@@ -26,6 +26,8 @@ type CustomTooltipProps = {
   mode: 'daily' | 'monthly';
 };
 
+
+
 const CustomTooltip = ({ active, payload, label, unit, mode }: CustomTooltipProps) => {
   if (active && payload && payload.length > 0) {
     const d = new Date(label as string);
@@ -114,7 +116,7 @@ const LineChartComponent = ({ data, title, unit }: LineChartComponentProps) => {
           stroke="#ffffff"
           tick={{ dx: -20, fill: "#ffffff", fontSize: 12 }}
         />
-        <Tooltip trigger='click' content={(props) => <CustomTooltip {...props} unit={unit} mode={mode} />} />
+        <Tooltip content={(props) => <CustomTooltip {...props} unit={unit} mode={mode} />} />
         <Legend />
         <Line
           type="monotone"
