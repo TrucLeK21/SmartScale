@@ -66,7 +66,7 @@ const QRScanPage: React.FC = () => {
         return () => {
             window.electronAPI.turnOffQrScanner();
         };
-    }, [mode]);
+    }, [mode, navigate]);
 
     return (
         <div style={styles.container}>
