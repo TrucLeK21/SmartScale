@@ -174,7 +174,10 @@ app.on("ready", async () => {
 
               const message = { isStable: true, weight: finalWeight };
               userState.set("weight", finalWeight);
-              BrowserWindow.getAllWindows()[0]?.webContents.send("weight-data", message);
+              BrowserWindow.getAllWindows()[0]?.webContents.send(
+                "weight-data",
+                message
+              );
 
               receivedValidWeight = true;
               if (retryTimeout) clearTimeout(retryTimeout); // dừng retry
@@ -191,7 +194,10 @@ app.on("ready", async () => {
         // Debug fallback
         const message = { isStable: true, weight: 65 };
         userState.set("weight", 65);
-        BrowserWindow.getAllWindows()[0]?.webContents.send("weight-data", message);
+        BrowserWindow.getAllWindows()[0]?.webContents.send(
+          "weight-data",
+          message
+        );
         return;
       }
     } catch (err) {
@@ -222,7 +228,10 @@ app.on("ready", async () => {
           receivedValidWeight = true;
           if (retryTimeout) clearTimeout(retryTimeout); // dừng retry
         }
-        BrowserWindow.getAllWindows()[0]?.webContents.send("weight-data", message);
+        BrowserWindow.getAllWindows()[0]?.webContents.send(
+          "weight-data",
+          message
+        );
       } catch (e) {
         console.error("Failed to parse Python output:", e);
       }
@@ -230,7 +239,10 @@ app.on("ready", async () => {
 
     python.stderr.on("data", (data) => {
       const errorMessage = { weightStatus: "error", message: data.toString() };
-      BrowserWindow.getAllWindows()[0]?.webContents.send("weight-data", errorMessage);
+      BrowserWindow.getAllWindows()[0]?.webContents.send(
+        "weight-data",
+        errorMessage
+      );
     });
 
     python.on("close", (code) => {
@@ -241,9 +253,6 @@ app.on("ready", async () => {
     // Lần đo đầu tiên bằng Python
     retryTimeout = setTimeout(retryPython, retryIntervalMs);
   });
-
-
-
 
   ipcMain.on("start-face", (_event, base64Data: string) => {
     faceRecognitionDone = false;
@@ -752,11 +761,11 @@ app.on("ready", async () => {
       step: string
     ): Promise<ResponseMessage> => {
       try {
-        const { stdout, stderr } = await runInCmd(exe, args, cwd);
+        const { stdout, stderr } = await runInCmd(exe, args, cwd, false);
 
+        // stderr chỉ log cảnh báo, không coi là thất bại
         if (stderr && stderr.trim().length > 0) {
-          console.error(`[${step}] Error:`, stderr);
-          return { success: false, message: `[${step}] failed: ${stderr}` };
+          console.warn(`[${step}] Warning:`, stderr);
         }
 
         // Nếu stdout rỗng => tự thêm message mặc định
@@ -771,10 +780,11 @@ app.on("ready", async () => {
           message: `[${step}] success: ${safeOut}`,
         };
       } catch (err: any) {
+        // Chỉ khi runInCmd reject (exit code != 0) thì vào đây
         console.error(`[${step}] Exception:`, err);
         return {
           success: false,
-          message: `[${step}] exception: ${err.message || err}`,
+          message: `[${step}] failed: ${err.message || err}`,
         };
       }
     };
