@@ -50,4 +50,4 @@ function App() {
   );
 }
 
-export default TestPage;
+export default App;

@@ -28,8 +28,8 @@ import {
   getOverviewData,
   getLineChartData,
   getBMIGroupData,
-  getBMIGroupByGender
-} from './db.js'
+  getBMIGroupByGender,
+} from "./db.js";
 import { runInCmd } from "./util.js";
 
 const SHOW_PYTHON_ERRORS = false;
@@ -656,11 +656,11 @@ app.on("ready", async () => {
     }
   });
 
-  ipcMain.handle('get-all-records', () => getAllRecords())
+  ipcMain.handle("get-all-records", () => getAllRecords());
 
-  ipcMain.handle('add-record', (e, record) => addRecord(record))
+  ipcMain.handle("add-record", (e, record) => addRecord(record));
 
-  ipcMain.handle('get-record', (e, id) => getRecordById(id))
+  ipcMain.handle("get-record", (e, id) => getRecordById(id));
 
   ipcMain.handle("update-record", (e, index, record) =>
     updateRecord(index, record)
@@ -678,25 +678,43 @@ app.on("ready", async () => {
     );
   });
 
-  ipcMain.handle('get-overview-data', async (e, { startDate, endDate }) => {
-    const response = await getOverviewData(new Date(startDate), new Date(endDate));
+  ipcMain.handle("get-overview-data", async (e, { startDate, endDate }) => {
+    const response = await getOverviewData(
+      new Date(startDate),
+      new Date(endDate)
+    );
     return response;
   });
 
-  ipcMain.handle('get-line-chart-data', async (e, { startDate, endDate, metricKey }) => {
-    return await getLineChartData(new Date(startDate), new Date(endDate), metricKey);
-  });
+  ipcMain.handle(
+    "get-line-chart-data",
+    async (e, { startDate, endDate, metricKey }) => {
+      return await getLineChartData(
+        new Date(startDate),
+        new Date(endDate),
+        metricKey
+      );
+    }
+  );
 
-  ipcMain.handle('get-bmi-group-data', async (e, { startDate, endDate }) => {
-    const response = await getBMIGroupData(new Date(startDate), new Date(endDate));
+  ipcMain.handle("get-bmi-group-data", async (e, { startDate, endDate }) => {
+    const response = await getBMIGroupData(
+      new Date(startDate),
+      new Date(endDate)
+    );
     return response;
   });
 
-  ipcMain.handle('get-bmi-group-by-gender', async (e, { startDate, endDate }) => {
-    const response = await getBMIGroupByGender(new Date(startDate), new Date(endDate));
-    return response;
-
-  });
+  ipcMain.handle(
+    "get-bmi-group-by-gender",
+    async (e, { startDate, endDate }) => {
+      const response = await getBMIGroupByGender(
+        new Date(startDate),
+        new Date(endDate)
+      );
+      return response;
+    }
+  );
 
   ipcMain.handle("ensure-pip", async () => {
     const pythonDir = getPythonDirPath();
