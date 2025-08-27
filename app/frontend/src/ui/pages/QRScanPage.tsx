@@ -9,10 +9,9 @@ const QRScanPage: React.FC = () => {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [data, setData] = useState<string | null>(null);
     const [scanning, setScanning] = useState<boolean>(true);
-
     const navigate = useNavigate();
 
-    // 🚀 Xử lý khi scan thành công
+    // 🚀 Xử lý khi scan thành công (camera + GM65)
     useEffect(() => {
         if (data) {
             console.log("Scan result:", data);
@@ -22,7 +21,7 @@ const QRScanPage: React.FC = () => {
         }
     }, [data, navigate]);
 
-    // ⏳ Timer cho gm65
+    // ⏳ Timer GM65
     useEffect(() => {
         if (mode !== "gm65") {
             setTimeLeft(20);
@@ -31,7 +30,6 @@ const QRScanPage: React.FC = () => {
         }
 
         if (isTimeOut) return;
-
         if (timeLeft === 0) {
             setIsTimeOut(true);
             return;
@@ -43,6 +41,32 @@ const QRScanPage: React.FC = () => {
 
         return () => clearInterval(timer);
     }, [mode, timeLeft, isTimeOut]);
+
+    // 🔄 Xử lý khi đổi mode: gọi GM65 hoặc tắt scanner
+    useEffect(() => {
+        if (mode === "gm65") {
+            // Khi đổi qua GM65 -> gọi API Electron để bắt đầu quét
+            window.electronAPI.startScan()
+                .then((res: { success: boolean; message?: string }) => {
+                    if (!res.success) setErrorMsg(res.message || "Quét thất bại");
+                    else {
+                        setErrorMsg(null);
+                        navigate("/weight");
+                    }
+                });
+            setTimeLeft(20);
+            setIsTimeOut(false);
+        } else {
+            // Khi đổi sang camera -> tắt GM65 nếu có API stop
+            window.electronAPI.turnOffQrScanner();
+            setErrorMsg(null);
+            setScanning(true);
+        }
+
+        return () => {
+            window.electronAPI.turnOffQrScanner();
+        };
+    }, [mode]);
 
     return (
         <div style={styles.container}>
@@ -61,12 +85,9 @@ const QRScanPage: React.FC = () => {
                                     height={375}
                                     facingMode="user"
                                     onUpdate={(_err, result) => {
-                                        if (result) {
-                                            setData(result.getText());
-                                        }
+                                        if (result) setData(result.getText());
                                     }}
                                 />
-                                {/* Overlay */}
                                 <div style={styles.overlay} />
                                 <div style={styles.tutorialText}>Đưa mã QR vào khung để quét</div>
                             </div>
@@ -103,8 +124,16 @@ const QRScanPage: React.FC = () => {
                                     onClick={() => {
                                         setTimeLeft(20);
                                         setIsTimeOut(false);
-                                        // gọi lại electron API để quét lại
-                                        window.electronAPI.startScan();
+                                        window.electronAPI.startScan()
+                                            .then((res: { success: boolean; message?: string }) => {
+                                                if (!res.success) setErrorMsg(res.message || "Quét thất bại");
+                                                else {
+                                                    setErrorMsg(null);
+                                                    navigate("/weight");
+                                                }
+                                            });
+                                        setTimeLeft(20);
+                                        setIsTimeOut(false);
                                     }}
                                     style={{
                                         backgroundColor: "var(--sub-background-color-2)",
@@ -124,12 +153,8 @@ const QRScanPage: React.FC = () => {
                     <button
                         style={{
                             width: 100,
-                            backgroundColor:
-                                mode === "camera"
-                                    ? "var(--primary-color)"
-                                    : "var(--sub-background-color)",
-                            border:
-                                mode === "camera" ? "none" : "2px solid var(--primary-color)",
+                            backgroundColor: mode === "camera" ? "var(--primary-color)" : "var(--sub-background-color)",
+                            border: mode === "camera" ? "none" : "2px solid var(--primary-color)",
                             color: "white"
                         }}
                         onClick={() => setMode("camera")}
@@ -141,12 +166,8 @@ const QRScanPage: React.FC = () => {
                     <button
                         style={{
                             width: 100,
-                            backgroundColor:
-                                mode === "gm65"
-                                    ? "var(--primary-color)"
-                                    : "var(--sub-background-color)",
-                            border:
-                                mode === "gm65" ? "none" : "2px solid var(--primary-color)",
+                            backgroundColor: mode === "gm65" ? "var(--primary-color)" : "var(--sub-background-color)",
+                            border: mode === "gm65" ? "none" : "2px solid var(--primary-color)",
                             color: "white"
                         }}
                         onClick={() => setMode("gm65")}
@@ -170,73 +191,13 @@ const QRScanPage: React.FC = () => {
 
 export default QRScanPage;
 
+// ======== Styles giữ nguyên ========
 const styles: { [key: string]: React.CSSProperties } = {
-    container: {
-        padding: 0,
-        margin: 0,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "transparent",
-        width: "100%",
-        height: "100vh"
-    },
-    wrapper: {
-        width: "80%",
-        height: "85%",
-        backgroundColor: "var(--sub-background-color)",
-        position: "relative",
-        borderRadius: 8
-    },
-    header: {
-        marginBottom: 20,
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        padding: 10,
-        borderRadius: "8px 8px 0 0",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    modeToggle: {
-        display: "flex",
-        gap: 20,
-        width: "100%",
-        justifyContent: "center",
-        alignItems: "center",
-        position: "absolute",
-        bottom: 10
-    },
-    body: {
-        position: "relative",
-        width: "100%",
-        maxWidth: 500,
-        aspectRatio: "4/3",
-        margin: "0 auto",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    overlay: {
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        width: "200px",
-        height: "200px",
-        border: "3px solid var(--primary-color)",
-        transform: "translate(-50%, -50%)",
-        borderRadius: "8px",
-        boxShadow: "0 0 15px var(--primary-color)",
-    },
-    tutorialText: {
-        position: "absolute",
-        bottom: 10,
-        left: 0,
-        width: "100%",
-        textAlign: "center",
-        color: "#fff",
-        textShadow: "0 0 5px #000",
-        fontWeight: "bold"
-    }
+    container: { padding: 0, margin: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", backgroundColor: "transparent", width: "100%", height: "100vh" },
+    wrapper: { width: "80%", height: "85%", backgroundColor: "var(--sub-background-color)", position: "relative", borderRadius: 8 },
+    header: { marginBottom: 20, backgroundColor: "rgba(255, 255, 255, 0.1)", padding: 10, borderRadius: "8px 8px 0 0", display: "flex", justifyContent: "center", alignItems: "center" },
+    modeToggle: { display: "flex", gap: 20, width: "100%", justifyContent: "center", alignItems: "center", position: "absolute", bottom: 10 },
+    body: { position: "relative", width: "100%", maxWidth: 500, aspectRatio: "4/3", margin: "0 auto", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" },
+    overlay: { position: "absolute", top: "50%", left: "50%", width: "200px", height: "200px", border: "3px solid var(--primary-color)", transform: "translate(-50%, -50%)", borderRadius: "8px", boxShadow: "0 0 15px var(--primary-color)" },
+    tutorialText: { position: "absolute", bottom: 10, left: 0, width: "100%", textAlign: "center", color: "#fff", textShadow: "0 0 5px #000", fontWeight: "bold" }
 };
