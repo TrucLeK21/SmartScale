@@ -10,17 +10,16 @@ electron.contextBridge.exposeInMainWorld('electronAPI', {
     rotateCamera: (direction) => ipcSend('rotate-camera', direction),
     getAIResponse: (userData) => ipcInvoke<'get-ai-response', AIResponse>('get-ai-response', userData),
     startCCCD: (data) => ipcSend('start-cccd', data),
-
     startScan: () => ipcInvoke<'start-scan', ResponseMessage>('start-scan'),
-
     turnOffQrScanner: () => ipcSend('turn-off-qrscanner'),
-
     getAllRecords: () => ipcInvoke('get-all-records'),
     getRecord: (id) => ipcInvoke('get-record', id),
     addRecord: (record) => ipcInvoke('add-record', record),
     updateRecord: (id, record) => ipcInvoke('update-record', [id, record]),
     deleteRecord: (id) => ipcInvoke('delete-record', id),
     getRecordByDate: (args) => ipcInvoke<'get-record-by-date', GetRecordByDateResult>('get-record-by-date', args),
+    ensurePipAndPackages: () => ipcSend("ensure-pip"),
+    onGettingEnsureLogs: (callback) => ipcOn('packages-logs', callback),
     getOverviewData: (startDate, endDate) => ipcInvoke<'get-overview-data', OverviewData>('get-overview-data', { startDate, endDate }),
     getLineChartData: (startDate, endDate, metricKey) => ipcInvoke<'get-line-chart-data', ChartData[]>('get-line-chart-data', { startDate, endDate, metricKey }),
     getBMIGroupData: (startDate, endDate) => ipcInvoke<'get-bmi-group-data', BMIGroupData[]>('get-bmi-group-data', { startDate, endDate }),

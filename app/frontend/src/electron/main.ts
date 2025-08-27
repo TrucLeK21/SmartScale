@@ -6,6 +6,8 @@ import {
   getPythonEnvPath,
   getPythonScriptPath,
   getSavedImagesPath,
+  getPipPath,
+  getPythonDirPath,
 } from "./pathResolver.js";
 import { spawn } from "child_process";
 import fs from "fs";
@@ -26,9 +28,9 @@ import {
   getOverviewData,
   getLineChartData,
   getBMIGroupData,
-  getBMIGroupByGender
-} from './db.js'
-
+  getBMIGroupByGender,
+} from "./db.js";
+import { runInCmd } from "./util.js";
 
 const SHOW_PYTHON_ERRORS = false;
 let faceRecognitionDone = false;
@@ -111,19 +113,19 @@ type ParsedCCCD = {
 
 app.on("ready", async () => {
   await initDB();
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   const mainWindow = new BrowserWindow({
     width,
     height,
     webPreferences: {
       preload: getPreloadPath(),
-    }
+    },
   });
   if (isDev()) {
     mainWindow.webContents.session.clearCache();
-    mainWindow.loadURL('http://localhost:5123/');
+    mainWindow.loadURL("http://localhost:5123/");
   } else {
-    mainWindow.loadFile(path.join(app.getAppPath(), '/dist-react/index.html'));
+    mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
   }
 
   ipcMain.on("start-ble", async () => {
@@ -458,21 +460,22 @@ app.on("ready", async () => {
   });
 
   ipcMain.handle("get-ai-response", async (_event, userData) => {
+    if (isDev())
+      return {
+        overview: "Đang ở chế độ phát triển, không gọi API AI",
+        diet: {
+          calories: { maintain: "", cut: "", bulk: "" },
+          macros: { protein: "", carbs: "", fats: "" },
+          supplements: "",
+        },
+        workout: {
+          cardio: "",
+          strength: [],
+          frequency: "",
+          note: "",
+        },
+      };
 
-    if (isDev()) return {
-      overview: "Đang ở chế độ phát triển, không gọi API AI",
-      diet: {
-        calories: { maintain: "", cut: "", bulk: "" },
-        macros: { protein: "", carbs: "", fats: "" },
-        supplements: "",
-      },
-      workout: {
-        cardio: "",
-        strength: [],
-        frequency: "",
-        note: "",
-      },
-    };
     const _baseUrl =
       "https://health-app-server-j2mc.onrender.com/api/ai/generate-advice"; // Thay bằng URL của server Python
     try {
@@ -518,7 +521,7 @@ app.on("ready", async () => {
   });
 
   const parseCCCDData = (data: string): ParsedCCCD | null => {
-    const parts = data.split("|").map(p => p.trim());
+    const parts = data.split("|").map((p) => p.trim());
     if (parts.length < 6) return null;
 
     const formatDate = (str: string) => {
@@ -529,7 +532,8 @@ app.on("ready", async () => {
       return `${year}-${month}-${day}`; // yyyy-MM-dd
     };
 
-    const [cccd_id, cmnd_id, name, dobRaw, gender, address, issueDateRaw = ""] = parts;
+    const [cccd_id, cmnd_id, name, dobRaw, gender, address, issueDateRaw = ""] =
+      parts;
 
     return {
       cccd_id,
@@ -542,25 +546,26 @@ app.on("ready", async () => {
     };
   };
 
-  ipcMain.on('start-cccd', (_event, data: string) => {
+  ipcMain.on("start-cccd", (_event, data: string) => {
     console.log("Received CCCD data:", data);
-    console.log("Buffer:", Buffer.from(data, 'utf8'));
+    console.log("Buffer:", Buffer.from(data, "utf8"));
     const parsedData = parseCCCDData(data);
     if (!parsedData) {
       console.error("Invalid CCCD data format");
       return;
     }
-    const age = dayjs().diff(dayjs(parsedData.dob, 'YYYY-MM-DD'), 'year');
+    const age = dayjs().diff(dayjs(parsedData.dob, "YYYY-MM-DD"), "year");
 
     userState.set("age", age);
-    userState.set("gender", parsedData.gender.toLowerCase() === "nam" ? "male" : "female");
-    userState.set("race", 'asian');
+    userState.set(
+      "gender",
+      parsedData.gender.toLowerCase() === "nam" ? "male" : "female"
+    );
+    userState.set("race", "asian");
 
     console.log(userState.get());
-    console.log('Parsed CCCD data:', parsedData);
+    console.log("Parsed CCCD data:", parsedData);
   });
-
-
 
   ipcMain.handle("start-scan", async (): Promise<ResponseMessage> => {
     try {
@@ -583,14 +588,20 @@ app.on("ready", async () => {
             port?.write("STOP_CCCD\n", (err) => {
               if (err) console.error("Error sending stop trigger:", err);
             });
-            resolve({ success: false, message: "Timeout: No barcode scanned within 20s" });
+            resolve({
+              success: false,
+              message: "Timeout: No barcode scanned within 20s",
+            });
           }
         }, 20000);
 
         console.log("Triggering GM65 to scan...");
         port?.write("GET_CCCD\n", (err) => {
           if (err) {
-            resolve({ success: false, message: "Trigger error: " + err.message });
+            resolve({
+              success: false,
+              message: "Trigger error: " + err.message,
+            });
           } else {
             console.log("Trigger sent to GM65");
           }
@@ -614,11 +625,17 @@ app.on("ready", async () => {
 
               const parsedData = parseCCCDData(decoded);
               if (!parsedData) {
-                resolve({ success: false, message: "Invalid CCCD data format" });
+                resolve({
+                  success: false,
+                  message: "Invalid CCCD data format",
+                });
                 return;
               }
 
-              const age = dayjs().diff(dayjs(parsedData.dob, "YYYY-MM-DD"), "year");
+              const age = dayjs().diff(
+                dayjs(parsedData.dob, "YYYY-MM-DD"),
+                "year"
+              );
 
               userState.set("age", age);
               userState.set(
@@ -657,17 +674,19 @@ app.on("ready", async () => {
     }
   });
 
-  ipcMain.handle('get-all-records', () => getAllRecords())
+  ipcMain.handle("get-all-records", () => getAllRecords());
 
-  ipcMain.handle('add-record', (e, record) => addRecord(record))
+  ipcMain.handle("add-record", (e, record) => addRecord(record));
 
-  ipcMain.handle('get-record', (e, id) => getRecordById(id))
+  ipcMain.handle("get-record", (e, id) => getRecordById(id));
 
-  ipcMain.handle('update-record', (e, index, record) => updateRecord(index, record))
+  ipcMain.handle("update-record", (e, index, record) =>
+    updateRecord(index, record)
+  );
 
-  ipcMain.handle('delete-record', (e, index) => deleteRecord(index))
+  ipcMain.handle("delete-record", (e, index) => deleteRecord(index));
 
-  ipcMain.handle('get-record-by-date', async (e, args: GetRecordByDateArgs) => {
+  ipcMain.handle("get-record-by-date", async (e, args: GetRecordByDateArgs) => {
     const { startDate, endDate, page, pageSize } = args;
     return await getRecordsByDatePaginated(
       new Date(startDate),
@@ -677,25 +696,130 @@ app.on("ready", async () => {
     );
   });
 
-  ipcMain.handle('get-overview-data', async (e, { startDate, endDate }) => {
-    const response = await getOverviewData(new Date(startDate), new Date(endDate));
+  ipcMain.handle("get-overview-data", async (e, { startDate, endDate }) => {
+    const response = await getOverviewData(
+      new Date(startDate),
+      new Date(endDate)
+    );
     return response;
   });
 
-  ipcMain.handle('get-line-chart-data', async (e, { startDate, endDate, metricKey }) => {
-    return await getLineChartData(new Date(startDate), new Date(endDate), metricKey);
-  });
+  ipcMain.handle(
+    "get-line-chart-data",
+    async (e, { startDate, endDate, metricKey }) => {
+      return await getLineChartData(
+        new Date(startDate),
+        new Date(endDate),
+        metricKey
+      );
+    }
+  );
 
-  ipcMain.handle('get-bmi-group-data', async (e, { startDate, endDate }) => {
-    const response = await getBMIGroupData(new Date(startDate), new Date(endDate));
+  ipcMain.handle("get-bmi-group-data", async (e, { startDate, endDate }) => {
+    const response = await getBMIGroupData(
+      new Date(startDate),
+      new Date(endDate)
+    );
     return response;
   });
 
-  ipcMain.handle('get-bmi-group-by-gender', async (e, { startDate, endDate }) => {
-    const response = await getBMIGroupByGender(new Date(startDate), new Date(endDate));
-    return response;
+  ipcMain.handle(
+    "get-bmi-group-by-gender",
+    async (e, { startDate, endDate }) => {
+      const response = await getBMIGroupByGender(
+        new Date(startDate),
+        new Date(endDate)
+      );
+      return response;
+    }
+  );
 
+  ipcMain.on("ensure-pip", async () => {
+    const pythonDir = getPythonDirPath();
+    const pythonExe = getPythonEnvPath();
+    const pipExe = getPipPath();
+    const getPip = getPythonScriptPath("get-pip.py");
+    const reqFile = getPythonScriptPath("requirements.txt");
+
+    const sendLog = (msg: ResponseMessage) => {
+      BrowserWindow.getAllWindows()[0]?.webContents.send("packages-logs", msg);
+    };
+
+    const runSafe = async (
+      exe: string,
+      args: string[],
+      cwd: string,
+      step: string
+    ): Promise<ResponseMessage> => {
+      try {
+        const { stdout, stderr } = await runInCmd(exe, args, cwd);
+
+        if (stderr && stderr.trim().length > 0) {
+          console.error(`[${step}] Error:`, stderr);
+          return { success: false, message: `[${step}] failed: ${stderr}` };
+        }
+
+        // Nếu stdout rỗng => tự thêm message mặc định
+        const safeOut =
+          stdout && stdout.trim().length > 0
+            ? stdout.trim()
+            : "Command executed successfully ✅";
+
+        console.log(`[${step}] Success:`, safeOut);
+        return {
+          success: true,
+          message: `[${step}] success: ${safeOut}`,
+        };
+      } catch (err: any) {
+        console.error(`[${step}] Exception:`, err);
+        return {
+          success: false,
+          message: `[${step}] exception: ${err.message || err}`,
+        };
+      }
+    };
+
+    try {
+      // 1. Kiểm tra pip
+      if (!fs.existsSync(pipExe)) {
+        sendLog({ success: true, message: "Start getting pip process..." });
+        const res = await runSafe(pythonExe, [getPip], pythonDir, "Get pip");
+        sendLog(res);
+        if (!res.success) return;
+      }
+
+      // 2. Kiểm tra thư viện
+      const checkRes = await runSafe(
+        pipExe,
+        ["check"],
+        pythonDir,
+        "Check requirements"
+      );
+      sendLog(checkRes);
+      if (!checkRes.success) return;
+
+      if (checkRes.message.includes("No broken requirements")) {
+        sendLog({ success: true, message: "All requirements satisfied. ✅" });
+        return;
+      }
+
+      // 3. Cài đặt requirements
+      const installRes = await runSafe(
+        pipExe,
+        ["install", "-r", reqFile],
+        pythonDir,
+        "Install requirements"
+      );
+      sendLog(installRes);
+      if (!installRes.success) return;
+
+      sendLog({ success: true, message: "Environment ready! ✅" });
+    } catch (e: any) {
+      console.error("ensure-pip failed:", e);
+      sendLog({
+        success: false,
+        message: `ensure-pip failed: ${e.message || e}`,
+      });
+    }
   });
-
-
 });

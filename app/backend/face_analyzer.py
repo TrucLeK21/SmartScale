@@ -1,9 +1,9 @@
 import os
-
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import cv2
 import json
 import sys
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 import argparse
 from deepface import DeepFace
 import numpy as np

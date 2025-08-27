@@ -1,33 +1,33 @@
-declare module 'swiper/css';
-declare module 'swiper/css/navigation';
-declare module 'swiper/css/pagination';
-declare module 'swiper/css/effect-coverflow';
-declare module 'swiper/css/effect-fade';
+declare module "swiper/css";
+declare module "swiper/css/navigation";
+declare module "swiper/css/pagination";
+declare module "swiper/css/effect-coverflow";
+declare module "swiper/css/effect-fade";
 
 interface PythonArgs {
-    input: string;
+  input: string;
 }
 
 interface WeightPayload {
-    weightStatus: 'measuring' | 'info' | 'error';
-    isStable?: boolean;
-    isRemoved?: boolean;
-    weight?: number;
-    message: string;
+  weightStatus: "measuring" | "info" | "error";
+  isStable?: boolean;
+  isRemoved?: boolean;
+  weight?: number;
+  message: string;
 }
 
 type GetRecordByDateArgs = {
-    startDate: string; // hoặc Date, nhưng thường IPC nên truyền string
-    endDate: string;
-    page?: number;
-    pageSize?: number;
+  startDate: string; // hoặc Date, nhưng thường IPC nên truyền string
+  endDate: string;
+  page?: number;
+  pageSize?: number;
 };
 
 type GetRecordByDateResult = {
-    data: RecordData[];
-    totalRecords: number;
-    totalPages: number;
-    currentPage: number;
+  data: RecordData[];
+  totalRecords: number;
+  totalPages: number;
+  currentPage: number;
 };
 
 type OverviewData = {
@@ -67,14 +67,16 @@ type EventPayloadMapping = {
     'get-line-chart-data': { startDate: Date, endDate: Date, metricKey: MetricKey };
     'get-bmi-group-data': {startDate: Date, endDate: Date};
     'get-bmi-group-by-gender': {startDate: Date, endDate: Date};
+    "ensure-pip": void;
+    'packages-logs': ResponseMessage;
 };
 
 type UserData = {
-    race?: string;
-    gender?: string;
-    age?: number;
-    height?: number;
-    weight?: number;
+  race?: string;
+  gender?: string;
+  age?: number;
+  height?: number;
+  weight?: number;
 };
 
 type FaceData = {
@@ -85,23 +87,23 @@ type FaceData = {
 };
 
 interface HealthRecord {
-    date: Date;
-    height: number;
-    weight: number;
-    age: number;
-    bmi: number;
-    bmr: number;
-    tdee: number;
-    lbm: number;
-    fatPercentage: number;
-    waterPercentage: number;
-    boneMass: number;
-    muscleMass: number;
-    proteinPercentage: number;
-    visceralFat: number;
-    idealWeight: number;
-    overviewScore: OverallHealthEvaluation;
-};
+  date: Date;
+  height: number;
+  weight: number;
+  age: number;
+  bmi: number;
+  bmr: number;
+  tdee: number;
+  lbm: number;
+  fatPercentage: number;
+  waterPercentage: number;
+  boneMass: number;
+  muscleMass: number;
+  proteinPercentage: number;
+  visceralFat: number;
+  idealWeight: number;
+  overviewScore: OverallHealthEvaluation;
+}
 
 interface RecordData {
     id?: string;
@@ -112,7 +114,7 @@ interface RecordData {
 }
 
 interface DBData {
-    records: RecordData[]
+  records: RecordData[];
 }
 
 type Direction = "up" | "down" | "stop" | "default";
@@ -120,35 +122,35 @@ type Direction = "up" | "down" | "stop" | "default";
 type UnsubscribeFunction = () => void;
 
 type AIResponse = {
-    overview: string;
-    diet: {
-        calories: {
-            maintain: string;
-            cut: string;
-            bulk: string;
-        };
-        macros: {
-            protein: string;
-            carbs: string;
-            fats: string;
-        };
-        supplements: string;
+  overview: string;
+  diet: {
+    calories: {
+      maintain: string;
+      cut: string;
+      bulk: string;
     };
-    workout: {
-        cardio: string;
-        strength: string[];
-        frequency: string;
-        note: string;
+    macros: {
+      protein: string;
+      carbs: string;
+      fats: string;
     };
+    supplements: string;
+  };
+  workout: {
+    cardio: string;
+    strength: string[];
+    frequency: string;
+    note: string;
+  };
 };
 type ParsedCCCD = {
-    cccd_id: string;
-    cmnd_id: string;
-    name: string;
-    dob: string;
-    gender: string;
-    address: string;
-    issue_date: string;
+  cccd_id: string;
+  cmnd_id: string;
+  name: string;
+  dob: string;
+  gender: string;
+  address: string;
+  issue_date: string;
 };
 
 type ResponseMessage = {
@@ -179,9 +181,7 @@ interface Window {
         getAIResponse: (user_data: UserData) => Promise<AIResponse>;
         startCCCD: (data: string) => void;
         startScan: () => Promise<ResponseMessage>;
-
         turnOffQrScanner: () => void;
-
         getAllRecords: () => Promise<RecordData[]>;
         getRecord: (id: string) => Promise<RecordData | null>;
         addRecord: (record: RecordData) => Promise<void>;
@@ -194,6 +194,7 @@ interface Window {
         getLineChartData: (startDate: Date, endDate: Date, metricKey: MetricKey) => Promise<ChartData[]>;
         getBMIGroupData: (startDate: Date, endDate: Date) => Promise<BMIGroupData[]>;
         getBMIGroupByGender: (startDate: Date, endDate: Date) => Promise<BMIGroupByGender[]>;
-
+        ensurePipAndPackages: () => void;
+        onGettingEnsureLogs: (callback: (data: ResponseMessage) => void) => UnsubscribeFunction;
     };
 }
