@@ -162,7 +162,7 @@ const HealthResultPage: React.FC = () => {
                         <button className="custom-btn fs-5" onClick={() => swiperRef.current?.slidePrev()}>
                           Lưu bản ghi <FontAwesomeIcon icon={faDatabase} />
                         </button>
-                          <button className="custom-btn fs-5 complete-btn" onClick={() => navigate("/")}><FontAwesomeIcon icon={faCheck} /></button>
+                          <button className="custom-btn fs-5 complete-btn" onClick={() => navigate("/dashboard")}><FontAwesomeIcon icon={faCheck} /></button>
                           <button className="custom-btn fs-5" onClick={() => swiperRef.current?.slideNext()}>
                             Tư vấn AI <FontAwesomeIcon icon={faDna} />
                           </button>

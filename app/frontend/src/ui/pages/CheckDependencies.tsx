@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import "react-toastify/dist/ReactToastify.css";
 import { showToast } from "../utils/toastUtils";
 import LoadingScreen from "../components/LoadingScreenComponent/LoadingScreen";
+import { useNavigate } from "react-router-dom";
 
 
 const CheckDependencies = () => {
     const [logs, setLogs] = useState<string[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [message, setMessage] = useState<string>("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Gửi yêu cầu check pip/packages
@@ -34,6 +36,12 @@ const CheckDependencies = () => {
             unsubscribe();
         };
     }, []);
+
+    useEffect(()=> {
+        if(!loading) {
+            navigate('/dashboard');
+        }
+    }, [loading])
 
     return (
         <div className="container-fluid d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
