@@ -5,9 +5,8 @@ import "./index.css";
 import "../assets/css/variables.css";
 import App from "./App";
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.getElementById('root')!).render(
   // <StrictMode>
-  //   <App />
+    <App />
   // </StrictMode>,
-  <App />
-);
+)

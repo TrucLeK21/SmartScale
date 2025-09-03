@@ -772,7 +772,7 @@ app.on("ready", async () => {
         const safeOut =
           stdout && stdout.trim().length > 0
             ? stdout.trim()
-            : "Command executed successfully ✅";
+            : "Command executing...";
 
         console.log(`[${step}] Success:`, safeOut);
         return {
@@ -823,12 +823,15 @@ app.on("ready", async () => {
       if (!installRes.success) return;
 
       sendLog({ success: true, message: "Environment ready! ✅" });
-    } catch (e: any) {
+    } catch (e: any ) {
       console.error("ensure-pip failed:", e);
       sendLog({
         success: false,
         message: `ensure-pip failed: ${e.message || e}`,
       });
+    }
+    finally {
+      sendLog({ success: true, message: "DONE" });
     }
   });
 });

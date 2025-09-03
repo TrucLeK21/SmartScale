@@ -1,0 +1,73 @@
+import { useEffect, useState } from "react";
+import "react-toastify/dist/ReactToastify.css";
+import LoadingScreen from "../components/LoadingScreenComponent/LoadingScreen";
+import { useNavigate } from "react-router-dom";
+
+
+const CheckDependencies = () => {
+    // const [logs, setLogs] = useState<string[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [message, setMessage] = useState<string>("");
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Gửi yêu cầu check pip/packages
+        window.electronAPI.ensurePipAndPackages();
+
+        // Nhận log
+        const unsubscribe = window.electronAPI.onGettingEnsureLogs(
+            (message: ResponseMessage) => {
+                // setLogs((prev) => [...prev, message.message]);
+                setMessage(message.message);
+
+                if (message.message === "DONE") {
+                    setLoading(false);
+                }
+            }
+        );
+        return () => {
+            unsubscribe();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!loading) {
+            navigate('/dashboard');
+        }
+    }, [loading, navigate])
+
+    return (
+        <div
+            className="container-fluid d-flex flex-column align-items-center justify-content-center"
+            style={{
+                width: "100vw",
+                height: "100vh",
+                backgroundColor: "var(--background-color)"
+
+            }}>
+            <div className="mt-3 w-75">
+                {loading ? (
+                    <LoadingScreen message={message} />
+                ) : null}
+                {/* (
+                    logs.map((msg, idx) => (
+                        msg !== "DONE" &&
+                        <div
+                            key={idx}
+                            className={`alert ${msg.includes("❌")
+                                ? "alert-danger"
+                                : msg.includes("✅")
+                                    ? "alert-success"
+                                    : "alert-info"
+                                } mt-2`}
+                        >
+                            {msg}
+                        </div>
+                    ))
+                ) */}
+            </div>
+        </div >
+    );
+}
+
+export default CheckDependencies

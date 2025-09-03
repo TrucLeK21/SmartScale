@@ -1,6 +1,9 @@
 {
   "appId": "com.trucle.health-app",
-  "files": ["dist-electron", "dist-react"],
+  "files": [
+    "dist-electron",
+    "dist-react"
+  ],
   "extraResources": [
     "dist-electron/preload.cjs",
     "src/assets/**",
@@ -24,6 +27,9 @@
     "category": "Utility"
   },
   "win": {
-    "target": ["portable", "msi"]
+    "target": [
+      "portable",
+      "msi"
+    ]
   }
 }

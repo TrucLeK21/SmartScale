@@ -13,33 +13,35 @@ import DashBoardPage from "./pages/DashBoardPage";
 import NewLayout from "./layouts/NewLayout";
 import QRScanPage from "./pages/QRScanPage";
 import HistoryPage from "./pages/History";
+import CheckDependencies from "./pages/CheckDependencies";
 // import MainLayout from './layouts/MainLayout';
 
 function App() {
   return (
-    <>
-      <Router>
-        {/* <MainLayout> */}
-        <NewLayout>
-          <Routes>
-            <Route path="/" element={<Navigate to="/test" />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/camera" element={<CameraPage />} />
-            <Route path="/result" element={<HealthResultPage />} />
-            <Route path="/weight" element={<WeightDisplayPage />} />
-            <Route path="/info" element={<InfoConfirmScreen />} />
-            <Route path="/qrcode" element={<QRCodePage />} />
-            <Route path="/ai" element={<AIPage />} />
-            <Route path="/test" element={<TestPage />} />
-            <Route path="/dashboard" element={<DashBoardPage />} />
-            <Route path="/qr-scan" element={<QRScanPage />} />
-            <Route path="/history" element={<HistoryPage />} />
-          </Routes>
-        </NewLayout>
-        {/* </MainLayout> */}
-      </Router>
-    </>
+    <Router>
+      <Routes>
+        {/* Route ngoài layout */}
+        <Route path="/check-dependencies" element={<CheckDependencies />} />
+
+        {/* Các route dùng chung NewLayout */}
+        <Route element={<NewLayout />}>
+          <Route path="/" element={<Navigate to="/check-dependencies" />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/camera" element={<CameraPage />} />
+          <Route path="/result" element={<HealthResultPage />} />
+          <Route path="/weight" element={<WeightDisplayPage />} />
+          <Route path="/info" element={<InfoConfirmScreen />} />
+          <Route path="/qrcode" element={<QRCodePage />} />
+          <Route path="/ai" element={<AIPage />} />
+          <Route path="/test" element={<TestPage />} />
+          <Route path="/dashboard" element={<DashBoardPage />} />
+          <Route path="/qr-scan" element={<QRScanPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+        </Route>
+      </Routes>
+    </Router>
   );
 }
+
 
 export default App;
