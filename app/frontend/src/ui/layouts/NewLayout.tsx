@@ -1,24 +1,19 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
+import { Outlet } from 'react-router-dom';
 import NewNabarComponent from '../components/SidebarComponent/SidebarComponent';
 import './NewLayout.css';
 import ToastProvider from '../components/ToastProviderComponent/ToastProvider';
-type Props = {
-    children: ReactNode;
-};
 
-const NewLayout: React.FC<Props> = ({ children }) => {
+const NewLayout: React.FC = () => {
     return (
-        <div className='d-flex '>
+        <div className="d-flex">
             <NewNabarComponent />
             <main>
-                {children}
+                <Outlet />   {/* nơi render route con */}
                 <ToastProvider />
             </main>
         </div>
     );
 };
 
-export default NewLayout;;
-
-
-
+export default NewLayout;

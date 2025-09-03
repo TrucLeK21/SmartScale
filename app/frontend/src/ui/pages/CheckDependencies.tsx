@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 
 const CheckDependencies = () => {
-    const [logs, setLogs] = useState<string[]>([]);
+    // const [logs, setLogs] = useState<string[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [message, setMessage] = useState<string>("");
     const navigate = useNavigate();
@@ -18,13 +18,13 @@ const CheckDependencies = () => {
         // Nhận log
         const unsubscribe = window.electronAPI.onGettingEnsureLogs(
             (message: ResponseMessage) => {
-                setLogs((prev) => [...prev, message.message]);
+                // setLogs((prev) => [...prev, message.message]);
                 setMessage(message.message);
                 if (message.success && message.message !== "DONE") {
                     showToast.success(message.message);
                 } else {
-                    if(message.message !== "DONE")
-                    showToast.error(message.message);
+                    if (message.message !== "DONE")
+                        showToast.error(message.message);
                 }
 
                 if (message.message === "DONE") {
@@ -37,18 +37,26 @@ const CheckDependencies = () => {
         };
     }, []);
 
-    useEffect(()=> {
-        if(!loading) {
+    useEffect(() => {
+        if (!loading) {
             navigate('/dashboard');
         }
-    }, [loading])
+    }, [loading, navigate])
 
     return (
-        <div className="container-fluid d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+        <div
+            className="container-fluid d-flex flex-column align-items-center justify-content-center"
+            style={{
+                width: "100vw",
+                height: "100vh",
+                backgroundColor: "var(--background-color)"
+
+            }}>
             <div className="mt-3 w-75">
                 {loading ? (
                     <LoadingScreen message={message} />
-                ) :(
+                ) : null}
+                {/* (
                     logs.map((msg, idx) => (
                         msg !== "DONE" &&
                         <div
@@ -63,10 +71,9 @@ const CheckDependencies = () => {
                             {msg}
                         </div>
                     ))
-                )}
-                {/*  */}
+                ) */}
             </div>
-        </div>
+        </div >
     );
 }
 

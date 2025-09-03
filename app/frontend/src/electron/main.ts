@@ -761,7 +761,7 @@ app.on("ready", async () => {
       step: string
     ): Promise<ResponseMessage> => {
       try {
-        const { stdout, stderr } = await runInCmd(exe, args, cwd, false);
+        const { stdout, stderr } = await runInCmd(exe, args, cwd);
 
         // stderr chỉ log cảnh báo, không coi là thất bại
         if (stderr && stderr.trim().length > 0) {
@@ -772,7 +772,7 @@ app.on("ready", async () => {
         const safeOut =
           stdout && stdout.trim().length > 0
             ? stdout.trim()
-            : "Command executed successfully ✅";
+            : "Command executing...";
 
         console.log(`[${step}] Success:`, safeOut);
         return {
@@ -810,7 +810,6 @@ app.on("ready", async () => {
 
       if (checkRes.message.includes("No broken requirements")) {
         sendLog({ success: true, message: "All requirements satisfied. ✅" });
-        return;
       }
 
       // 3. Cài đặt requirements
