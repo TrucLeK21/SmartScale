@@ -7,7 +7,12 @@
     {
       "from": "../backend",
       "to": "backend",
-      "filter": ["**/*", "!venv/**"]
+      "filter": [
+        "**/*",
+        "!python-runtime/Lib/**",
+        "!python-runtime/Scripts/**",
+        "!python-runtime/share/**"
+      ]
     }
   ],
   "icon": "./desktopIcon.png",
