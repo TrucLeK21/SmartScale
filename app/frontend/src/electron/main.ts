@@ -752,7 +752,7 @@ app.on("ready", async () => {
       step: string
     ): Promise<ResponseMessage> => {
       try {
-        const { stdout, stderr } = await runInCmd(exe, args, cwd);
+        const { stdout, stderr } = await runInCmd(exe, args, cwd, false);
 
         if (stderr && stderr.trim().length > 0) {
           console.error(`[${step}] Error:`, stderr);
@@ -820,6 +820,9 @@ app.on("ready", async () => {
         success: false,
         message: `ensure-pip failed: ${e.message || e}`,
       });
+    }
+    finally {
+      sendLog({ success: true, message: "DONE" });
     }
   });
 });

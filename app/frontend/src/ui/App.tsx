@@ -13,6 +13,7 @@ import DashBoardPage from "./pages/DashBoardPage";
 import NewLayout from "./layouts/NewLayout";
 import QRScanPage from "./pages/QRScanPage";
 import HistoryPage from "./pages/History";
+import CheckDependencies from "./pages/CheckDependencies";
 // import MainLayout from './layouts/MainLayout';
 
 function App() {
@@ -22,7 +23,7 @@ function App() {
         {/* <MainLayout> */}
         <NewLayout>
           <Routes>
-            <Route path="/" element={<Navigate to="/test" />} />
+            <Route path="/" element={<Navigate to="/check-dependencies" />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/camera" element={<CameraPage />} />
             <Route path="/result" element={<HealthResultPage />} />
@@ -34,6 +35,7 @@ function App() {
             <Route path="/dashboard" element={<DashBoardPage />} />
             <Route path="/qr-scan" element={<QRScanPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/check-dependencies" element={<CheckDependencies />} />
           </Routes>
         </NewLayout>
         {/* </MainLayout> */}
