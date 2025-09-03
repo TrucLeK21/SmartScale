@@ -1,13 +1,21 @@
 {
   "appId": "com.trucle.health-app",
-  "files": ["dist-electron", "dist-react"],
+  "files": [
+    "dist-electron",
+    "dist-react"
+  ],
   "extraResources": [
     "dist-electron/preload.cjs",
     "src/assets/**",
     {
       "from": "../backend",
       "to": "backend",
-      "filter": ["**/*", "!venv/**"]
+      "filter": [
+        "*/",
+        "!python-runtime/Lib/**",
+        "!python-runtime/Scripts/**",
+        "!python-runtime/share/**"
+      ]
     }
   ],
   "icon": "./desktopIcon.png",
@@ -19,6 +27,9 @@
     "category": "Utility"
   },
   "win": {
-    "target": ["portable", "msi"]
+    "target": [
+      "portable",
+      "msi"
+    ]
   }
 }

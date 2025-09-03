@@ -9,9 +9,11 @@ const NewNabarComponent: React.FC = () => {
         <aside className="sidebar">
             <div className="">
                 <div className="sidebar-header">
-                    <a href="/dashboard">
+                    <NavLink
+                        to="/"
+                    >
                         <img src={bklogo} alt="logo" />
-                    </a>
+                    </NavLink>
                 </div>
                 <nav className="sidebar-nav">
                     <ul>

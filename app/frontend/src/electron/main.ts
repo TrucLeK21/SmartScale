@@ -761,7 +761,7 @@ app.on("ready", async () => {
       step: string
     ): Promise<ResponseMessage> => {
       try {
-        const { stdout, stderr } = await runInCmd(exe, args, cwd, false);
+        const { stdout, stderr } = await runInCmd(exe, args, cwd, true);
 
         // stderr chỉ log cảnh báo, không coi là thất bại
         if (stderr && stderr.trim().length > 0) {
