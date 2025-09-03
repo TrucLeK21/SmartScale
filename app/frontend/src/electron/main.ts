@@ -761,7 +761,7 @@ app.on("ready", async () => {
       step: string
     ): Promise<ResponseMessage> => {
       try {
-        const { stdout, stderr } = await runInCmd(exe, args, cwd, true);
+        const { stdout, stderr } = await runInCmd(exe, args, cwd, false);
 
         // stderr chỉ log cảnh báo, không coi là thất bại
         if (stderr && stderr.trim().length > 0) {
@@ -823,7 +823,7 @@ app.on("ready", async () => {
       if (!installRes.success) return;
 
       sendLog({ success: true, message: "Environment ready! ✅" });
-    } catch (e: any) {
+    } catch (e: any ) {
       console.error("ensure-pip failed:", e);
       sendLog({
         success: false,

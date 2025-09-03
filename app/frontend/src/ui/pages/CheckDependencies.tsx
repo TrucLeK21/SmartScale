@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import "react-toastify/dist/ReactToastify.css";
-import { showToast } from "../utils/toastUtils";
 import LoadingScreen from "../components/LoadingScreenComponent/LoadingScreen";
 import { useNavigate } from "react-router-dom";
 
@@ -20,12 +19,6 @@ const CheckDependencies = () => {
             (message: ResponseMessage) => {
                 // setLogs((prev) => [...prev, message.message]);
                 setMessage(message.message);
-                if (message.success && message.message !== "DONE") {
-                    showToast.success(message.message);
-                } else {
-                    if (message.message !== "DONE")
-                        showToast.error(message.message);
-                }
 
                 if (message.message === "DONE") {
                     setLoading(false);
