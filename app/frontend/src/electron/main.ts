@@ -42,6 +42,9 @@ const ESP32_VID = "303A"; // Espressif VID
 let timeoutHandle: NodeJS.Timeout | null = null;
 let scanCompleted = false;
 
+// Debug mode 
+const debugging = true;
+
 const checkPortExists = async (portPath: string): Promise<boolean> => {
   try {
     const ports = await SerialPort.list();
@@ -128,131 +131,130 @@ app.on("ready", async () => {
     mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
   }
 
-  ipcMain.on("start-ble", async () => {
-    const pythonEnvPath = getPythonEnvPath();
-    const pythonScriptPath = getPythonScriptPath("weight_scale.py");
-    const retryIntervalMs = 10000; // 10 giây retry nếu chưa có dữ liệu
+    ipcMain.on("start-ble", async () => {
+      const pythonEnvPath = getPythonEnvPath();
+      const pythonScriptPath = getPythonScriptPath("weight_scale.py");
+      const retryIntervalMs = 10000; // 10 giây retry nếu chưa có dữ liệu
 
-    try {
-      const ports = await SerialPort.list();
-      const esp32Port = ports.find(
-        (port) => port.vendorId && port.vendorId.toUpperCase() === ESP32_VID
-      );
-      const debugging = false;
-
-      if (esp32Port && !debugging) {
-        console.log("ESP32 detected on port:", esp32Port.path);
-
-        await openSerialPort(esp32Port.path);
-
-        let receivedValidWeight = false;
-        let retryTimeout: NodeJS.Timeout | null = null;
-
-        const sendGetWeight = () => {
-          if (!receivedValidWeight) {
-            port?.write("GET_WEIGHT\n", (err) => {
-              if (err) return console.error("Error writing:", err.message);
-              console.log("GET_WEIGHT command sent");
-            });
-
-            retryTimeout = setTimeout(() => {
-              if (!receivedValidWeight) {
-                console.log("Retrying GET_WEIGHT...");
-                sendGetWeight();
-              }
-            }, retryIntervalMs);
-          }
-        };
-
-        port?.on("data", (data) => {
-          const received = data.toString().trim();
-          if (received.includes("[WEIGHT]")) {
-            const match = received.match(/(\d+(\.\d+)?)\s*kg/);
-            if (match) {
-              const finalWeight = parseFloat(match[1]);
-              console.log("Weight received:", finalWeight);
-
-              const message = { isStable: true, weight: finalWeight };
-              userState.set("weight", finalWeight);
-              BrowserWindow.getAllWindows()[0]?.webContents.send(
-                "weight-data",
-                message
-              );
-
-              receivedValidWeight = true;
-              if (retryTimeout) clearTimeout(retryTimeout); // dừng retry
-            } else {
-              console.log("Received [WEIGHT] but cannot parse value.");
-            }
-          }
-        });
-
-        // Lần đo đầu tiên
-        sendGetWeight();
-        return;
-      } else {
-        // Debug fallback
-        const message = { isStable: true, weight: 65 };
-        userState.set("weight", 65);
-        BrowserWindow.getAllWindows()[0]?.webContents.send(
-          "weight-data",
-          message
-        );
-        return;
-      }
-    } catch (err) {
-      console.error("Error checking serial ports:", err);
-    }
-
-    // Nếu ESP32 không tìm thấy, fallback sang Python
-    const python = spawn(pythonEnvPath, [pythonScriptPath]);
-    console.log("Python process started:", pythonEnvPath, pythonScriptPath);
-
-    let receivedValidWeight = false;
-    let retryTimeout: NodeJS.Timeout | null = null;
-
-    const retryPython = () => {
-      if (!receivedValidWeight) {
-        console.log("Retrying Python weight measurement...");
-        // Nếu script Python hỗ trợ input để đo lại, có thể dùng:
-        python.stdin.write("\n");
-        retryTimeout = setTimeout(retryPython, retryIntervalMs);
-      }
-    };
-
-    python.stdout.on("data", (data) => {
       try {
-        const message = JSON.parse(data.toString());
-        if (message.isStable) {
-          userState.set("weight", message.weight);
-          receivedValidWeight = true;
-          if (retryTimeout) clearTimeout(retryTimeout); // dừng retry
+        const ports = await SerialPort.list();
+        const esp32Port = ports.find(
+          (port) => port.vendorId && port.vendorId.toUpperCase() === ESP32_VID
+        );
+
+        if (esp32Port && !debugging) {
+          console.log("ESP32 detected on port:", esp32Port.path);
+
+          await openSerialPort(esp32Port.path);
+
+          let receivedValidWeight = false;
+          let retryTimeout: NodeJS.Timeout | null = null;
+
+          const sendGetWeight = () => {
+            if (!receivedValidWeight) {
+              port?.write("GET_WEIGHT\n", (err) => {
+                if (err) return console.error("Error writing:", err.message);
+                console.log("GET_WEIGHT command sent");
+              });
+
+              retryTimeout = setTimeout(() => {
+                if (!receivedValidWeight) {
+                  console.log("Retrying GET_WEIGHT...");
+                  sendGetWeight();
+                }
+              }, retryIntervalMs);
+            }
+          };
+
+          port?.on("data", (data) => {
+            const received = data.toString().trim();
+            if (received.includes("[WEIGHT]")) {
+              const match = received.match(/(\d+(\.\d+)?)\s*kg/);
+              if (match) {
+                const finalWeight = parseFloat(match[1]);
+                console.log("Weight received:", finalWeight);
+
+                const message = { isStable: true, weight: finalWeight };
+                userState.set("weight", finalWeight);
+                BrowserWindow.getAllWindows()[0]?.webContents.send(
+                  "weight-data",
+                  message
+                );
+
+                receivedValidWeight = true;
+                if (retryTimeout) clearTimeout(retryTimeout); // dừng retry
+              } else {
+                console.log("Received [WEIGHT] but cannot parse value.");
+              }
+            }
+          });
+
+          // Lần đo đầu tiên
+          sendGetWeight();
+          return;
+        } else {
+          // Debug fallback
+          const message = { isStable: true, weight: 65 };
+          userState.set("weight", 65);
+          BrowserWindow.getAllWindows()[0]?.webContents.send(
+            "weight-data",
+            message
+          );
+          return;
         }
+      } catch (err) {
+        console.error("Error checking serial ports:", err);
+      }
+
+      // Nếu ESP32 không tìm thấy, fallback sang Python
+      const python = spawn(pythonEnvPath, [pythonScriptPath]);
+      console.log("Python process started:", pythonEnvPath, pythonScriptPath);
+
+      let receivedValidWeight = false;
+      let retryTimeout: NodeJS.Timeout | null = null;
+
+      const retryPython = () => {
+        if (!receivedValidWeight) {
+          console.log("Retrying Python weight measurement...");
+          // Nếu script Python hỗ trợ input để đo lại, có thể dùng:
+          python.stdin.write("\n");
+          retryTimeout = setTimeout(retryPython, retryIntervalMs);
+        }
+      };
+
+      python.stdout.on("data", (data) => {
+        try {
+          const message = JSON.parse(data.toString());
+          if (message.isStable) {
+            userState.set("weight", message.weight);
+            receivedValidWeight = true;
+            if (retryTimeout) clearTimeout(retryTimeout); // dừng retry
+          }
+          BrowserWindow.getAllWindows()[0]?.webContents.send(
+            "weight-data",
+            message
+          );
+        } catch (e) {
+          console.error("Failed to parse Python output:", e);
+        }
+      });
+
+      python.stderr.on("data", (data) => {
+        const errorMessage = { weightStatus: "error", message: data.toString() };
         BrowserWindow.getAllWindows()[0]?.webContents.send(
           "weight-data",
-          message
+          errorMessage
         );
-      } catch (e) {
-        console.error("Failed to parse Python output:", e);
-      }
-    });
+      });
 
-    python.stderr.on("data", (data) => {
-      const errorMessage = { weightStatus: "error", message: data.toString() };
-      BrowserWindow.getAllWindows()[0]?.webContents.send(
-        "weight-data",
-        errorMessage
-      );
-    });
+      python.on("close", (code) => {
+        console.log(`Python measuring weight process exited with code ${code}`);
+        if (retryTimeout) clearTimeout(retryTimeout);
+      });
 
-    python.on("close", (code) => {
-      console.log(`Python measuring weight process exited with code ${code}`);
-      if (retryTimeout) clearTimeout(retryTimeout);
+      // Lần đo đầu tiên bằng Python
+      retryTimeout = setTimeout(retryPython, retryIntervalMs);
     });
-
-    // Lần đo đầu tiên bằng Python
-    retryTimeout = setTimeout(retryPython, retryIntervalMs);
-  });
 
   ipcMain.on("start-face", (_event, base64Data: string) => {
     faceRecognitionDone = false;
@@ -833,5 +835,10 @@ app.on("ready", async () => {
     finally {
       sendLog({ success: true, message: "DONE" });
     }
+  });
+
+
+  ipcMain.handle('get-debug-status', () => {
+    return {debugging};
   });
 });

@@ -11,7 +11,7 @@
       "from": "../backend",
       "to": "backend",
       "filter": [
-        "*/",
+        "**/*",
         "!python-runtime/Lib/**",
         "!python-runtime/Scripts/**",
         "!python-runtime/share/**"
