@@ -25,10 +25,14 @@ const HistoryPage: React.FC = () => {
 
 
     const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(today.getMonth() - 1);
+
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
-        from: today,
+        from: lastMonth,
         to: today,
     });
+
 
     const [pageSize, setPageSize] = useState<number>(10);
 
@@ -223,7 +227,7 @@ const HistoryPage: React.FC = () => {
                         <div className="left d-flex align-items-center gap-3">
                             <DropDown
                                 options={pageSizeOptions}
-                                placeholder={ `${ pageSize }`}
+                                placeholder={`${pageSize}`}
                                 onChange={(value) => {
                                     const newSize = parseInt(value, 10);
                                     if (newSize !== pageSize) {
