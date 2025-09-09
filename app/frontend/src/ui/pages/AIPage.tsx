@@ -41,6 +41,7 @@ import useHealthStore from '../hooks/healthStore';
 function AIPage() {
     const [aiResponse, setAiResponse] = useState<string>('');
     const [isLoading, setIsLoading] = useState(true);
+    const [isDebugging, setIsDebugging] = useState<boolean>(false);
     // Change this to enable API calling
     const hasFetched = useRef(false);
 
@@ -58,26 +59,52 @@ function AIPage() {
     }), [activityFactor, gender, race, fullRecord]);
 
 
+
     useEffect(() => {
-        if (!hasFetched.current) {
-            console.log("Đang lấy dữ liệu AI...");
+        const fetchData = async () => {
+            if (hasFetched.current) return;
             hasFetched.current = true;
             setIsLoading(true);
 
-            window.electronAPI.getAIResponse(user_data)
-                .then(response => {
-                    setAiResponse(JSON.stringify(response, null, 2));
+            try {
+                const { debugging } = await window.electronAPI.getDebugStatus();
+
+                if (debugging) {
+                    console.log("Đang ở chế độ DEBUG, không gọi AI");
+                    setIsDebugging(true);
+                    setAiResponse(JSON.stringify({
+                        overview: '',
+                        diet: {
+                            calories: { maintain: '', cut: '', bulk: '' },
+                            macros: { protein: '', carbs: '', fats: '' },
+                            supplements: ''
+                        },
+                        workout: {
+                            cardio: '',
+                            strength: [],
+                            frequency: '',
+                            note: ''
+                        }
+                    }));
                     setIsLoading(false);
-                    console.log('thành công')
-                })
-                .catch(error => {
-                    console.error("Lỗi khi lấy dữ liệu AI:", error);
-                    setAiResponse('');
-                    setIsLoading(false);
-                });
-        }
-    }, []);
-// user_data1, fullRecord
+                    return;
+                }
+
+                console.log("Đang gọi API AI...");
+                const response = await window.electronAPI.getAIResponse(user_data);
+                setAiResponse(JSON.stringify(response, null, 2));
+                setIsLoading(false);
+                console.log("Lấy dữ liệu AI thành công");
+            } catch (error) {
+                console.error("Lỗi khi lấy dữ liệu AI:", error);
+                setAiResponse('');
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [user_data]);
+    // user_data1, fullRecord
     const parsedResponse = useMemo(() => {
         try {
             return JSON.parse(aiResponse);
@@ -85,64 +112,55 @@ function AIPage() {
             return null;
         }
     }, [aiResponse]);
-
-    // if (!fullRecord) {
-    //     return (
-    //         <div style={styles.errorContainer}>
-    //             <p style={styles.errorText}>Không có dữ liệu để tạo tư vấn AI</p>
-    //         </div>
-    //     );
-    // }
-
     // return (isLoading && fullRecord) ? (
     return (isLoading) ? (
         <LoadingScreen message={"Đang tải gợi ý từ AI..."} />
     ) : (
         <div className="d-flex flex-column align-items-center justify-content-center" style={styles.container}>
-            {/* {!fullRecord ? (
-                <div style={styles.errorContainer}>
-                    <p style={styles.errorText}>Không có dữ liệu để tạo tư vấn AI</p>
+            {isDebugging && (
+                <div style={styles.debugBanner}>
+                    🚧 Đang ở chế độ Debugging - dữ liệu hiển thị là rỗng 🚧
                 </div>
-            ) : ( */}
-                <div style={styles.frame}>
+            )}
+            <div style={styles.frame}>
 
-                    <div className='text-light' style={styles.content}>
-                        <h2 className="mb-3">Tổng Quan</h2>
-                        <p>{parsedResponse.overview}</p>
+                <div className='text-light' style={styles.content}>
+                    <h2 className="mb-3">Tổng Quan</h2>
+                    <p>{parsedResponse.overview}</p>
 
-                        <div className="row mt-4">
-                            <div className="col-6">
-                                <h4>Chế Độ Ăn</h4>
-                                <p><strong>Lượng calo:</strong></p>
-                                <ul className='fw-light'>
-                                    <li>Duy trì: {parsedResponse.diet.calories.maintain}</li>
-                                    <li>Giảm mỡ: {parsedResponse.diet.calories.cut}</li>
-                                    <li>Tăng cơ: {parsedResponse.diet.calories.bulk}</li>
-                                </ul>
-                                <p><strong>Thành phần dinh dưỡng: </strong></p>
-                                <ul className='fw-light'>
-                                    <li>Protein: {parsedResponse.diet.macros.protein}</li>
-                                    <li>Carbs: {parsedResponse.diet.macros.carbs}</li>
-                                    <li>Fats: {parsedResponse.diet.macros.fats}</li>
-                                </ul>
-                                <p><strong>Thực phẩm bổ sung:</strong> {parsedResponse.diet.supplements}</p>
-                            </div>
+                    <div className="row mt-4">
+                        <div className="col-6">
+                            <h4>Chế Độ Ăn</h4>
+                            <p><strong>Lượng calo:</strong></p>
+                            <ul className='fw-light'>
+                                <li>Duy trì: {parsedResponse.diet.calories.maintain}</li>
+                                <li>Giảm mỡ: {parsedResponse.diet.calories.cut}</li>
+                                <li>Tăng cơ: {parsedResponse.diet.calories.bulk}</li>
+                            </ul>
+                            <p><strong>Thành phần dinh dưỡng: </strong></p>
+                            <ul className='fw-light'>
+                                <li>Protein: {parsedResponse.diet.macros.protein}</li>
+                                <li>Carbs: {parsedResponse.diet.macros.carbs}</li>
+                                <li>Fats: {parsedResponse.diet.macros.fats}</li>
+                            </ul>
+                            <p><strong>Thực phẩm bổ sung:</strong> {parsedResponse.diet.supplements}</p>
+                        </div>
 
-                            <div className="col-6">
-                                <h4>Luyện Tập</h4>
-                                <p><strong>Cardio:</strong> {parsedResponse.workout.cardio}</p>
-                                <p><strong>Rèn luyện sức mạnh:</strong></p>
-                                <ul>
-                                    {parsedResponse.workout.strength.map((item: string, index: number) => (
-                                        <li key={index}>{item}</li>
-                                    ))}
-                                </ul>
-                                <p><strong>Tần suất:</strong> {parsedResponse.workout.frequency}</p>
-                                <p><strong>Ghi chú:</strong> {parsedResponse.workout.note}</p>
-                            </div>
+                        <div className="col-6">
+                            <h4>Luyện Tập</h4>
+                            <p><strong>Cardio:</strong> {parsedResponse.workout.cardio}</p>
+                            <p><strong>Rèn luyện sức mạnh:</strong></p>
+                            <ul>
+                                {parsedResponse.workout.strength.map((item: string, index: number) => (
+                                    <li key={index}>{item}</li>
+                                ))}
+                            </ul>
+                            <p><strong>Tần suất:</strong> {parsedResponse.workout.frequency}</p>
+                            <p><strong>Ghi chú:</strong> {parsedResponse.workout.note}</p>
                         </div>
                     </div>
                 </div>
+            </div>
             {/* )} */}
         </div>
     );
@@ -183,6 +201,15 @@ const styles: { [key: string]: React.CSSProperties } = {
         color: '#721c24',
         fontSize: '1rem',
         margin: 0,
+    },
+    debugBanner: {
+        backgroundColor: '#ffc107',
+        color: '#212529',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        padding: '8px',
+        borderRadius: '0.5rem',
+        marginBottom: '1rem',
     },
 };
 

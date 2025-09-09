@@ -69,6 +69,8 @@ type EventPayloadMapping = {
     'get-bmi-group-by-gender': {startDate: Date, endDate: Date};
     "ensure-pip": void;
     'packages-logs': ResponseMessage;
+    'get-debug-status': void;
+
 };
 
 type UserData = {
@@ -196,5 +198,7 @@ interface Window {
         getBMIGroupByGender: (startDate: Date, endDate: Date) => Promise<BMIGroupByGender[]>;
         ensurePipAndPackages: () => void;
         onGettingEnsureLogs: (callback: (data: ResponseMessage) => void) => UnsubscribeFunction;
+
+        getDebugStatus: () => Promise<{ debugging: boolean }>;
     };
 }

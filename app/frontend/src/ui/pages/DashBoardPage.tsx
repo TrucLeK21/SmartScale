@@ -30,9 +30,13 @@ const metricOptions = [
 
 const DashBoardPage = () => {
 
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(today.getMonth() - 1);
+
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
-        from: new Date(),
-        to: new Date(),
+        from: lastMonth,
+        to: today,
     });
 
     const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
@@ -220,7 +224,7 @@ const DashBoardPage = () => {
                             <span>Biểu đồ BMI trung bình theo độ tuổi và giới tính</span>
                         </div>
                         <div className="chart-container">
-                            <BarChartComponent data={bmiGroupByGender}/>
+                            <BarChartComponent data={bmiGroupByGender} />
 
                         </div>
                     </div>

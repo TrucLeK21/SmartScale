@@ -5,7 +5,6 @@ import {
   getPreloadPath,
   getPythonEnvPath,
   getPythonScriptPath,
-  getSavedImagesPath,
   getPipPath,
   getPythonDirPath,
 } from "./pathResolver.js";
@@ -32,7 +31,7 @@ import {
 } from "./db.js";
 import { runInCmd } from "./util.js";
 
-const SHOW_PYTHON_ERRORS = false;
+// const SHOW_PYTHON_ERRORS = false;
 let faceRecognitionDone = false;
 let port: SerialPort | null = null;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -42,15 +41,21 @@ const ESP32_VID = "303A"; // Espressif VID
 let timeoutHandle: NodeJS.Timeout | null = null;
 let scanCompleted = false;
 
-const checkPortExists = async (portPath: string): Promise<boolean> => {
-  try {
-    const ports = await SerialPort.list();
-    return ports.some((port) => port.path === portPath);
-  } catch (err: unknown) {
-    console.error("Error listing serial ports:", (err as Error).message);
-    return false;
-  }
-};
+
+let pythonServer: any;
+
+// Debug mode
+const debugging = true;
+
+// const checkPortExists = async (portPath: string): Promise<boolean> => {
+//   try {
+//     const ports = await SerialPort.list();
+//     return ports.some((port) => port.path === portPath);
+//   } catch (err: unknown) {
+//     console.error("Error listing serial ports:", (err as Error).message);
+//     return false;
+//   }
+// };
 
 let isOpening = false;
 
@@ -128,6 +133,27 @@ app.on("ready", async () => {
     mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
   }
 
+  // Đường dẫn Python env + file server.py
+  const pythonEnvPath = getPythonEnvPath();
+  const serverPath = getPythonScriptPath("server.py");
+
+  pythonServer = spawn(pythonEnvPath, ["-u",serverPath], {
+    cwd: path.dirname(serverPath), // chạy trong thư mục chứa script
+    stdio: "pipe",
+  });
+
+  pythonServer.stdout.on("data", (data: Buffer) => {
+    console.log(`[Flask] ${data.toString()}`);
+  });
+
+  pythonServer.stderr.on("data", (data: Buffer) => {
+    console.error(`[Flask ERROR] ${data.toString()}`);
+  });
+
+  pythonServer.on("close", (code: number) => {
+    console.log(`[Flask] exited with code ${code}`);
+  });
+
   ipcMain.on("start-ble", async () => {
     const pythonEnvPath = getPythonEnvPath();
     const pythonScriptPath = getPythonScriptPath("weight_scale.py");
@@ -138,7 +164,6 @@ app.on("ready", async () => {
       const esp32Port = ports.find(
         (port) => port.vendorId && port.vendorId.toUpperCase() === ESP32_VID
       );
-      const debugging = false;
 
       if (esp32Port && !debugging) {
         console.log("ESP32 detected on port:", esp32Port.path);
@@ -254,96 +279,148 @@ app.on("ready", async () => {
     retryTimeout = setTimeout(retryPython, retryIntervalMs);
   });
 
-  ipcMain.on("start-face", (_event, base64Data: string) => {
+  // ipcMain.on("start-face", (_event, base64Data: string) => {
+  //   faceRecognitionDone = false;
+  //   const matches = base64Data.match(/^data:image\/(png|jpeg);base64,(.+)$/);
+  //   if (!matches) return;
+
+  //   // const extension = matches[1];
+  //   const data = matches[2];
+  //   const buffer = Buffer.from(data, "base64");
+
+  //   // Tạo khóa và IV (khóa cần lưu lại dùng để giải mã phía Python)
+  //   const key = crypto.randomBytes(32); // AES-256
+  //   const iv = crypto.randomBytes(16); // 128-bit IV
+
+  //   // Mã hóa ảnh bằng AES-CBC
+  //   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  //   const encryptedBuffer = Buffer.concat([
+  //     cipher.update(buffer),
+  //     cipher.final(),
+  //   ]);
+
+  //   const encryptedPath = path.join(
+  //     getSavedImagesPath(),
+  //     `screenshot-${Date.now()}.enc`
+  //   );
+
+  //   fs.writeFile(encryptedPath, encryptedBuffer, (err) => {
+  //     if (err) {
+  //       console.error("Failed to save encrypted image:", err);
+  //     } else {
+  //       console.log("Encrypted image saved to:", encryptedPath);
+  //     }
+  //   });
+
+  //   // Gọi script Python và truyền thêm key + iv (mã hóa base64 để an toàn)
+  //   const pythonEnvPath = getPythonEnvPath();
+  //   const faceScriptPath = getPythonScriptPath("face_analyzer.py");
+
+  //   const faceProcess = spawn(pythonEnvPath, [
+  //     faceScriptPath,
+  //     "--image",
+  //     encryptedPath,
+  //     "--key",
+  //     key.toString("base64"),
+  //     "--iv",
+  //     iv.toString("base64"),
+  //     "--angle",
+  //     "75", // Thay đổi góc nghiêng nếu cần
+  //   ]);
+  //   const start = Date.now();
+
+  //   // const args = [
+  //   //     '--image', encryptedPath,
+  //   //     '--key', key.toString('base64'),
+  //   //     '--iv', iv.toString('base64'),
+  //   //     '--angle', '55' // Thay đổi góc nghiêng nếu cần
+  //   // ];
+
+  //   // console.log('Running command:', pythonEnvPath, '[faceScriptPath]', ...args);
+
+  //   faceProcess.stdout.on("data", (data) => {
+  //     try {
+  //       const message = JSON.parse(data.toString());
+  //       console.log(`Python face analyzing output:`, message);
+
+  //       if (message.type === "success") {
+  //         userState.set("race", message.race === "AI" ? "asian" : "other");
+  //         userState.set("age", message.age);
+  //         userState.set("gender", message.gender === "Man" ? "male" : "female");
+  //         userState.set("height", message.height);
+  //         const end = Date.now();
+  //         console.log(
+  //           `Face data have been saved, execution time: ${end - start} ms`
+  //         );
+  //         faceRecognitionDone = true;
+  //       }
+  //     } catch (e) {
+  //       console.log("Raw data:", data.toString());
+  //       console.error("Failed to parse Python output:", e);
+  //     }
+  //   });
+
+  //   faceProcess.stderr.on("data", (data) => {
+  //     if (SHOW_PYTHON_ERRORS) {
+  //       console.error("Error from Python process:", data.toString());
+  //     }
+  //   });
+
+  //   faceProcess.on("close", (code) => {
+  //     console.log(`Python face analyzing process exited with code ${code}`);
+  //   });
+  // });
+
+  ipcMain.on("start-face", async (_event, base64Data: string) => {
     faceRecognitionDone = false;
     const matches = base64Data.match(/^data:image\/(png|jpeg);base64,(.+)$/);
     if (!matches) return;
 
-    // const extension = matches[1];
     const data = matches[2];
     const buffer = Buffer.from(data, "base64");
 
-    // Tạo khóa và IV (khóa cần lưu lại dùng để giải mã phía Python)
-    const key = crypto.randomBytes(32); // AES-256
-    const iv = crypto.randomBytes(16); // 128-bit IV
+    // Tạo key và iv
+    const key = crypto.randomBytes(32);
+    const iv = crypto.randomBytes(16);
 
-    // Mã hóa ảnh bằng AES-CBC
+    // Mã hóa AES-CBC
     const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
     const encryptedBuffer = Buffer.concat([
       cipher.update(buffer),
       cipher.final(),
     ]);
 
-    const encryptedPath = path.join(
-      getSavedImagesPath(),
-      `screenshot-${Date.now()}.enc`
-    );
+    try {
+      const res = await fetch("http://127.0.0.1:5001/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          image: encryptedBuffer.toString("base64"),
+          key: key.toString("base64"),
+          iv: iv.toString("base64"),
+          angle: 75,
+        }),
+      });
 
-    fs.writeFile(encryptedPath, encryptedBuffer, (err) => {
-      if (err) {
-        console.error("Failed to save encrypted image:", err);
-      } else {
-        console.log("Encrypted image saved to:", encryptedPath);
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
       }
-    });
 
-    // Gọi script Python và truyền thêm key + iv (mã hóa base64 để an toàn)
-    const pythonEnvPath = getPythonEnvPath();
-    const faceScriptPath = getPythonScriptPath("face_analyzer.py");
+      const message = await res.json();
+      console.log("Python server output:", message);
 
-    const faceProcess = spawn(pythonEnvPath, [
-      faceScriptPath,
-      "--image",
-      encryptedPath,
-      "--key",
-      key.toString("base64"),
-      "--iv",
-      iv.toString("base64"),
-      "--angle",
-      "75", // Thay đổi góc nghiêng nếu cần
-    ]);
-    const start = Date.now();
-
-    // const args = [
-    //     '--image', encryptedPath,
-    //     '--key', key.toString('base64'),
-    //     '--iv', iv.toString('base64'),
-    //     '--angle', '55' // Thay đổi góc nghiêng nếu cần
-    // ];
-
-    // console.log('Running command:', pythonEnvPath, '[faceScriptPath]', ...args);
-
-    faceProcess.stdout.on("data", (data) => {
-      try {
-        const message = JSON.parse(data.toString());
-        console.log(`Python face analyzing output:`, message);
-
-        if (message.type === "success") {
-          userState.set("race", message.race === "AI" ? "asian" : "other");
-          userState.set("age", message.age);
-          userState.set("gender", message.gender === "Man" ? "male" : "female");
-          userState.set("height", message.height);
-          const end = Date.now();
-          console.log(
-            `Face data have been saved, execution time: ${end - start} ms`
-          );
-          faceRecognitionDone = true;
-        }
-      } catch (e) {
-        console.log("Raw data:", data.toString());
-        console.error("Failed to parse Python output:", e);
+      if (message.type === "success") {
+        userState.set("race", message.race === "AI" ? "asian" : "other");
+        userState.set("age", message.age);
+        userState.set("gender", message.gender === "Man" ? "male" : "female");
+        userState.set("height", message.height);
+        faceRecognitionDone = true;
       }
-    });
-
-    faceProcess.stderr.on("data", (data) => {
-      if (SHOW_PYTHON_ERRORS) {
-        console.error("Error from Python process:", data.toString());
-      }
-    });
-
-    faceProcess.on("close", (code) => {
-      console.log(`Python face analyzing process exited with code ${code}`);
-    });
+    } catch (err) {
+      console.error("Error calling Flask server:", err);
+    }
   });
 
   ipcMain.handle("get-face-data", async () => {
@@ -428,45 +505,45 @@ app.on("ready", async () => {
     return userMetrics;
   });
 
-  ipcMain.on("rotate-camera", async (event, direction) => {
-    const isPortAvailable = await checkPortExists("COM8");
-    if (!isPortAvailable) {
-      console.error("Port COM8 does not exist, skipping command send");
-      event.reply("serial-response", {
-        success: false,
-        message: "Cổng COM8 không tồn tại",
-      });
-      return;
-    }
+  // ipcMain.on("rotate-camera", async (event, direction) => {
+  //   const isPortAvailable = await checkPortExists("COM8");
+  //   if (!isPortAvailable) {
+  //     // console.error("Port COM8 does not exist, skipping command send");
+  //     event.reply("serial-response", {
+  //       success: false,
+  //       message: "Cổng COM8 không tồn tại",
+  //     });
+  //     return;
+  //   }
 
-    openSerialPort("COM8"); // Ensure the serial port is open before sending the command
+  //   openSerialPort("COM8"); // Ensure the serial port is open before sending the command
 
-    let command = "";
+  //   let command = "";
 
-    if (direction === "up") command = "SERVO-MOVEUP";
-    else if (direction === "down") command = "SERVO-MOVEDN";
-    else if (direction === "stop") command = "SERVO-STOP";
-    else if (direction === "default") command = "SERVO-MOVEDEFAULT";
+  //   if (direction === "up") command = "SERVO-MOVEUP";
+  //   else if (direction === "down") command = "SERVO-MOVEDN";
+  //   else if (direction === "stop") command = "SERVO-STOP";
+  //   else if (direction === "default") command = "SERVO-MOVEDEFAULT";
 
-    if (command) {
-      const fullCommand = command + "\n";
-      port?.write(fullCommand, (err) => {
-        if (err) {
-          console.error("Error sending serial:", err.message);
-          event.reply("serial-response", {
-            success: false,
-            message: "Lỗi gửi dữ liệu",
-          });
-        } else {
-          console.log("Command sent:", fullCommand);
-          event.reply("serial-response", {
-            success: true,
-            message: "Đã gửi string đến COM8",
-          });
-        }
-      });
-    }
-  });
+  //   if (command) {
+  //     const fullCommand = command + "\n";
+  //     port?.write(fullCommand, (err) => {
+  //       if (err) {
+  //         console.error("Error sending serial:", err.message);
+  //         event.reply("serial-response", {
+  //           success: false,
+  //           message: "Lỗi gửi dữ liệu",
+  //         });
+  //       } else {
+  //         console.log("Command sent:", fullCommand);
+  //         event.reply("serial-response", {
+  //           success: true,
+  //           message: "Đã gửi string đến COM8",
+  //         });
+  //       }
+  //     });
+  //   }
+  // });
 
   ipcMain.handle("get-ai-response", async (_event, userData) => {
     if (isDev())
@@ -833,4 +910,15 @@ app.on("ready", async () => {
       sendLog({ success: true, message: "DONE" });
     }
   });
+
+  ipcMain.handle("get-debug-status", () => {
+    return { debugging };
+  });
+});
+
+
+app.on("will-quit", () => {
+  if (pythonServer) {
+    pythonServer.kill();
+  }
 });
