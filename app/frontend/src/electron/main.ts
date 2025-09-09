@@ -41,11 +41,10 @@ const ESP32_VID = "303A"; // Espressif VID
 let timeoutHandle: NodeJS.Timeout | null = null;
 let scanCompleted = false;
 
-
 let pythonServer: any;
 
 // Debug mode
-const debugging = true;
+const debugging = false;
 
 // const checkPortExists = async (portPath: string): Promise<boolean> => {
 //   try {
@@ -106,6 +105,29 @@ const openSerialPort = async (portNum: string) => {
   }
 };
 
+const startServer = () => {
+  // Đường dẫn Python env + file server.py
+  const pythonEnvPath = getPythonEnvPath();
+  const serverPath = getPythonScriptPath("server.py");
+
+  pythonServer = spawn(pythonEnvPath, ["-u", serverPath], {
+    cwd: path.dirname(serverPath), // chạy trong thư mục chứa script
+    stdio: "pipe",
+  });
+
+  pythonServer.stdout.on("data", (data: Buffer) => {
+    console.log(`[Flask] ${data.toString()}`);
+  });
+
+  pythonServer.stderr.on("data", (data: Buffer) => {
+    console.error(`[Flask ERROR] ${data.toString()}`);
+  });
+
+  pythonServer.on("close", (code: number) => {
+    console.log(`[Flask] exited with code ${code}`);
+  });
+};
+
 type ParsedCCCD = {
   cccd_id: string;
   cmnd_id: string;
@@ -132,27 +154,6 @@ app.on("ready", async () => {
   } else {
     mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
   }
-
-  // Đường dẫn Python env + file server.py
-  const pythonEnvPath = getPythonEnvPath();
-  const serverPath = getPythonScriptPath("server.py");
-
-  pythonServer = spawn(pythonEnvPath, ["-u",serverPath], {
-    cwd: path.dirname(serverPath), // chạy trong thư mục chứa script
-    stdio: "pipe",
-  });
-
-  pythonServer.stdout.on("data", (data: Buffer) => {
-    console.log(`[Flask] ${data.toString()}`);
-  });
-
-  pythonServer.stderr.on("data", (data: Buffer) => {
-    console.error(`[Flask ERROR] ${data.toString()}`);
-  });
-
-  pythonServer.on("close", (code: number) => {
-    console.log(`[Flask] exited with code ${code}`);
-  });
 
   ipcMain.on("start-ble", async () => {
     const pythonEnvPath = getPythonEnvPath();
@@ -900,6 +901,7 @@ app.on("ready", async () => {
       if (!installRes.success) return;
 
       sendLog({ success: true, message: "Environment ready! ✅" });
+      startServer();
     } catch (e: any) {
       console.error("ensure-pip failed:", e);
       sendLog({
@@ -915,7 +917,6 @@ app.on("ready", async () => {
     return { debugging };
   });
 });
-
 
 app.on("will-quit", () => {
   if (pythonServer) {
