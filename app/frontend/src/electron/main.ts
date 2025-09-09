@@ -777,7 +777,7 @@ app.on("ready", async () => {
         console.log(`[${step}] Success:`, safeOut);
         return {
           success: true,
-          message: `[${step}] success: ${safeOut}`,
+          message: `[${step}] ${safeOut}`,
         };
       } catch (err: any) {
         // Chỉ khi runInCmd reject (exit code != 0) thì vào đây
@@ -823,14 +823,13 @@ app.on("ready", async () => {
       if (!installRes.success) return;
 
       sendLog({ success: true, message: "Environment ready! ✅" });
-    } catch (e: any ) {
+    } catch (e: any) {
       console.error("ensure-pip failed:", e);
       sendLog({
         success: false,
         message: `ensure-pip failed: ${e.message || e}`,
       });
-    }
-    finally {
+    } finally {
       sendLog({ success: true, message: "DONE" });
     }
   });
