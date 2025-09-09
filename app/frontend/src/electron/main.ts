@@ -41,11 +41,10 @@ const ESP32_VID = "303A"; // Espressif VID
 let timeoutHandle: NodeJS.Timeout | null = null;
 let scanCompleted = false;
 
-
 let pythonServer: any;
 
 // Debug mode
-const debugging = true;
+const debugging = false;
 
 // const checkPortExists = async (portPath: string): Promise<boolean> => {
 //   try {
@@ -137,7 +136,7 @@ app.on("ready", async () => {
   const pythonEnvPath = getPythonEnvPath();
   const serverPath = getPythonScriptPath("server.py");
 
-  pythonServer = spawn(pythonEnvPath, ["-u",serverPath], {
+  pythonServer = spawn(pythonEnvPath, ["-u", serverPath], {
     cwd: path.dirname(serverPath), // chạy trong thư mục chứa script
     stdio: "pipe",
   });
@@ -915,7 +914,6 @@ app.on("ready", async () => {
     return { debugging };
   });
 });
-
 
 app.on("will-quit", () => {
   if (pythonServer) {
