@@ -3,7 +3,7 @@ import './SidebarComponent.css';
 import bklogo from '../../../assets/bkLogo.svg';
 import { NavLink } from "react-router-dom";
 
-const NewNabarComponent: React.FC = () => {
+const SidebarComponent: React.FC = () => {
 
     return (
         <aside className="sidebar">
@@ -63,5 +63,5 @@ const NewNabarComponent: React.FC = () => {
     );
 }
 
-export default NewNabarComponent;
+export default SidebarComponent;
 

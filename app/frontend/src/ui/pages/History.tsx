@@ -239,10 +239,10 @@ const HistoryPage: React.FC = () => {
                             />
                             <span> / Trang</span>
                         </div>
-                        <span>
+                        {/* <span>
                             Hiển thị {(currentPage - 1) * pageSize + 1}–
                             {Math.min(currentPage * pageSize, totalRecords)} / {totalRecords} bản ghi
-                        </span>
+                        </span> */}
 
                         <div className="pagination">
                             <button

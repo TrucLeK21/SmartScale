@@ -42,7 +42,6 @@ const styles: { [key: string]: React.CSSProperties } = {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: '100%'
     },
     menu: {
         display: "flex",

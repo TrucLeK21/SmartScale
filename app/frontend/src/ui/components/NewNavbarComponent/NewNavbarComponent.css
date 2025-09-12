@@ -1,0 +1,44 @@
+nav {
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);
+    display: flex;
+    position: fixed;
+    top: 0;
+    background-color: #2A2D34;
+    height: 5rem;
+    width: 100vw;
+    z-index: 1000;
+    align-items: center;
+    gap: 10px;
+}
+
+ul {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 10px;
+}
+
+
+
+li a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 15px;
+    font-size: 1.2rem;
+    gap: 10px;
+}
+
+.active {
+    background-color: var(--primary-color);
+}
+
+li a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}

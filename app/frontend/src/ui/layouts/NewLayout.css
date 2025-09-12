@@ -1,3 +1,6 @@
+   
+   /* CSS FOR SIDE BAR */
+   /*
    main {
        width: calc(100vw - 240px);
        margin-left: 240px;
@@ -11,5 +14,15 @@
            width: calc(100vw - 100px);
 
            /* màn nhỏ hơn 768px thì không margin sidebar */
-       }
+       /* } */
+   /* } */
+
+
+   main {
+    width: 100vw;
+    margin-top: 5rem;
+    background-color: var(--background-color);
+    min-height: calc(100vh - 5rem);
+    display: flex;
    }
+   
