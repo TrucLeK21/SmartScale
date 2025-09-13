@@ -4,7 +4,7 @@ nav {
     position: fixed;
     top: 0;
     background-color: #2A2D34;
-    height: 5rem;
+    height: 4rem;
     width: 100vw;
     z-index: 1000;
     align-items: center;
@@ -13,30 +13,34 @@ nav {
 
 ul {
     display: flex;
-    flex: 1;
+    width: 100%;
     justify-content: center;
     list-style: none;
     padding: 0;
     margin: 0;
-    gap: 10px;
+}
+
+ul li {
+    flex: 1;
 }
 
 
 
 li a {
     display: flex;
+    width: 100%;
     align-items: center;
     padding: 15px 20px;
     color: white;
     text-decoration: none;
     font-weight: 500;
-    border-radius: 15px;
     font-size: 1.2rem;
     gap: 10px;
+    justify-content: center;
 }
 
 .active {
-    background-color: var(--primary-color);
+    border-bottom: 4px solid var(--primary-color) ;
 }
 
 li a:hover {

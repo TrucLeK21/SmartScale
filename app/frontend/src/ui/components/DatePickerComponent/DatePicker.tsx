@@ -12,6 +12,7 @@ interface DatePickerProps {
 const DatePicker: React.FC<DatePickerProps> = ({ value, onChange }) => {
   const [selected, setSelected] = useState<DateRange | undefined>(value);
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  
 
   const togglePicker = () => {
     setSelected(value); // khi mở lại thì copy giá trị từ cha

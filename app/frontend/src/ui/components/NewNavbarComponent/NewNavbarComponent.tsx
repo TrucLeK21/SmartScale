@@ -1,16 +1,9 @@
 import React from 'react'
 import './NewNavbarComponent.css'
-import { Image } from 'react-bootstrap';
-import bklogo from '../../../assets/bkLogo.svg';
 import { NavLink } from "react-router-dom";
 const NewNavbarComponent: React.FC = () => {
     return (
         <nav>
-            <NavLink
-                to="/"
-            >
-                <Image src={bklogo} alt="logo" width={80} height={80} />
-            </NavLink>
 
             <ul className='d-flex'>
                 <li >
@@ -49,11 +42,7 @@ const NewNavbarComponent: React.FC = () => {
                 </li>
 
             </ul>
-            <div
-            style={{ 
-                width: '80px',
-             }}
-            ></div>
+
         </nav>
     )
 }

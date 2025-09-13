@@ -20,7 +20,7 @@
 
    main {
     width: 100vw;
-    margin-top: 5rem;
+    margin-top: 4rem;
     background-color: var(--background-color);
     min-height: calc(100vh - 5rem);
     display: flex;
