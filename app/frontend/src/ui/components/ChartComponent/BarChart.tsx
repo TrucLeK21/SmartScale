@@ -39,7 +39,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
                 <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--primary-color)' }}>
                     Nhóm tuổi: {label}
                 </p>
-                <p style={{ margin: '4px 0', color: '#14AE8B' }}>
+                <p style={{ margin: '4px 0', color: '#3b82f6' }}>
                     BMI Nam: <span style={{ marginLeft: 4 }}>{payload[0]?.value}</span>
                 </p>
                 <p style={{ margin: '4px 0', color: '#FF79C6' }}>

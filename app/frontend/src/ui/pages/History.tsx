@@ -22,6 +22,7 @@ const HistoryPage: React.FC = () => {
     const [filteredData, setFilteredData] = useState<RecordData[]>([]);
     const [genderFilter, setGenderFilter] = useState<string>("all");
     const [raceFilter, setRaceFilter] = useState<string>("all");
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
 
     const today = new Date();
@@ -46,6 +47,7 @@ const HistoryPage: React.FC = () => {
                 endDate: to.toISOString(),
                 page,
                 pageSize,
+                sortDirection
             });
 
             setHistoryData(result.data);
@@ -77,8 +79,9 @@ const HistoryPage: React.FC = () => {
 
     // Khi đổi ngày thì load lại từ page 1
     useEffect(() => {
+        console.log(sortDirection)
         loadHistory(1);
-    }, [dateRange, pageSize]);
+    }, [dateRange, pageSize, sortDirection]);
 
     return (
         <div className="history-page-container">
@@ -138,6 +141,14 @@ const HistoryPage: React.FC = () => {
                         <span>Tìm kiếm</span>
                     </button>
                 </div> */}
+                <div className="sort-direction-container ">
+                    <button
+                    onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
+                    className="btn d-flex gap-2 justify-content-center align-items-center">
+                        <i className="bi bi-arrow-repeat"></i>
+                        {sortDirection === 'asc' ? 'Cũ nhất' : 'Mới nhất'}
+                    </button>
+                </div>
             </div>
 
             {/* Bảng dữ liệu */}
@@ -189,8 +200,8 @@ const HistoryPage: React.FC = () => {
                             </thead>
                             <tbody>
                                 {filteredData.length > 0 ? (
-                                    filteredData.map((item) => (
-                                        <tr key={item.id}>
+                                    filteredData.map((item, index) => (
+                                        <tr key={index}>
                                             <td>{item.record?.date ? new Date(item.record.date).toLocaleDateString() : "-"}</td>
                                             <td>{item.gender === "male" ? "Nam" : "Nữ"}</td>
                                             <td>{item.race === "asian" ? "Châu Á" : "Khác"}</td>

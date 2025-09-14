@@ -21,6 +21,7 @@ type GetRecordByDateArgs = {
   endDate: string;
   page?: number;
   pageSize?: number;
+  sortDirection?: "asc" | "desc";
 };
 
 type GetRecordByDateResult = {

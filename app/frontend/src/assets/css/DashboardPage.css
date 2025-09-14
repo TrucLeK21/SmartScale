@@ -18,6 +18,7 @@ header {
     flex: 1;
 }
 
+
 .top-container {
     display: flex;
     flex-direction: column;
@@ -38,25 +39,8 @@ header {
     color: white;
 }
 
-.main-chart-header {
-    margin-bottom: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
 
-.main-chart-header h4 {
-    margin: 0;
-    font-size: 20px;
-    font-weight: bold;
-}
 
-.main-chart-header span {
-    margin: 0;
-    font-size: 14px;
-    opacity: 0.9;
-}
 
 .card-container {
     display: grid;

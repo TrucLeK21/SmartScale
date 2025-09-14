@@ -3,9 +3,9 @@ import './NewNavbarComponent.css'
 import { NavLink } from "react-router-dom";
 const NewNavbarComponent: React.FC = () => {
     return (
-        <nav>
+        <nav className='new-navbar'>
 
-            <ul className='d-flex'>
+            <ul className='d-flex navbar-list'>
                 <li >
                     <NavLink
                         to="/dashboard"

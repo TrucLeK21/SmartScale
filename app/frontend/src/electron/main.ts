@@ -774,12 +774,13 @@ app.on("ready", async () => {
   ipcMain.handle("delete-record", (e, index) => deleteRecord(index));
 
   ipcMain.handle("get-record-by-date", async (e, args: GetRecordByDateArgs) => {
-    const { startDate, endDate, page, pageSize } = args;
+    const { startDate, endDate, page, pageSize,sortDirection } = args;
     return await getRecordsByDatePaginated(
       new Date(startDate),
       new Date(endDate),
       page ?? 1,
-      pageSize ?? 10
+      pageSize ?? 10,
+      sortDirection
     );
   });
 

@@ -161,6 +161,13 @@ input:focus {
     background-color: var(--sub-background-color-2);
 }
 
+.sort-direction-container button{
+    height: 44px;
+    background-color: var(--background-color);
+    color: white;
+    box-shadow:0 0 10px rgba(255, 255, 255, 0.3);
+}
+
 /* Thanh cuộn ngang tùy chỉnh */
 .table-wrapper::-webkit-scrollbar {
     height: 8px;

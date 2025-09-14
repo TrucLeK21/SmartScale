@@ -26,6 +26,12 @@ const metricOptions = [
     { value: "idealWeight", label: "Cân nặng lý tưởng", unit: "kg" },
 ];
 
+const filterOptions = [
+    { value: "day", label: "Theo ngày" },
+    { value: "month", label: "Theo tháng" },
+    { value: "year", label: "Theo năm" },
+];
+
 
 
 const DashBoardPage = () => {
@@ -41,6 +47,7 @@ const DashBoardPage = () => {
 
     const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
     const [dataKey, setDataKey] = useState<string>('weight');
+    const [filterOption, setFilterOption] = useState<"day" | "month" | "year">('day');
     const [dataByKey, setDataByKey] = useState<ChartData[]>([]);
     const [bmiGroupData, setBmiGroupData] = useState<BMIGroupData[]>([]);
     const [bmiGroupByGender, setBmiGroupByGender] = useState<BMIGroupByGender[]>([]);
@@ -125,6 +132,7 @@ const DashBoardPage = () => {
                 <div className="filter-container text-light">
                     <DatePicker value={dateRange} onChange={setDateRange} />
 
+
                 </div>
                 <div className="top-container">
                     <div className="card-container">
@@ -176,25 +184,31 @@ const DashBoardPage = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="main-chart-container d-flex flex-column gap-2">
-                        <div className="chart-header text-light d-flex align-items-center justify-content-between ">
+                    <div className="main-chart-container d-flex flex-column gap-2 mt-4">
+                        <div className="main-chart-header text-light d-flex align-items-center justify-content-between mb-2">
                             <div className="left d-flex align-items-center gap-2">
                                 <div className="icon">
                                     <i className="bi bi-graph-up"></i>
                                 </div>
                                 <h5 className='m-0 fw-semibold'>Xu hướng</h5>
                             </div>
-                            <div className="right">
+                            <div className="right d-flex gap-4">
                                 <DropDown
                                     options={metricOptions}
                                     defaultValue={dataKey}
                                     onChange={(value) => setDataKey(value)}
                                 />
+
+                                <DropDown
+                                    options={filterOptions}
+                                    defaultValue={filterOption}
+                                    onChange={(value) => setFilterOption(value as "day" | "month" | "year")}
+                                />
                             </div>
 
                         </div>
                         <div className="main-chart">
-                            <LineChartComponent data={dataByKey} title={getMetricLabel(dataKey)} unit={getMetricUnit(dataKey)} />
+                            <LineChartComponent data={dataByKey} title={getMetricLabel(dataKey)} unit={getMetricUnit(dataKey)} mode={filterOption} />
                         </div>
                     </div>
 
