@@ -34,28 +34,32 @@ const InfoConfirmScreen: React.FC = () => {
     const [editingField, setEditingField] = useState<string | null>(null);
     const [tempValue, setTempValue] = useState<string | number>('');
     const [showModal, setShowModal] = useState(false);
-    const [userData, setUserData] = useState({
-        age: 25,
-        gender: 'Nữ',
-        race: 'Châu Á',
-        height: 170,
-    });
+    const [userData, setUserData] = useState<{
+        age: number,
+        gender: string,
+        race: string,
+        height: number,
+    } | null>(null);
     const set = useHealthStore(state => state.set);
     const navigate = useNavigate();
+
+    const fields = ['age', 'gender', 'race', 'height'] as const;
+    const [curStep, setCurStep] = useState<number | null>(0);
+    const [isInit, setIsInit] = useState<boolean>(true);
+
 
     useEffect(() => {
         setIsLoading(true);
         const getFaceData = async () => {
             try {
                 const data = await window.electronAPI.getFaceData();
-                setIsLoading(false);
                 const displayData = {
                     age: data.age,
                     race: data.race === 'asian' ? 'Châu Á' : 'Khác',
                     gender: data.gender === 'male' ? 'Nam' : 'Nữ',
                     height: data.height || 170, // Default height if not provided
                 };
-                console.log(displayData);
+                // console.log(displayData);
                 setUserData(displayData);
                 analyzeActivitySound().play();
             } catch (error: unknown) {
@@ -64,6 +68,8 @@ const InfoConfirmScreen: React.FC = () => {
                 } else {
                     showToast.error(`Lỗi không xác định: ${error}`);
                 }
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -79,6 +85,9 @@ const InfoConfirmScreen: React.FC = () => {
         getFaceData();
     }, []);
 
+
+
+
     const handleConfirm = async () => {
         if (selected === null) {
             activityWarnSound().play();
@@ -89,10 +98,10 @@ const InfoConfirmScreen: React.FC = () => {
         const activityFactor = activityLevels.find((activity) => activity.id === selected)?.value;
         if (activityFactor !== undefined) {
             const formattedData = {
-                age: userData.age,
-                gender: genderMap[userData.gender] || userData.gender,
-                race: raceMap[userData.race] || userData.race,
-                height: userData.height,
+                age: userData!.age,
+                gender: genderMap[userData!.gender] || userData!.gender,
+                race: raceMap[userData!.race] || userData!.race,
+                height: userData!.height,
                 activityFactor,
             };
 
@@ -132,15 +141,27 @@ const InfoConfirmScreen: React.FC = () => {
 
     const handleEdit = (field: string) => {
         setEditingField(field);
-        setTempValue(userData[field as keyof typeof userData] || '');
+        setTempValue(userData![field as keyof typeof userData] || '');
         setShowModal(true);
     };
 
     const handleSaveEdit = () => {
         if (editingField) {
-            setUserData((prev) => ({ ...prev, [editingField]: tempValue }));
+            setUserData((prev) => ({ ...prev!, [editingField]: tempValue }));
             setEditingField(null);
             setShowModal(false);
+
+            if (curStep != null && curStep < 4) {
+                if (curStep + 1 >= 4) {
+                    setCurStep(null);
+                    setIsInit(false);
+                }
+                else {
+                    setCurStep(curStep + 1)
+                }
+
+            }
+
         }
     };
 
@@ -150,7 +171,7 @@ const InfoConfirmScreen: React.FC = () => {
                 <HoldableNumberPicker
                     min={6}
                     max={99}
-                    initial={userData.age}
+                    initial={userData!.age}
                     step={1}
                     onChange={(value) => setTempValue(value)}
                 />
@@ -194,7 +215,7 @@ const InfoConfirmScreen: React.FC = () => {
                 <HoldableNumberPicker
                     min={50}
                     max={250}
-                    initial={userData.height}
+                    initial={userData!.height}
                     step={1}
                     onChange={(value) => setTempValue(value)}
                 />
@@ -203,6 +224,14 @@ const InfoConfirmScreen: React.FC = () => {
         }
         return null;
     };
+
+    const showModalByStep = () => {
+        if (curStep != null) handleEdit(fields[curStep]);
+    }
+
+    useEffect(() => {
+        if (userData) showModalByStep();
+    }, [userData, curStep]);
 
     return isLoading ? (
         <>
@@ -230,7 +259,7 @@ const InfoConfirmScreen: React.FC = () => {
 
                                     </div>
                                     <div className="d-flex justify-content-center w-100 align-items-center" style={styles.cardValue}>
-                                        <p className="fs-5 fw-bold mb-0">{userData[field as keyof typeof userData]}</p>
+                                        <p className="fs-5 fw-bold mb-0">{userData![field as keyof typeof userData]}</p>
                                     </div>
                                     <div className="footer mb-2">
                                         <small className="text-white">Nhấn để chỉnh sửa</small>
@@ -279,17 +308,26 @@ const InfoConfirmScreen: React.FC = () => {
 
 
             {/* Modal chỉnh sửa thông tin */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered >
-                <Modal.Header closeButton>
-                    <Modal.Title>Chỉnh sửa {editingField === 'age' ? 'Tuổi' : editingField === 'gender' ? 'Giới tính': editingField === 'race' ? 'Chủng tộc' : 'Chiều cao'}</Modal.Title>
+            <Modal
+                show={showModal}
+                onHide={() => setShowModal(false)}
+                centered
+                backdrop={isInit ? "static" : true}
+            >
+                <Modal.Header closeButton={!isInit}>
+                    <Modal.Title>Chỉnh sửa {editingField === 'age' ? 'Tuổi' : editingField === 'gender' ? 'Giới tính' : editingField === 'race' ? 'Chủng tộc' : 'Chiều cao'}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className='pl-3'>
                     {renderEditField()}
                 </Modal.Body>
                 <Modal.Footer >
-                    <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>
-                        Hủy
-                    </Button>
+                    {
+                        !isInit &&
+                        <Button variant="secondary" onClick={() => setShowModal(false)} style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>
+                            Hủy
+                        </Button>
+                    }
+
                     <Button variant="primary" onClick={handleSaveEdit} style={{ padding: '0.5rem 1rem', fontSize: '1rem' }}>
                         Lưu
                     </Button>

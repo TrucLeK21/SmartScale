@@ -2,14 +2,19 @@
     background-color: white;
 }
 .modal-dialog {
-    max-width: 300px;
+    max-width: 500px;
 }
 
 .modal-content{
     color: white ;
     background-color: var(--background-color);
+    height: 400px;
 }
-
+.modal-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .modal-header {
     background-color: rgba(255, 255, 255, 0.1);
     border: none;

@@ -127,7 +127,6 @@ function WeightDisplayPage() {
 
 const styles: { [key: string]: React.CSSProperties } = {
     container: {
-        height: '100%',
         padding: '3rem 5rem',
     },
     frame: {

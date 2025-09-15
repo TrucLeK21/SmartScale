@@ -10,8 +10,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   message = "Processing, please wait...",
 }) => {
   return (
-    <div className="container-fluid d-flex flex-column align-items-center justify-content-center"
-    style={{ height: "100%" }}>
+    <div className="container-fluid d-flex flex-column align-items-center justify-content-center">
       <Lottie
         animationData={loadingAnimation}
         loop
