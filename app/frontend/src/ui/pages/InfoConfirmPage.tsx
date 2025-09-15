@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Modal, Button, Form } from 'react-bootstrap';
-import { activityWarnSound, analyzeActivitySound } from '../../assets/sounds';
+import { analyzeActivitySound } from '../../assets/sounds';
 import "react-toastify/dist/ReactToastify.css";
 import HoldableNumberPicker from '../components/NumberPickerComponent/NumberPickerComponent';
 import LoadingScreen from '../components/LoadingScreenComponent/LoadingScreen';
@@ -10,18 +10,11 @@ import { useNavigate } from 'react-router-dom';
 import { showToast } from '../utils/toastUtils';
 import '../../assets/css/InfoConfirmPage.css'
 
-const activityLevels = [
-    { id: 1, label: 'Ít vận động', description: 'Ngồi nhiều, ít đi lại', value: 1.2 },
-    { id: 2, label: 'Vận động nhẹ', description: 'Đi bộ nhẹ, ít tập luyện', value: 1.375 },
-    { id: 3, label: 'Vận động vừa', description: 'Tập thể thao 3-5 ngày/tuần', value: 1.55 },
-    { id: 4, label: 'Vận động nhiều', description: 'Tập thể thao 6-7 ngày/tuần', value: 1.725 },
-    { id: 5, label: 'Vận động rất nhiều', description: 'Tập nặng, vận động viên', value: 1.9 },
-];
-
 const genderMap: Record<string, string> = {
     'Nam': 'male',
     'Nữ': 'female',
 };
+
 
 const raceMap: Record<string, string> = {
     'Châu Á': 'asian',
@@ -29,7 +22,6 @@ const raceMap: Record<string, string> = {
 };
 
 const InfoConfirmScreen: React.FC = () => {
-    const [selected, setSelected] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [editingField, setEditingField] = useState<string | null>(null);
     const [tempValue, setTempValue] = useState<string | number>('');
@@ -40,7 +32,8 @@ const InfoConfirmScreen: React.FC = () => {
         race: string,
         height: number,
     } | null>(null);
-    const set = useHealthStore(state => state.set);
+    const state = useHealthStore((s) => s);
+    const { set, getRecord } = useHealthStore();
     const navigate = useNavigate();
 
     const fields = ['age', 'gender', 'race', 'height'] as const;
@@ -51,6 +44,21 @@ const InfoConfirmScreen: React.FC = () => {
     useEffect(() => {
         setIsLoading(true);
         const getFaceData = async () => {
+            if (state.record !== null) {
+                console.log("Info confirm page:", state);
+                const displayData = {
+                    age: state.record.age,
+                    race: state.race === 'asian' ? 'Châu Á' : 'Khác',
+                    gender: state.gender === 'male' ? 'Nam' : 'Nữ',
+                    height: state.record.height || 170, // Default height if not provided
+                };
+
+                setUserData(displayData);
+                setCurStep(null);
+                setIsInit(false);
+                setIsLoading(false);
+                return;
+            }
             try {
                 const data = await window.electronAPI.getFaceData();
                 const displayData = {
@@ -89,53 +97,42 @@ const InfoConfirmScreen: React.FC = () => {
 
 
     const handleConfirm = async () => {
-        if (selected === null) {
-            activityWarnSound().play();
-            showToast.warn("Vui lòng chọn mức độ vận động!");
-            return;
+        const prevRecord = getRecord();
+        if (userData !== null) {
+            set({
+                gender: genderMap[userData.gender] || userData.gender,
+                race: raceMap[userData.race] || userData.race,
+                record: prevRecord
+                    ? {
+                        ...prevRecord, // merge nếu có record cũ
+                        height: userData.height,
+                        age: userData.age,
+                    }
+                    : {
+                        // nếu chưa có record thì tạo mới
+                        date: new Date(),
+                        height: userData.height,
+                        weight: 0,
+                        age: userData.age,
+                        bmi: 0,
+                        bmr: 0,
+                        tdee: 0,
+                        lbm: 0,
+                        fatPercentage: 0,
+                        waterPercentage: 0,
+                        boneMass: 0,
+                        muscleMass: 0,
+                        proteinPercentage: 0,
+                        visceralFat: 0,
+                        idealWeight: 0,
+                        overviewScore: null as any,
+                    },
+            });
+
+            navigate('/activity-select');
         }
-
-        const activityFactor = activityLevels.find((activity) => activity.id === selected)?.value;
-        if (activityFactor !== undefined) {
-            const formattedData = {
-                age: userData!.age,
-                gender: genderMap[userData!.gender] || userData!.gender,
-                race: raceMap[userData!.race] || userData!.race,
-                height: userData!.height,
-                activityFactor,
-            };
-
-            try {
-                console.log("Gửi dữ liệu:", formattedData);
-                const metrics = await window.electronAPI.getMetrics(formattedData);
-                console.log("Nhận dữ liệu:", metrics);
-
-
-                // Lưu dữ liệu vào db
-                await window.electronAPI.addRecord({
-                    gender: formattedData.gender,
-                    race: formattedData.race,
-                    activityFactor: formattedData.activityFactor,
-                    record: metrics,
-                });
-
-                set({
-                    gender: formattedData.gender,
-                    race: formattedData.race,
-                    activityFactor: formattedData.activityFactor,
-                    record: metrics,
-                });
-                navigate("/result");
-            } catch (error: unknown) {
-                if (error instanceof Error) {
-                    showToast.error(`Có lỗi xảy ra khi tính toán chỉ số: ${error.message}`);
-                } else {
-                    showToast.error(`Lỗi không xác định khi tính toán chỉ số: ${error}`);
-                }
-            }
-
-        } else {
-            showToast.error("Không tìm thấy mức độ vận động phù hợp!");
+        else {
+            showToast.warn("Hãy xác nhận thông tin trước");
         }
     };
 
@@ -245,7 +242,7 @@ const InfoConfirmScreen: React.FC = () => {
                 <div className="w-100 mb-4">
                     <div className="row g-3 text-center">
                         {['age', 'gender', 'race', 'height'].map((field) => (
-                            <div className="col-md-3 col-sm-6" key={field}>
+                            <div className="col-md-6 col-sm-12" key={field}>
                                 <div
                                     className="rounded-3 shadow-sm hover-shadow align-items-center"
                                     style={styles.infoCard}
@@ -270,36 +267,6 @@ const InfoConfirmScreen: React.FC = () => {
                     </div>
                 </div>
 
-                <h4 className="text-center mb-3 text-light">Chọn mức độ vận động</h4>
-                <div className="row g-3 w-100 px-2">
-                    {activityLevels.map((activity) => {
-                        const isSelected = selected === activity.id;
-
-                        return (
-                            <div className="col-12 col-md-4" key={activity.id}>
-                                <div
-                                    className="rounded-4 shadow-sm"
-                                    style={{
-                                        ...styles.infoCard,
-                                        ...(isSelected ? styles.selectedCard : styles.unselectedCard),
-                                    }}
-                                    onClick={() => setSelected(activity.id)}
-                                >
-                                    <div style={styles.cardHeader} className="d-flex flex-row gap-2 align-items-center">
-                                        <div style={styles.cardIcon} className="d-flex justify-content-center align-items-center">
-                                            <i className="bi bi-person-arms-up"></i>
-                                        </div>
-                                        <span className="text-capitalize">{activity.label}</span>
-
-                                    </div>
-                                    <div className="d-flex justify-content-center w-100 align-items-center" style={styles.cardValue}>
-                                        <p className="">{activity.description}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
 
                 <button className="fs-5 mt-4" style={styles.confirmButton} onClick={handleConfirm}>
                     Xác nhận

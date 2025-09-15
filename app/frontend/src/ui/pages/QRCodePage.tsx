@@ -67,14 +67,13 @@ function QRCodePage() {
 
 const styles: { [key: string]: React.CSSProperties } = {
     container: {
-        height: '100%',
-        padding: '3rem 5rem',
+        padding: '5rem 10rem',
     },
     frame: {
         backgroundColor: 'var(--sub-background-color)',
         borderRadius: '1rem',
-        height: '100%',
         width: '100%',
+        padding: '3rem'
     },
     title: {
         fontSize: '1.5rem',

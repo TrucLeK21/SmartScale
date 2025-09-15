@@ -14,6 +14,7 @@ import NewLayout from "./layouts/NewLayout";
 import QRScanPage from "./pages/QRScanPage";
 import HistoryPage from "./pages/History";
 import CheckDependencies from "./pages/CheckDependencies";
+import ActivitySelectPage from "./pages/ActivitySelectPage";
 // import MainLayout from './layouts/MainLayout';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path="/result" element={<HealthResultPage />} />
           <Route path="/weight" element={<WeightDisplayPage />} />
           <Route path="/info" element={<InfoConfirmScreen />} />
+          <Route path="/activity-select" element={<ActivitySelectPage/>} />
           <Route path="/qrcode" element={<QRCodePage />} />
           <Route path="/ai" element={<AIPage />} />
           <Route path="/test" element={<TestPage />} />

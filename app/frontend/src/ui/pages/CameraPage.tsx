@@ -23,7 +23,7 @@ const Face: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [detections, setDetections] = useState<FaceDetection.Detection[]>([]);
-  const [cameraView, setCameraView] = useState({ width: 960, height: 540 });
+  const [cameraView, setCameraView] = useState({ width: 640, height: 540 });
   const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedRes, setSelectedRes] = useState(resolutions[1].label);
@@ -309,7 +309,6 @@ const Face: React.FC = () => {
   return (
     <div
       className="container-fluid d-flex justify-content-center align-items-center"
-      style={{ height: "100%" }}
     >
       <div
         style={{

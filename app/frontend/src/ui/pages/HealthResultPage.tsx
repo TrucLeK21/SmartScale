@@ -146,10 +146,11 @@ const HealthResultPage: React.FC = () => {
         onSwiper={onSwiper}
         style={{
           height: '100%',
-          width: '100%'
+          width: '100%',
+          alignItems: 'center',
         }}
       >
-        <SwiperSlide>
+        <SwiperSlide >
           <QRCodePage />
         </SwiperSlide>
         <SwiperSlide>

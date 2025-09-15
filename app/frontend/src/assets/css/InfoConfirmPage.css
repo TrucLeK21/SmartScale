@@ -8,7 +8,7 @@
 .modal-content{
     color: white ;
     background-color: var(--background-color);
-    height: 400px;
+    min-height: 400px;
 }
 .modal-body {
     display: flex;
