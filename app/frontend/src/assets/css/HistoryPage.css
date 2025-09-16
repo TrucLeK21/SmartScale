@@ -163,7 +163,7 @@ input:focus {
 
 .sort-direction-container button{
     height: 44px;
-    background-color: var(--background-color);
+    background-color: var(--sub-background-color);
     color: white;
     box-shadow:0 0 10px rgba(255, 255, 255, 0.3);
 }

@@ -84,7 +84,9 @@ export async function getRecordsByDatePaginated(
   endDate: Date,
   page: number = 1,
   pageSize: number = 10,
-  sortDirection: "asc" | "desc" = "asc" // thêm tham số
+  sortDirection: "asc" | "desc" = "asc",
+  gender: "all" | "male" | "female" = "all",
+  race: "all" | "asian" | "caucasian" = "all"
 ): Promise<{
   data: RecordData[];
   totalRecords: number;
@@ -102,16 +104,15 @@ export async function getRecordsByDatePaginated(
     `Filtering records from ${start.toISOString()} to ${end.toISOString()}`
   );
 
-  // Lọc theo ngày
   const filtered = (db.data?.records ?? []).filter((item) => {
     if (!item.record?.date) return false;
     const recordDate = new Date(item.record.date);
-    return recordDate >= start && recordDate <= end;
+    if (recordDate < start || recordDate > end) return false;
+    if (gender !== "all" && item.gender !== gender) return false;
+    if (race !== "all" && item.race !== race) return false;
+    return true;
   });
 
-  console.log(`Found ${filtered.length} records in the specified date range.`);
-
-  // Sắp xếp theo ngày
   const sorted = filtered.sort((a, b) => {
     const dateA = new Date(a.record!.date).getTime();
     const dateB = new Date(b.record!.date).getTime();

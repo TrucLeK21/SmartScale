@@ -19,9 +19,8 @@ const HistoryPage: React.FC = () => {
     const [totalRecords, setTotalRecords] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
-    const [filteredData, setFilteredData] = useState<RecordData[]>([]);
-    const [genderFilter, setGenderFilter] = useState<string>("all");
-    const [raceFilter, setRaceFilter] = useState<string>("all");
+    const [genderFilter, setGenderFilter] = useState<"all" | "male" | "female">("all");
+    const [raceFilter, setRaceFilter] = useState<"all" | "asian" | "caucasian">("all");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
 
@@ -36,7 +35,6 @@ const HistoryPage: React.FC = () => {
 
 
     const [pageSize, setPageSize] = useState<number>(10);
-
     const loadHistory = async (page: number = 1) => {
         try {
             if (!dateRange?.from || !dateRange?.to) return;
@@ -47,7 +45,9 @@ const HistoryPage: React.FC = () => {
                 endDate: to.toISOString(),
                 page,
                 pageSize,
-                sortDirection
+                sortDirection,
+                gender: genderFilter,
+                race: raceFilter,
             });
 
             setHistoryData(result.data);
@@ -59,29 +59,14 @@ const HistoryPage: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        let filtered = historyData;
-        if (genderFilter !== "all") {
-            filtered = filtered.filter((item) => item.gender === genderFilter);
-        }
-        if (raceFilter !== "all") {
-            filtered = filtered.filter((item) => item.race === raceFilter);
-        }
-
-        setFilteredData(filtered);
-        setTotalRecords(filtered.length);
-    }, [historyData, genderFilter, raceFilter]);
-
-
-    useEffect(() => {
-        loadHistory();
-    }, []);
-
     // Khi đổi ngày thì load lại từ page 1
     useEffect(() => {
-        console.log(sortDirection)
         loadHistory(1);
-    }, [dateRange, pageSize, sortDirection]);
+    }, [dateRange, pageSize, sortDirection, genderFilter, raceFilter]);
+
+    useEffect(() => {
+        console.table(historyData);
+    }, [historyData])
 
     return (
         <div className="history-page-container">
@@ -111,7 +96,7 @@ const HistoryPage: React.FC = () => {
                             { value: "male", label: "Nam", iconClass: "bi bi-gender-male" },
                             { value: "female", label: "Nữ", iconClass: "bi bi-gender-female" },
                         ]}
-                        onChange={(val) => setGenderFilter(val)}
+                        onChange={(val) => setGenderFilter(val as "all" | "male" | "female")}
                     />
                 </div>
 
@@ -123,7 +108,7 @@ const HistoryPage: React.FC = () => {
                         { value: "asian", label: "Châu Á", iconClass: "bi bi-globe-asia-australia" },
                         { value: "caucasian", label: "Khác", iconClass: "bi bi-person-circle" },
                     ]}
-                    onChange={(val) => setRaceFilter(val)}
+                    onChange={(val) => setRaceFilter(val as "all" | "asian" | "caucasian")}
                 />
 
                 {/* <div
@@ -143,8 +128,8 @@ const HistoryPage: React.FC = () => {
                 </div> */}
                 <div className="sort-direction-container ">
                     <button
-                    onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
-                    className="btn d-flex gap-2 justify-content-center align-items-center">
+                        onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
+                        className="btn d-flex gap-2 justify-content-center align-items-center">
                         <i className="bi bi-arrow-repeat"></i>
                         {sortDirection === 'asc' ? 'Cũ nhất' : 'Mới nhất'}
                     </button>
@@ -199,8 +184,8 @@ const HistoryPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredData.length > 0 ? (
-                                    filteredData.map((item, index) => (
+                                {historyData.length > 0 ? (
+                                    historyData.map((item, index) => (
                                         <tr key={index}>
                                             <td>{item.record?.date ? new Date(item.record.date).toLocaleDateString() : "-"}</td>
                                             <td>{item.gender === "male" ? "Nam" : "Nữ"}</td>

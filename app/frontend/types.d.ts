@@ -22,6 +22,8 @@ type GetRecordByDateArgs = {
   page?: number;
   pageSize?: number;
   sortDirection?: "asc" | "desc";
+  gender?: "all" | "male" | "female";
+  race?: "all" | "asian" | "caucasian";
 };
 
 type GetRecordByDateResult = {

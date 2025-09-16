@@ -56,12 +56,12 @@ const HealthMetrics: React.FC<HealthMetricsProps> = ({ data }) => {
   ];
 
   return (
-    <Container className="px-5 pt-5 pb-3 d-flex flex-column align-items-center">
+    <Container className="px-4 py-3 d-flex flex-column align-items-center">
       <div className="header-section mb-4 text-center text-white">
         <h3>Chỉ Số Sức Khỏe</h3>
         <div className="date-display">Ngày đo: {formattedDate}</div>
       </div>
-      <Row md={4} className="g-4">
+      <Row xs={4} className="g-4">
         {metrics.map((metric, index) => {
           const explanation = explanations[metric.label];
           const hasExplanation = Boolean(explanation);
