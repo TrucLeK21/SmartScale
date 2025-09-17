@@ -79,6 +79,43 @@ export async function getAllRecords(): Promise<RecordData[]> {
   return db.data?.records ?? [];
 }
 
+export async function getRecordsByDateAll(
+  startDate: Date,
+  endDate: Date,
+  sortDirection: "asc" | "desc" = "asc",
+  gender: "all" | "male" | "female" = "all",
+  race: "all" | "asian" | "caucasian" = "all"
+): Promise<RecordData[]> {
+  await db.read();
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  console.log(
+    `Filtering ALL records from ${start.toISOString()} to ${end.toISOString()}`
+  );
+
+  const filtered = (db.data?.records ?? []).filter((item) => {
+    if (!item.record?.date) return false;
+    const recordDate = new Date(item.record.date);
+    if (recordDate < start || recordDate > end) return false;
+    if (gender !== "all" && item.gender !== gender) return false;
+    if (race !== "all" && item.race !== race) return false;
+    return true;
+  });
+
+  const sorted = filtered.sort((a, b) => {
+    const dateA = new Date(a.record!.date).getTime();
+    const dateB = new Date(b.record!.date).getTime();
+    return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
+  });
+
+  return sorted;
+}
+
 export async function getRecordsByDatePaginated(
   startDate: Date,
   endDate: Date,
@@ -86,7 +123,8 @@ export async function getRecordsByDatePaginated(
   pageSize: number = 10,
   sortDirection: "asc" | "desc" = "asc",
   gender: "all" | "male" | "female" = "all",
-  race: "all" | "asian" | "caucasian" = "all"
+  race: "all" | "asian" | "caucasian" = "all",
+  paginate = true
 ): Promise<{
   data: RecordData[];
   totalRecords: number;
@@ -118,6 +156,15 @@ export async function getRecordsByDatePaginated(
     const dateB = new Date(b.record!.date).getTime();
     return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
   });
+
+  if (!paginate) {
+    return {
+      data: sorted,
+      totalRecords: sorted.length,
+      totalPages: 1,
+      currentPage: 1,
+    };
+  }
 
   const totalRecords = sorted.length;
   const totalPages = Math.ceil(totalRecords / pageSize);

@@ -24,6 +24,7 @@ type GetRecordByDateArgs = {
   sortDirection?: "asc" | "desc";
   gender?: "all" | "male" | "female";
   race?: "all" | "asian" | "caucasian";
+  paginate?: boolean;
 };
 
 type GetRecordByDateResult = {

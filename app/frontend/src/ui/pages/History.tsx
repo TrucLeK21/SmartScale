@@ -4,6 +4,9 @@ import "../../assets/css/HistoryPage.css";
 import DatePicker from "../components/DatePickerComponent/DatePicker";
 import DropDown from "../components/DropDownComponent/DropDown";
 import { DateRange } from "react-day-picker";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { showToast } from "../utils/toastUtils";
 
 const pageSizeOptions = [
     { value: "5", label: "5" },
@@ -58,6 +61,67 @@ const HistoryPage: React.FC = () => {
             console.error("Error loading records:", error);
         }
     };
+
+
+    const exportToExcel = async () => {
+        try {
+            if (!dateRange?.from || !dateRange?.to) return;
+            const { from, to } = dateRange;
+            const allHistoryData = await window.electronAPI.getRecordByDate({
+                startDate: from.toISOString(),
+                endDate: to.toISOString(),
+                sortDirection,
+                gender: genderFilter,
+                race: raceFilter,
+                paginate: false,
+            })
+
+            if (!allHistoryData.data || allHistoryData.data.length === 0) {
+                showToast.warn("Không có dữ liệu để xuất file");
+                return;
+            }
+
+            // Chuyển dữ liệu thành JSON đơn giản (flatten record)
+            const formattedData = allHistoryData.data.map((item) => ({
+                "Ngày": item.record?.date ? new Date(item.record.date).toLocaleDateString() : "-",
+                "Giới tính": item.gender === "male" ? "Nam" : "Nữ",
+                "Chủng tộc": item.race === "asian" ? "Châu Á" : "Khác",
+                "Chiều cao (cm)": item.record?.height ?? "-",
+                "Cân nặng (kg)": item.record?.weight ?? "-",
+                "Tuổi (năm)": item.record?.age ?? "-",
+                "BMI (kg/m²)": item.record?.bmi ?? "-",
+                "BMR (kcal)": item.record?.bmr ?? "-",
+                "TDEE (kcal)": item.record?.tdee ?? "-",
+                "LBM (kg)": item.record?.lbm ?? "-",
+                "Tỉ lệ mỡ (%)": item.record?.fatPercentage ?? "-",
+                "Tỉ lệ nước (%)": item.record?.waterPercentage ?? "-",
+                "Khối lượng xương (kg)": item.record?.boneMass ?? "-",
+                "Khối lượng cơ (kg)": item.record?.muscleMass ?? "-",
+                "Tỉ lệ protein (%)": item.record?.proteinPercentage ?? "-",
+                "Mỡ nội tạng": item.record?.visceralFat ?? "-", // nếu có đơn vị, ví dụ "level"
+                "Cân nặng lý tưởng (kg)": item.record?.idealWeight ?? "-",
+                "Điểm tổng quan": item.record?.overviewScore?.status ?? "-"
+            }));
+
+            // Format ngày YYYY-MM-DD
+            const formatDate = (date: Date) => date.toISOString().split("T")[0];
+            const fileName = `lich_su_do_${formatDate(from)}_den_${formatDate(to)}.xlsx`;
+
+            // Tạo worksheet & workbook
+            const worksheet = XLSX.utils.json_to_sheet(formattedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "History");
+
+            // Xuất file
+            const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+            const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+            saveAs(blob, fileName);
+        }
+        catch (e) {
+            showToast.error(`Đã có lỗi xảy ra: ${e}`);
+        }
+    };
+
 
     // Khi đổi ngày thì load lại từ page 1
     useEffect(() => {
@@ -130,8 +194,17 @@ const HistoryPage: React.FC = () => {
                     <button
                         onClick={() => setSortDirection(sortDirection === "asc" ? "desc" : "asc")}
                         className="btn d-flex gap-2 justify-content-center align-items-center">
-                        <i className="bi bi-arrow-repeat"></i>
+                        <i className="bi bi-arrow-repeat fs-4"></i>
                         {sortDirection === 'asc' ? 'Cũ nhất' : 'Mới nhất'}
+                    </button>
+                </div>
+
+                <div className="export-file-container">
+                    <button
+                        onClick={exportToExcel}
+                        className="btn d-flex gap-2 justify-content-center align-items-center">
+                        <i className="bi bi-filetype-xlsx fs-4"></i>
+                        Xuất file
                     </button>
                 </div>
             </div>
@@ -167,19 +240,19 @@ const HistoryPage: React.FC = () => {
                                     <th>Giới tính</th>
                                     <th>Chủng tộc</th>
                                     <th>Chiều cao (cm)</th>
-                                    <th>Cân nặng</th>
+                                    <th>Cân nặng (kg)</th>
                                     <th>Tuổi</th>
-                                    <th>BMI</th>
-                                    <th>BMR</th>
-                                    <th>TDEE</th>
-                                    <th>LBM</th>
-                                    <th>Mỡ %</th>
-                                    <th>Nước %</th>
-                                    <th>Xương</th>
-                                    <th>Cơ</th>
-                                    <th>Protein %</th>
+                                    <th>BMI (kg/m²)</th>
+                                    <th>BMR (kcal/ngày)</th>
+                                    <th>TDEE (kcal/ngày)</th>
+                                    <th>LBM (kg)</th>
+                                    <th>Tỉ lệ mỡ (%)</th>
+                                    <th>Tỉ lệ nước (%)</th>
+                                    <th>Khối lượng xương (kg)</th>
+                                    <th>Khối lượng cơ (kg)</th>
+                                    <th>Tỉ lệ protein (%)</th>
                                     <th>Mỡ nội tạng</th>
-                                    <th>Cân nặng lý tưởng</th>
+                                    <th>Cân nặng lý tưởng (kg)</th>
                                     <th>Điểm tổng quan</th>
                                 </tr>
                             </thead>
