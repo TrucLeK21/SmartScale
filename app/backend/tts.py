@@ -15,7 +15,9 @@ url = "https://api.zalo.ai/v1/tts/synthesize"
 #     "Chiều cao của bạn là {chieu_cao} cm và cân nặng của bạn là {can_nang} kg."
 # )
 
-tts_message = "Hãy đứng thẳng người, đưa mặt vào khung xanh và giữ yên trong 3 giây. "
+# tts_message = "Hãy đứng thẳng người, đưa mặt vào khung xanh và giữ yên trong 3 giây. "
+# tts_message = "Vui lòng đưa mã qui a căn cước công dân trong Vi en e i đi vào khung xanh."
+tts_message = "Vui lòng đưa mã qui a căn cước công dân vào vị trí của cảm biến"
 
 tts_message = tts_message.format(
     gioi_tinh="nam",

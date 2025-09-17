@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 import { useNavigate } from "react-router-dom";
+import { useCCCD1Sound, useCCCD2Sound } from "../../assets/sounds";
 
 const QRScanPage: React.FC = () => {
     const [mode, setMode] = useState<"camera" | "gm65">("camera");
@@ -10,6 +11,8 @@ const QRScanPage: React.FC = () => {
     const [data, setData] = useState<string | null>(null);
     const [scanning, setScanning] = useState<boolean>(true);
     const navigate = useNavigate();
+    const cccd1Sound = useCCCD1Sound();
+    const cccd2Sound = useCCCD2Sound();
 
     // 🚀 Xử lý khi scan thành công (camera + GM65)
     useEffect(() => {
@@ -44,8 +47,10 @@ const QRScanPage: React.FC = () => {
 
     // 🔄 Xử lý khi đổi mode: gọi GM65 hoặc tắt scanner
     useEffect(() => {
+
         if (mode === "gm65") {
             // Khi đổi qua GM65 -> gọi API Electron để bắt đầu quét
+            cccd2Sound.play();
             window.electronAPI.startScan()
                 .then((res: { success: boolean; message?: string }) => {
                     if (!res.success) setErrorMsg(res.message || "Quét thất bại");
@@ -58,6 +63,7 @@ const QRScanPage: React.FC = () => {
             setIsTimeOut(false);
         } else {
             // Khi đổi sang camera -> tắt GM65 nếu có API stop
+            cccd1Sound.play();
             window.electronAPI.turnOffQrScanner();
             setErrorMsg(null);
             setScanning(true);
