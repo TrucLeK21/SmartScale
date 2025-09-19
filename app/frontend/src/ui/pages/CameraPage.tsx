@@ -385,11 +385,11 @@ const Face: React.FC = () => {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Camera Settings</Modal.Title>
+          <Modal.Title>Cài đặt camera</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="flex-col">
           <Form.Group className="mb-3">
-            <Form.Label>Resolution</Form.Label>
+            <Form.Label>Độ phân giải</Form.Label>
             <Form.Select
               value={selectedRes}
               onChange={(e) => setSelectedRes(e.target.value)}
@@ -402,7 +402,7 @@ const Face: React.FC = () => {
             </Form.Select>
           </Form.Group>
           <Form.Group>
-            <Form.Label>Camera</Form.Label>
+            <Form.Label>Chọn camera</Form.Label>
             <Form.Select
               value={deviceId || ""}
               onChange={(e) => setDeviceId(e.target.value || undefined)}
@@ -418,10 +418,10 @@ const Face: React.FC = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
+            Hủy
           </Button>
           <Button variant="primary" onClick={handleApplySettings}>
-            Apply
+            Áp dụng
           </Button>
         </Modal.Footer>
       </Modal>

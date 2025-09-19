@@ -200,7 +200,7 @@ export default QRScanPage;
 // ======== Styles giữ nguyên ========
 const styles: { [key: string]: React.CSSProperties } = {
     container: { padding: 0, margin: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", backgroundColor: "transparent", width: "100%", height: "100vh" },
-    wrapper: { width: "80%", height: "85%", backgroundColor: "var(--sub-background-color)", position: "relative", borderRadius: 8 },
+    wrapper: { minWidth: "700px", minHeight: '550px', backgroundColor: "var(--sub-background-color)", position: "relative", borderRadius: 8 },
     header: { marginBottom: 20, backgroundColor: "rgba(255, 255, 255, 0.1)", padding: 10, borderRadius: "8px 8px 0 0", display: "flex", justifyContent: "center", alignItems: "center" },
     modeToggle: { display: "flex", gap: 20, width: "100%", justifyContent: "center", alignItems: "center", position: "absolute", bottom: 10 },
     body: { position: "relative", width: "100%", maxWidth: 500, aspectRatio: "4/3", margin: "0 auto", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" },

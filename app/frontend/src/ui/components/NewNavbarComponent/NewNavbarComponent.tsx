@@ -8,7 +8,8 @@ const analysisRoutes = [
     "/weight",
     "/info",
     "/activity-select",
-    "/result"
+    "/result",
+    "/qr-scan"
 ];
 
 const NewNavbarComponent: React.FC = () => {
