@@ -427,7 +427,7 @@ app.on("ready", async () => {
   ipcMain.handle("get-face-data", async () => {
     const userData = userState.get();
 
-    if (!userState.isComplete(["activityFactor", "height"])) {
+    if (!userState.isComplete(["activityFactor","height"])) {
       const timeout = 22000;
       const pollInterval = 100;
 
@@ -455,9 +455,10 @@ app.on("ready", async () => {
 
         throw new Error("User data is incomplete");
       }
-    } else {
-      userState.set("height", 170); // hardcode
-    }
+    } 
+    // else {
+    //   userState.set("height", 170); // hardcode
+    // }
 
     console.log(userData);
     if (!userData || typeof userData !== "object") {
