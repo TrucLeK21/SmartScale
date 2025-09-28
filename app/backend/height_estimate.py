@@ -17,7 +17,7 @@ ETHNICITY_HEAD_HEIGHT = {
     "causian": 13                    # Caucasians (European descent)
 }
 # CAMERA_TO_GROUND_MINUS_EYE = 121.5    # Camera height offset
-CAMERA_TO_GROUND_MINUS_EYE = 107    # Camera height offset
+CAMERA_TO_GROUND_MINUS_EYE = 97    # Camera height offset
 
 # Helper function: calculate vertical height component
 def calc_opposite(hypotenuse, angle_degrees):

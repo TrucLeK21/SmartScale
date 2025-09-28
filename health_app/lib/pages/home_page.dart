@@ -470,7 +470,7 @@ class _HomePageState extends State<HomePage> {
                             style: const TextStyle(
                               color: AppColors.mainColor,
                               fontWeight: FontWeight.bold,
-                              fontSize: 22,
+                              fontSize: 14,
                             ),
                             softWrap: true,
                             overflow: TextOverflow.ellipsis, // Prevent overflow

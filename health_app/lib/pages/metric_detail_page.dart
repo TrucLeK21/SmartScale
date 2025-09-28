@@ -42,72 +42,98 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
     });
   }
 
-  void _loadMetricRecords() async {
-    final modalRoute = ModalRoute.of(context);
-    if (modalRoute != null) {
-      final arguments = modalRoute.settings.arguments as Map?;
-      if (arguments != null) {
-        final metric = arguments['metric'];
-        memId = arguments['userId'];
+void _loadMetricRecords() async {
+  final modalRoute = ModalRoute.of(context);
+  if (modalRoute != null) {
+    final arguments = modalRoute.settings.arguments as Map?;
+    if (arguments != null) {
+      final metric = arguments['metric'];
+      memId = arguments['userId'];
 
-        final res = await userServices().getMetricRecords(metric, memId);
-        if (res != null && res.isNotEmpty) {
-          setState(() {
-            records = res;
-            _metricUnit = res[0]['unit'] ?? "";
-            _selectedRecord = res.last['value'].toString();
-            // lấy giá trị cuối
-            final lastValue = res.last['value'];
-            _selectedRecord = lastValue?.toString() ?? "";
+      final res = await userServices().getMetricRecords(metric, memId);
+      if (res != null && res.isNotEmpty) {
+        setState(() {
+          records = res;
 
-            // lấy giá trị trước đó
-            final prevValue =
-                res.length >= 2 ? res[res.length - 2]['value'] : null;
+          // lấy đơn vị
+          _metricUnit = res[0]['unit'] ?? "";
 
-            // parse double an toàn
-            final lastDouble = lastValue != null
-                ? double.tryParse(lastValue.toString())
-                : null;
-            final prevDouble = prevValue != null
-                ? double.tryParse(prevValue.toString())
-                : null;
+          // lấy record cuối
+          final last = res.last;
+          final lastValue = last['value'];
+          _selectedRecord = lastValue?.toString() ?? "-";
 
-            _metricDiff = (lastDouble != null && prevDouble != null)
-                ? lastDouble - prevDouble
-                : null;
-            _selectedRecordDate = DateTime.parse(res.last['date']);
-            _previousRecordDate = DateFormat('dd/MM')
-                .format(DateTime.parse(res[res.length - 2]['date']).toLocal());
-            _formattedDate = DateFormat('hh:mm - dd/MM/yyyy')
-                .format(_selectedRecordDate!.toLocal());
+          // lấy record trước (nếu có ít nhất 2 record)
+          final prevValue = res.length >= 2 ? res[res.length - 2]['value'] : null;
+
+          // convert sang double an toàn
+          final lastDouble =
+              lastValue != null ? double.tryParse(lastValue.toString()) : null;
+          final prevDouble =
+              prevValue != null ? double.tryParse(prevValue.toString()) : null;
+
+          // tính chênh lệch nếu cả 2 đều hợp lệ
+          _metricDiff = (lastDouble != null && prevDouble != null)
+              ? lastDouble - prevDouble
+              : null;
+
+          // ngày cuối
+          if (last['date'] != null) {
+            _selectedRecordDate = DateTime.tryParse(last['date']);
+            if (_selectedRecordDate != null) {
+              _formattedDate = DateFormat('HH:mm - dd/MM/yyyy')
+                  .format(_selectedRecordDate!.toLocal());
+            }
+          }
+
+          // ngày trước đó
+          if (res.length >= 2 && res[res.length - 2]['date'] != null) {
+            _previousRecordDate = DateFormat('dd/MM').format(
+                DateTime.parse(res[res.length - 2]['date']).toLocal());
+          }
+
+          // khoảng thời gian
+          if (res.first['date'] != null && res.last['date'] != null) {
             _fromDate = DateFormat('dd/MM/yyyy')
                 .format(DateTime.parse(res.first['date']));
             _toDate = DateFormat('dd/MM/yyyy')
                 .format(DateTime.parse(res.last['date']));
-          });
-          for (int i = 0; i < records.length; i++) {
-            spots.add(FlSpot(i.toDouble(), records[i]['value'].toDouble()));
           }
+        });
 
+        // clear trước khi add
+        spots.clear();
+        for (int i = 0; i < records.length; i++) {
+          final v = records[i]['value'];
+          if (v != null) {
+            final parsed = double.tryParse(v.toString());
+            if (parsed != null) {
+              spots.add(FlSpot(i.toDouble(), parsed));
+            }
+          }
+        }
+
+        // set spot cuối nếu có
+        if (spots.isNotEmpty) {
           setState(() {
             _selectedSpot = LineBarSpot(
-              LineChartBarData(
-                  spots: spots), // Bar data giả lập, không ảnh hưởng biểu đồ
-              records.length - 1, // Chỉ mục của điểm cuối cùng
-              FlSpot((records.length - 1).toDouble(),
-                  records.last['value'].toDouble()),
+              LineChartBarData(spots: spots),
+              records.length - 1,
+              spots.last,
             );
           });
-        } else {
-          print("Cannot load metrics");
         }
       } else {
-        print('No arguments found');
+        print("Cannot load metrics");
       }
     } else {
-      print('No ModalRoute found');
+      print('No arguments found');
     }
+  } else {
+    print('No ModalRoute found');
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -136,13 +162,12 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
   Widget _buildUI() {
     // lấy các điểm
 
-    const leftReservedSize = 52.0;
+    const leftReservedSize = 40.0;
     return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: 16,
         children: [
           LayoutBuilder(builder: (context, constraints) {
-            final width = constraints.maxWidth;
             return Row(
                     children: [
                       const SizedBox(width: leftReservedSize),
@@ -356,7 +381,7 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
                         showTitles: true,
                         reservedSize: leftReservedSize,
                         maxIncluded: true,
-                        minIncluded: false,
+                        minIncluded: true,
                       ),
                     ),
                     bottomTitles: AxisTitles(
@@ -403,7 +428,7 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         Text(
           "$_selectedRecord $_metricUnit",
           style: const TextStyle(
@@ -441,7 +466,7 @@ class _MetricDetailPageState extends State<MetricDetailPage> {
                     style: const TextStyle(
                       color: AppColors.boldGray,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 12,
                     ),
                   ),
                 ],
