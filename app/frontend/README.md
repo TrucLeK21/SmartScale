@@ -1,99 +1,69 @@
-<<<<<<< HEAD
-# Smart Scale Station UI
+# Smart Scale Project Setup Guide
 
-## Introduction
-This project is a frontend application built with React + Electron with python as backend. Below are the instructions to set up, run, and build the project.
+This document explains how to set up and run both the **Frontend** (Electron + React) and **Backend** (Python) parts of the project.
 
-## Prerequisites
-Make sure you have the following installed:
-- [Node.js](https://nodejs.org/) (LTS recommended)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+---
 
-## Installation
-Clone the repository and install dependencies:
+## Frontend Setup (Electron + React)
 
-```sh
-git clone https://github.com/TrucLeK21/SmartScale.git
-cd app/frontend
+### Install Dependencies
+First, navigate to the `frontend` directory and install the required Node.js packages:
+
+```bash
+cd frontend
 npm install
 ```
 
-## Running the Project
-To start the development server, use the following command:
+### Run in Development Mode
+To start the application in development mode (hot reload, debugging enabled):
 
-```sh
+```bash
 npm run dev
 ```
 
-This will launch the application in development mode with live reloading.
+This will launch the Electron app with live reload on file changes.
 
-## Building the Project
-To build the project for Windows, use the following command:
+### Build for Windows
+To package the Electron app for Windows:
 
-```sh
+```bash
 npm run dist:win
 ```
 
-This will generate a distributable version of the application for Windows.
+The built application will be located in the `dist/` directory after the process completes.
 
-## Additional Notes
-- Ensure all dependencies are installed before running the project.
-- Modify `.env` files if necessary for custom configurations.
-- If you encounter any issues, check the logs and ensure all dependencies are up-to-date.
+---
 
-=======
-# React + TypeScript + Vite
+## Backend Setup (Python)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Create a Virtual Environment (Recommended)
+Navigate to the `backend` folder and create a Python virtual environment:
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+cd backend
+python -m venv venv
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Activate the virtual environment:
+- On Windows:
+  ```bash
+  venv\Scripts\activate
+  ```
+- On macOS/Linux:
+  ```bash
+  source venv/bin/activate
+  ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Install Python Modules
+Once the virtual environment is activated, install the required Python modules:
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+pip install -r requirements.txt
 ```
->>>>>>> combined-version
+
+---
+
+## Notes
+- Make sure Node.js and Python are installed before proceeding.
+- Use Node.js v16+ and Python 3.8+ for best compatibility.
+- Always avoid pushing `venv/` and `node_modules/` folders to the Git repository.
