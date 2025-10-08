@@ -1,0 +1,2 @@
+E:/SmartScale/health_app/android/app/.cxx/Debug/5z5m5l4s/x86/CMakeFiles/edit_cache.dir
+E:/SmartScale/health_app/android/app/.cxx/Debug/5z5m5l4s/x86/CMakeFiles/rebuild_cache.dir

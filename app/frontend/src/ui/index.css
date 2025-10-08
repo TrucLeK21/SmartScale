@@ -12,8 +12,29 @@ a {
 
 body {
   font-family: var(--font-family);
+<<<<<<< HEAD
   background-color: var(--background-color);
   color: var(--text-color);
   margin: 0;
   padding: 0;
 }
+=======
+  /* background-color: var(--background-color);
+  color: var(--text-color); */
+  margin: 0;
+  padding: 0;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+svg:focus {
+  outline: none !important;
+}
+
+path:focus {
+  outline: none !important;
+
+}
+>>>>>>> combined-version

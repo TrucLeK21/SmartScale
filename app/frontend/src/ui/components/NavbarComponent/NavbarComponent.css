@@ -1,0 +1,28 @@
+.appName {
+    font-style: normal;
+    font-weight: 700;
+    font-size: 4rem;
+    line-height: 5rem;
+    color: #FFFFFF;
+}
+
+
+.brandLeft {
+    display: flex;
+    align-items: center;
+}
+
+.navBrand {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.navBar {
+    background-color: var(--appbar-color);
+    display: flex;
+    justify-content: center;
+}

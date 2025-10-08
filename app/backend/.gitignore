@@ -1,0 +1,8 @@
+.env
+python-runtime/Lib
+python-runtime/Scripts
+python-runtime/share
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

@@ -2,6 +2,10 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
+<<<<<<< HEAD
+=======
+  "author": "Trucle",
+>>>>>>> combined-version
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -12,6 +16,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "transpile:electron": "tsc --project src/electron/tsconfig.json",
+<<<<<<< HEAD
     "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64"
   },
   "dependencies": {
@@ -25,6 +30,53 @@
     "@eslint/js": "^9.21.0",
     "@types/node": "^22.13.17",
     "@types/react": "^19.0.10",
+=======
+    "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-brands-svg-icons": "^6.7.2",
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/face_detection": "^0.4.1646425229",
+    "@serialport/bindings-cpp": "^13.0.1",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "crypto-js": "^4.2.0",
+    "dayjs": "^1.11.13",
+    "file-saver": "^2.0.5",
+    "framer-motion": "^12.9.2",
+    "iconv-lite": "^0.6.3",
+    "lottie-react": "^2.4.1",
+    "lowdb": "^7.0.1",
+    "qrcode.react": "^4.2.0",
+    "react": "^19.1.0",
+    "react-bootstrap": "^2.10.9",
+    "react-day-picker": "^9.8.1",
+    "react-dom": "^19.0.0",
+    "react-is": "^19.1.1",
+    "react-qr-barcode-scanner": "^2.1.8",
+    "react-router-dom": "^7.4.1",
+    "react-toastify": "^11.0.5",
+    "react-use-face-detection": "^1.0.2",
+    "react-webcam": "^7.2.0",
+    "recharts": "^3.1.0",
+    "serialport": "^13.0.0",
+    "swiper": "^11.2.6",
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/crypto-js": "^4.2.2",
+    "@types/file-saver": "^2.0.7",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^22.13.17",
+    "@types/react": "^19.1.0",
+>>>>>>> combined-version
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "cross-env": "^7.0.3",
@@ -34,7 +86,13 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
+<<<<<<< HEAD
     "npm-run-all": "^4.1.5",
+=======
+    "html5-qrcode": "^2.3.8",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.6.2",
+>>>>>>> combined-version
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "vite": "^6.2.0"
